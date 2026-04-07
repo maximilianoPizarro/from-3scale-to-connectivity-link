@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{values.name}}
+  description: ${{values.description}}
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-id: ${{values.name}}
+    backstage.io/kubernetes-namespace: ${{values.namespace}}
+    argocd/app-name: ${{values.name}}
+    tektonci/build-namespace: ${{values.namespace}}
+  tags:
+    - frontend
+    - html
+    - openshift-commons
+spec:
+  type: website
+  lifecycle: experimental
+  owner: user:${{values.owner}}

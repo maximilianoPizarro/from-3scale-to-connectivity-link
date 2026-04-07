@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: ${{values.name}}-gateway
+  namespace: ${{values.namespace}}
+  labels:
+    app.kubernetes.io/name: ${{values.name}}
+    backstage.io/kubernetes-id: ${{values.name}}
+  annotations:
+    networking.istio.io/service-type: ClusterIP
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same

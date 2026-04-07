@@ -1,0 +1,38 @@
+schemaVersion: 2.2.2
+metadata:
+  name: ${{values.name}}
+  version: 1.0.0
+  displayName: ${{values.name}}
+  description: ${{values.description}}
+  language: Java
+  projectType: Quarkus
+components:
+  - name: tools
+    container:
+      image: registry.redhat.io/devspaces/udi-rhel8:3.18
+      memoryLimit: 3Gi
+      cpuLimit: "2"
+      mountSources: true
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+  - name: m2
+    volume:
+      size: 2Gi
+commands:
+  - id: build
+    exec:
+      component: tools
+      commandLine: mvn package -DskipTests
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: true
+  - id: run
+    exec:
+      component: tools
+      commandLine: mvn quarkus:dev
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+        isDefault: true

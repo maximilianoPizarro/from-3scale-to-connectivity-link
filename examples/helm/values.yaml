@@ -204,6 +204,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: gitea
+      enabled: true
+      path: connectivity-link-gitea
+      destinationNamespace: gitea
+      syncWave: "3"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: false
 
 # ============================================================
 # Lightspeed / MCP — LLM provider config for OLS component

@@ -1,0 +1,54 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{values.name}}
+  description: ${{values.description}}
+  annotations:
+    backstage.io/kubernetes-id: ${{values.name}}
+    backstage.io/kubernetes-namespace: ${{values.namespace}}
+    argocd/app-name: ${{values.name}}
+  tags:
+    - gateway
+    - kuadrant
+    - api
+    - golden-path
+spec:
+  type: api
+  lifecycle: production
+  owner: user:${{values.owner}}
+  providesApis:
+    - ${{values.name}}-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: ${{values.name}}-api
+  description: "API exposed through ${{values.name}} gateway"
+  tags:
+    - gateway
+    - rest
+spec:
+  type: openapi
+  lifecycle: production
+  owner: user:${{values.owner}}
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: ${{values.name}} API
+      version: 1.0.0
+      description: ${{values.description}}
+    paths:
+      /:
+        get:
+          summary: Root endpoint
+          security:
+            - apiKey: []
+          responses:
+            '200':
+              description: Success
+    components:
+      securitySchemes:
+        apiKey:
+          type: apiKey
+          in: header
+          name: Authorization

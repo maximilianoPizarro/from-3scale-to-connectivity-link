@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: software-templates
+  description: Software Templates for Developer Hub
+spec:
+  targets:
+    - ./quarkus-mcp/template.yaml
+    - ./static-frontend/template.yaml
+    - ./api-gateway/template.yaml
