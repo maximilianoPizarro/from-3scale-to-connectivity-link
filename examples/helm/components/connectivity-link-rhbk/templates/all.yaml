@@ -270,7 +270,7 @@ spec:
       name: keycloak-db-secret
     vendor: postgres
   hostname:
-    hostname: rhbk.apps.cluster-8wffz.dynamic.redhatworkshops.io
+    hostname: rhbk.apps.cluster-k6jxj.dynamic.redhatworkshops.io
   http: {}
   instances: 1
   proxy:
@@ -1428,13 +1428,13 @@ spec:
         protocolMapper: oidc-usersessionmodel-note-mapper
       publicClient: false
       redirectUris:
-      - https://backstage-developer-hub-developer-hub.apps.cluster-8wffz.dynamic.redhatworkshops.io/api/auth/oidc/handler/frame
+      - https://backstage-developer-hub-developer-hub.apps.cluster-k6jxj.dynamic.redhatworkshops.io/api/auth/oidc/handler/frame
       secret: FfzjFAAuQUGjZDtKUErTx9fOaqF7RV6m
       serviceAccountsEnabled: true
       standardFlowEnabled: true
       surrogateAuthRequired: false
       webOrigins:
-      - https://backstage-developer-hub-developer-hub.apps.cluster-8wffz.dynamic.redhatworkshops.io/
+      - https://backstage-developer-hub-developer-hub.apps.cluster-k6jxj.dynamic.redhatworkshops.io/
     - alwaysDisplayInConsole: false
       attributes:
         backchannel.logout.revoke.offline.tokens: "false"
@@ -2557,9 +2557,9 @@ spec:
       name: Frontend Web App
       publicClient: true
       redirectUris:
-      - https://neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io/*
-      - https://neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io/auth/callback
-      rootUrl: https://neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io
+      - https://neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io/*
+      - https://neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io/auth/callback
+      rootUrl: https://neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io
       standardFlowEnabled: true
       webOrigins:
       - '*'
@@ -2572,8 +2572,8 @@ spec:
       name: NeuralBank OIDC (API / policy)
       publicClient: false
       redirectUris:
-      - https://neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io/*
-      - https://neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io/auth/callback
+      - https://neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io/*
+      - https://neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io/auth/callback
       standardFlowEnabled: true
       webOrigins:
       - '*'

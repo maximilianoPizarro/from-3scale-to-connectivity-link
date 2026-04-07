@@ -117,12 +117,12 @@ spec:
       cookie:
         name: jwt
   provider:
-    authorizationEndpoint: https://rhbk.apps.cluster-8wffz.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/auth
+    authorizationEndpoint: https://rhbk.apps.cluster-k6jxj.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/auth
     clientID: neuralbank-frontend
     clientSecret: FYtNXAyn6eRmWxHIig7oLhK3zxQ1nLaF
-    issuerURL: https://rhbk.apps.cluster-8wffz.dynamic.redhatworkshops.io/realms/neuralbank
-    redirectURI: https://neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io/auth/callback
-    tokenEndpoint: https://rhbk.apps.cluster-8wffz.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token
+    issuerURL: https://rhbk.apps.cluster-k6jxj.dynamic.redhatworkshops.io/realms/neuralbank
+    redirectURI: https://neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io/auth/callback
+    tokenEndpoint: https://rhbk.apps.cluster-k6jxj.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token
   targetRef:
     group: gateway.networking.k8s.io
     kind: HTTPRoute
@@ -161,7 +161,7 @@ metadata:
   namespace: neuralbank-stack
 spec:
   hostnames:
-  - neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io
+  - neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io
   parentRefs:
   - name: neuralbank-gateway
     namespace: neuralbank-stack
@@ -186,7 +186,7 @@ metadata:
   namespace: neuralbank-stack
 spec:
   hostnames:
-  - neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io
+  - neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io
   parentRefs:
   - name: neuralbank-gateway
     namespace: neuralbank-stack
@@ -242,7 +242,7 @@ metadata:
   name: neuralbank-external-route
   namespace: neuralbank-stack
 spec:
-  host: neuralbank.apps.cluster-8wffz.dynamic.redhatworkshops.io
+  host: neuralbank.apps.cluster-k6jxj.dynamic.redhatworkshops.io
   port:
     targetPort: http
   tls:

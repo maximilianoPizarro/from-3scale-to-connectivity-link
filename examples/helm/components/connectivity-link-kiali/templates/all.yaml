@@ -12,13 +12,13 @@ spec:
   external_services:
     grafana:
       enabled: true
-      external_url: https://grafana-nfl-wallet-service.apps.cluster-8wffz.dynamic.redhatworkshops.io
+      external_url: https://grafana-nfl-wallet-service.apps.cluster-k6jxj.dynamic.redhatworkshops.io
       internal_url: http://grafana-nfl-wallet-service.openshift-cluster-observability-operator.svc.cluster.local:3000
     prometheus:
       url: http://connectivity-link-stack-prometheus.openshift-cluster-observability-operator.svc.cluster.local:9090
     tracing:
       enabled: true
-      external_url: https://jaeger.apps.cluster-8wffz.dynamic.redhatworkshops.io
+      external_url: https://jaeger.apps.cluster-k6jxj.dynamic.redhatworkshops.io
       internal_url: http://jaeger.openshift-opentelemetry.svc.cluster.local:16686
       use_grpc: false
 ---

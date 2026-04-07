@@ -245,10 +245,10 @@ data:
     https://img.freepik.com\n      - https://cdn.dribbble.com\n      - https://gitlab.com\n
     \     - https://*.gitlab.com\n      - https://*.gitlabusercontent.com\n  reading:\n
     \   allow:\n      - host: gitlab.com\n      - host: raw.gitlabusercontent.com\n
-    \     - host: nfl-wallet-dev.apps.cluster-8wffz.dynamic.redhatworkshops.io\n
-    \     - host: nfl-wallet-test.apps.cluster-8wffz.dynamic.redhatworkshops.io\n
-    \     - host: nfl-wallet-test-espn.apps.cluster-8wffz.dynamic.redhatworkshops.io\n
-    \     - host: nfl-wallet-prod.apps.cluster-8wffz.dynamic.redhatworkshops.io\nsignInPage:
+    \     - host: nfl-wallet-dev.apps.cluster-k6jxj.dynamic.redhatworkshops.io\n
+    \     - host: nfl-wallet-test.apps.cluster-k6jxj.dynamic.redhatworkshops.io\n
+    \     - host: nfl-wallet-test-espn.apps.cluster-k6jxj.dynamic.redhatworkshops.io\n
+    \     - host: nfl-wallet-prod.apps.cluster-k6jxj.dynamic.redhatworkshops.io\nsignInPage:
     oidc\ncatalog:\n  providers:\n    keycloakOrg:\n      default:\n        baseUrl:
     \"${KEYCLOAK_BASE_URL}\"\n        loginRealm: \"${KEYCLOAK_REALM}\"\n        realm:
     \"${KEYCLOAK_REALM}\"\n        clientId: \"${KEYCLOAK_CLIENT_ID}\"\n        clientSecret:
@@ -344,9 +344,9 @@ data:
     \ customResources:\n    - group: 'tekton.dev'\n      apiVersion: 'v1beta1'\n      plural:
     'pipelineruns'\n    - group: 'tekton.dev'\n      apiVersion: 'v1beta1'\n      plural:
     'taskruns'\n# Tekton/CI Pipeline Configuration\n# Configure Tekton integration
-    for pipeline visualization\ntekton:\n  dashboardUrl: 'https://tekton-dashboard.apps.cluster-8wffz.dynamic.redhatworkshops.io'\n
+    for pipeline visualization\ntekton:\n  dashboardUrl: 'https://tekton-dashboard.apps.cluster-k6jxj.dynamic.redhatworkshops.io'\n
     \ namespace: openshift-pipelines\n# CI/CD Integration\nci:\n  - name: tekton\n
-    \   baseUrl: 'https://tekton-dashboard.apps.cluster-8wffz.dynamic.redhatworkshops.io'\n
+    \   baseUrl: 'https://tekton-dashboard.apps.cluster-k6jxj.dynamic.redhatworkshops.io'\n
     \   # Optional: Configure authentication if needed\n    # auth:\n    #   token:
     ${TEKTON_TOKEN}\n# Lightspeed plugin disabled (image version conflicts)\n# lightspeed:\n#
     \  servers:\n#     - id: \"${LLM_SERVER_ID}\"\n#       url: \"${LLM_SERVER_URL}\"\n#
