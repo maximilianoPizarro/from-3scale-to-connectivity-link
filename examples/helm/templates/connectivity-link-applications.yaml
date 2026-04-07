@@ -16,6 +16,88 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: {{ $.Values.argocd.project }}
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+        - /spec/clusterIPs
+        - /spec/ipFamilies
+        - /spec/ipFamilyPolicy
+        - /spec/internalTrafficPolicy
+    - group: route.openshift.io
+      kind: Route
+      jsonPointers:
+        - /spec/host
+        - /spec/wildcardPolicy
+        - /status
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/template/metadata/annotations
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+    - group: ""
+      kind: Namespace
+      jsonPointers:
+        - /metadata/annotations
+        - /metadata/labels
+    - group: networking.istio.io
+      kind: "*"
+      jsonPointers:
+        - /spec
+        - /metadata/annotations
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: sailoperator.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: operator.istio.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: ols.openshift.io
+      kind: OLSConfig
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: keycloak.org
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: k8s.keycloak.org
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: kuadrant.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: mcp.openshift.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: ""
+      kind: ConfigMap
+      jsonPointers:
+        - /metadata/annotations
   source:
     repoURL: {{ $.Values.gitops.repoUrl }}
     targetRevision: {{ $.Values.gitops.revision }}
@@ -76,6 +158,8 @@ spec:
       selfHeal: {{ .selfHeal }}
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
       {{- if .skipDryRunOnMissingResource }}
       - SkipDryRunOnMissingResource=true
       {{- end }}
