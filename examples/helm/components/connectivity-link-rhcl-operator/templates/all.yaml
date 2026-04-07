@@ -105,7 +105,7 @@ apiVersion: extensions.kuadrant.io/v1alpha1
 kind: OIDCPolicy
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "4"
   name: neuralbank-oidc
   namespace: neuralbank-stack
 spec:
@@ -132,8 +132,8 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   annotations:
-    argocd.argoproj.io/ignore-healthcheck: "true"
     argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/health-check: skip
   name: neuralbank-gateway
   namespace: neuralbank-stack
 spec:
@@ -156,7 +156,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "4"
   name: neuralbank-api-route
   namespace: neuralbank-stack
 spec:
@@ -181,7 +181,7 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "4"
   name: neuralbank-root-route
   namespace: neuralbank-stack
 spec:
@@ -210,7 +210,7 @@ apiVersion: kuadrant.io/v1
 kind: RateLimitPolicy
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-wave: "4"
   name: neuralbank-customers-ratelimit
   namespace: neuralbank-stack
 spec:
@@ -237,7 +237,7 @@ apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "6"
+    argocd.argoproj.io/sync-wave: "4"
     haproxy.router.openshift.io/timeout: 300s
   name: neuralbank-external-route
   namespace: neuralbank-stack
