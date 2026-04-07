@@ -615,7 +615,7 @@ metadata:
   namespace: mcp-system
   annotations:
     argocd.argoproj.io/sync-wave: "2"
-    argocd.argoproj.io/health-check: skip
+    networking.istio.io/service-type: ClusterIP
 spec:
   gatewayClassName: istio
   listeners:

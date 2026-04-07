@@ -133,7 +133,7 @@ kind: Gateway
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "4"
-    argocd.argoproj.io/health-check: skip
+    networking.istio.io/service-type: ClusterIP
   name: neuralbank-gateway
   namespace: neuralbank-stack
 spec:
