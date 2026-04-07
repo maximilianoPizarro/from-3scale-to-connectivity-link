@@ -69,30 +69,51 @@ spec:
         app: granite-cpu
         app.kubernetes.io/part-of: connectivity-link-lightspeed
     spec:
-      containers:
-        - name: ollama
-          image: docker.io/ollama/ollama:latest
-          env:
-            - name: OLLAMA_MODELS
-              value: /models
-            - name: OLLAMA_HOST
-              value: "0.0.0.0:11434"
-            - name: HOME
-              value: /tmp
+      initContainers:
+        - name: download-model
+          image: curlimages/curl:latest
           command: ["/bin/sh", "-c"]
           args:
             - |
-              ollama serve &
-              SERVER_PID=$!
-              echo "Waiting for Ollama server..."
-              until curl -sf http://localhost:11434/api/tags >/dev/null 2>&1; do sleep 2; done
-              echo "Server ready, pulling granite3.1:8b..."
-              ollama pull granite3.1:8b
-              echo "Model granite3.1:8b ready for inference"
-              wait $SERVER_PID
+              if [ -f /models/granite.gguf ]; then
+                echo "Model already exists on PVC, skipping download"
+                ls -lh /models/granite.gguf
+              else
+                echo "Downloading Granite 3.1 8B Instruct Q4_K_M (~5GB)..."
+                curl -L --progress-bar -o /models/granite.gguf \
+                  "https://huggingface.co/bartowski/granite-3.1-8b-instruct-GGUF/resolve/main/granite-3.1-8b-instruct-Q4_K_M.gguf"
+                echo "Download complete"
+                ls -lh /models/granite.gguf
+              fi
+          volumeMounts:
+            - name: models
+              mountPath: /models
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      containers:
+        - name: llama-cpp
+          image: ghcr.io/ggerganov/llama.cpp:server
+          args:
+            - "--model"
+            - "/models/granite.gguf"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "8080"
+            - "--ctx-size"
+            - "4096"
+            - "--threads"
+            - "4"
+            - "--n-predict"
+            - "2048"
           ports:
             - name: http
-              containerPort: 11434
+              containerPort: 8080
               protocol: TCP
           resources:
             requests:
@@ -106,25 +127,22 @@ spec:
               mountPath: /models
           startupProbe:
             httpGet:
-              path: /api/tags
-              port: 11434
+              path: /health
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           livenessProbe:
             httpGet:
-              path: /api/tags
-              port: 11434
+              path: /health
+              port: 8080
             periodSeconds: 30
           readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - "curl -sf http://localhost:11434/api/tags | grep -q granite"
-            initialDelaySeconds: 60
-            periodSeconds: 15
-            failureThreshold: 20
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -150,8 +168,8 @@ spec:
     app: granite-cpu
   ports:
     - name: http
-      port: 11434
-      targetPort: 11434
+      port: 8080
+      targetPort: 8080
       protocol: TCP
 ---
 ##
@@ -172,7 +190,7 @@ spec:
     providers:
       - name: granite-cpu
         type: openai
-        url: "http://granite-cpu.openshift-lightspeed.svc.cluster.local:11434/v1"
+        url: "http://granite-cpu.openshift-lightspeed.svc.cluster.local:8080/v1"
         credentialsSecretRef:
           name: granite-cpu-credentials
         models:
