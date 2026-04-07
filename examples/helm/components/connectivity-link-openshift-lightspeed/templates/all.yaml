@@ -134,6 +134,12 @@ spec:
         - name: openshift-mcp-server
           image: "quay.io/redhat-user-workloads/crt-nshift-lightspeed-tenant/openshift-mcp-server:latest"
           imagePullPolicy: IfNotPresent
+          command: ["/openshift-mcp-server"]
+          args:
+            - "--port"
+            - "8080"
+            - "--toolsets"
+            - "core,config,openshift"
           ports:
             - containerPort: 8080
               protocol: TCP
