@@ -64,13 +64,6 @@ spec:
         replicas: 1
       llamaStack: {}
       mcpServer: {}
-    mcpServers:
-      - name: openshift-mcp-server
-        url: "http://field-content-ols.openshift-lightspeed.svc.cluster.local:8080/mcp"
-        timeout: 120
-      - name: kubernetes-mcp-server
-        url: "http://field-content-ols-k8s-mcp.openshift-lightspeed.svc.cluster.local:8085/mcp"
-        timeout: 120
     conversationCache:
       type: postgres
       postgres:
@@ -78,3 +71,7 @@ spec:
         sharedBuffers: 256MB
     introspectionEnabled: true
     userDataCollection: {}
+  mcpServers:
+    - name: kubernetes-mcp-server
+      url: "http://field-content-ols-k8s-mcp.openshift-lightspeed.svc.cluster.local:8085/mcp"
+      timeout: 120
