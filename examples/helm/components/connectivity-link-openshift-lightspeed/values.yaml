@@ -57,6 +57,7 @@ n8n:
         - https://raw.githubusercontent.com/maximilianoPizarro/field-sourced-content-template/main/examples/helm/components/connectivity-link-openshift-lightspeed/workflows/workflow-pvc-storage-monitor.json
         - https://raw.githubusercontent.com/maximilianoPizarro/field-sourced-content-template/main/examples/helm/components/connectivity-link-openshift-lightspeed/workflows/workflow-operator-health-check.json
         - https://raw.githubusercontent.com/maximilianoPizarro/field-sourced-content-template/main/examples/helm/components/connectivity-link-openshift-lightspeed/workflows/workflow-mcp-gateway-status.json
+        - https://raw.githubusercontent.com/maximilianoPizarro/field-sourced-content-template/main/examples/helm/components/connectivity-link-openshift-lightspeed/workflows/workflow-lightspeed-agent.json
 
 # ============================================================
 # openshift-mcp-server — MCP servers + LiteLLM proxy + Inspector

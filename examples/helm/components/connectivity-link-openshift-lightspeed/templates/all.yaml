@@ -15,7 +15,147 @@ stringData:
   apitoken: "sk-9guuWZPNUC0zY5KS3kbFLA"
 ---
 ##
-## 2. OLSConfig — Lightspeed → MaaS LiteLLM + MCP servers
+## 2. Granite CPU Model — Ollama serving granite3.1:8b
+##
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: granite-cpu-models
+  namespace: openshift-lightspeed
+  labels:
+    app.kubernetes.io/part-of: connectivity-link-lightspeed
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: granite-cpu-credentials
+  namespace: openshift-lightspeed
+  labels:
+    app.kubernetes.io/part-of: connectivity-link-lightspeed
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+type: Opaque
+stringData:
+  apitoken: "no-key-needed"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: granite-cpu
+  namespace: openshift-lightspeed
+  labels:
+    app: granite-cpu
+    app.kubernetes.io/part-of: connectivity-link-lightspeed
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: granite-cpu
+  template:
+    metadata:
+      labels:
+        app: granite-cpu
+        app.kubernetes.io/part-of: connectivity-link-lightspeed
+    spec:
+      containers:
+        - name: ollama
+          image: docker.io/ollama/ollama:latest
+          env:
+            - name: OLLAMA_MODELS
+              value: /models
+            - name: OLLAMA_HOST
+              value: "0.0.0.0:11434"
+            - name: HOME
+              value: /tmp
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              ollama serve &
+              SERVER_PID=$!
+              echo "Waiting for Ollama server..."
+              until curl -sf http://localhost:11434/api/tags >/dev/null 2>&1; do sleep 2; done
+              echo "Server ready, pulling granite3.1:8b..."
+              ollama pull granite3.1:8b
+              echo "Model granite3.1:8b ready for inference"
+              wait $SERVER_PID
+          ports:
+            - name: http
+              containerPort: 11434
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "2"
+              memory: "8Gi"
+            limits:
+              cpu: "4"
+              memory: "12Gi"
+          volumeMounts:
+            - name: models
+              mountPath: /models
+          startupProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            periodSeconds: 30
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "curl -sf http://localhost:11434/api/tags | grep -q granite"
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: granite-cpu-models
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: granite-cpu
+  namespace: openshift-lightspeed
+  labels:
+    app: granite-cpu
+    app.kubernetes.io/part-of: connectivity-link-lightspeed
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selector:
+    app: granite-cpu
+  ports:
+    - name: http
+      port: 11434
+      targetPort: 11434
+      protocol: TCP
+---
+##
+## 3. OLSConfig — Granite CPU + MCP servers for tool calling
 ##
 apiVersion: ols.openshift.io/v1alpha1
 kind: OLSConfig
@@ -30,6 +170,13 @@ spec:
     - MCPServer
   llm:
     providers:
+      - name: granite-cpu
+        type: openai
+        url: "http://granite-cpu.openshift-lightspeed.svc.cluster.local:11434/v1"
+        credentialsSecretRef:
+          name: granite-cpu-credentials
+        models:
+          - name: granite3.1:8b
       - name: litellm
         type: openai
         url: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
@@ -38,8 +185,8 @@ spec:
         models:
           - name: llama-scout-17b
   ols:
-    defaultProvider: litellm
-    defaultModel: llama-scout-17b
+    defaultProvider: granite-cpu
+    defaultModel: granite3.1:8b
     logLevel: INFO
     querySystemPrompt: |
       CRITICAL RULE: You have tool functions available. When the user asks about
@@ -68,10 +215,10 @@ spec:
     mcpServers:
       - name: openshift-mcp-server
         url: "http://field-content-ols.openshift-lightspeed.svc.cluster.local:8080/mcp"
-        timeout: 30
+        timeout: 120
       - name: kubernetes-mcp-server
         url: "http://field-content-ols-k8s-mcp.openshift-lightspeed.svc.cluster.local:8085/mcp"
-        timeout: 30
+        timeout: 120
     conversationCache:
       type: postgres
       postgres:
