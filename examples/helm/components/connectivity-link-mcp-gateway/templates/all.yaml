@@ -569,8 +569,6 @@ spec:
           command:
             - ./mcp_controller
           args:
-            - --controller
-            - --leader-elect=false
             - --log-level=0
           ports:
             - name: health
