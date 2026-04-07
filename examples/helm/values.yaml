@@ -196,6 +196,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: mcp-gateway
+      enabled: true
+      path: connectivity-link-mcp-gateway
+      destinationNamespace: mcp-system
+      syncWave: "9"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
 
 # ============================================================
 # LiteMaaS / MaaS (optional — injected by RHDP when enabled on order)
