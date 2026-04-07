@@ -2945,9 +2945,10 @@ spec:
     - name: EU-Clients
     id: neuralbank
     realm: neuralbank
-    realmRoles:
-    - name: personal-client
-    - name: corporate-client
+    roles:
+      realm:
+      - name: personal-client
+      - name: corporate-client
     users:
     - email: robert.anderson@email.com
       enabled: true
