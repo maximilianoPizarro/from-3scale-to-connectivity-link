@@ -3,7 +3,7 @@ kind: CheCluster
 metadata:
   annotations:
     argocd.argoproj.io/compare-options: IgnoreExtraneous=true
-    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: "7"
   labels:
     app.kubernetes.io/instance: devspaces
