@@ -63,7 +63,7 @@ This deployment provisions a full Neuralbank developer workshop environment on O
 | **Keycloak** | Identity provider for backstage and neuralbank realms (30 users) |
 | **Istio / Gateway API** | Service mesh with Gateway, HTTPRoute per scaffolded service |
 | **Kuadrant** | API management: OIDCPolicy (auth) + RateLimitPolicy per service |
-| **Showroom** | Antora-based workshop lab guide in Spanish |
+| **Showroom** | Antora-based workshop lab guide (English) |
 | **OLS (Lightspeed)** | AI assistant with MCP Gateway integration |
 | **LiteMaaS** | LLM proxy for model access |
 
@@ -77,22 +77,36 @@ Each template generates a full application with CI/CD pipeline, connectivity-lin
 | **neuralbank-backend** | Quarkus REST API | Credit management API (`/api/customers`, `/api/credits`, `/api/credits/{id}/update`) |
 | **neuralbank-frontend** | Static HTML/CSS/JS | Credit visualization SPA with OpenShift Commons theme (Red Hat palette) |
 
-### Scaffolding Flow
+### Scaffolding Flow (End-to-End CI/CD)
 
 ```
 User in Developer Hub
   → Selects Software Template
     → 1. fetch:template (generates skeleton with user values)
-    → 2. publish:gitea (pushes to Gitea org/developer-hub)
-    → 3. catalog:register (registers Component in catalog)
-    → ArgoCD syncs manifests/ → Deploys to userN-devspaces namespace
+    → 2. publish:gitea (pushes to Gitea ws-userN org)
+    → 3. catalog:register (registers Component + API + System in catalog)
+    → 4. create-argocd-app (creates ArgoCD Application via API)
+    → 5. create-webhook (creates Gitea webhook for CI/CD on push)
+    → ArgoCD syncs manifests/ → Deploys to userN-neuralbank namespace
       → Deployment + Service
       → Gateway (Istio, ClusterIP)
       → HTTPRoute
       → OIDCPolicy (Keycloak backstage realm)
       → RateLimitPolicy (60 req/min per user)
       → OpenShift Route (edge TLS → gateway-istio service)
+      → Pipeline + TriggerTemplate + TriggerBinding + EventListener
+      → Initial PipelineRun (first build)
+    → On git push → Gitea webhook → EventListener → New PipelineRun
 ```
+
+**User sees in Developer Hub:**
+- Topology view (Deployments, Pods, Routes, Gateways)
+- Tekton CI tab (PipelineRuns, task logs)
+- ArgoCD tab (sync status, health)
+- Kubernetes tab (pods, events)
+- API documentation (OpenAPI)
+- Kuadrant API Product info (OIDCPolicy, RateLimitPolicy, API keys)
+- Component relationships (System graph: frontend → backend → MCP)
 
 ## Cluster Sizing (30 users)
 
@@ -159,6 +173,34 @@ The cluster domain is injected by RHDP via `deployer.domain`. For manual deploym
 ./update-cluster-domain.sh apps.cluster-xxxxx.dynamic.redhatworkshops.io
 git add -A && git commit -m "update cluster domain" && git push
 ```
+
+### Platform Engineer Access
+
+Two admin users with full Platform Engineer permissions in Developer Hub:
+
+| Username | Auth Method | Roles | Notes |
+|----------|-------------|-------|-------|
+| `maximilianopizarro` | Keycloak SSO (email) | platformengineer, api-admin, api-owner | Primary admin |
+| `platformadmin` | Keycloak username/password | platformengineer, api-admin, api-owner | Must be created in Keycloak manually |
+
+**Creating `platformadmin` in Keycloak:**
+
+```bash
+KEYCLOAK_URL="https://rhbk.apps.<cluster-domain>"
+
+# Get admin token
+TOKEN=$(curl -sk "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
+  -d "client_id=admin-cli" -d "grant_type=password" \
+  -d "username=admin" -d "password=<KEYCLOAK_ADMIN_PASSWORD>" | jq -r .access_token)
+
+# Create platformadmin user with password Welcome123!
+curl -sk "$KEYCLOAK_URL/admin/realms/backstage/users" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"platformadmin","enabled":true,"emailVerified":true,"credentials":[{"type":"password","value":"Welcome123!","temporary":false}]}'
+```
+
+Platform Engineer permissions include: full catalog CRUD, scaffolder execution, RBAC administration, Lightspeed chat, Kuadrant API product management (create/update/delete/approve), and Adoption Insights.
 
 ### Manual Credentials (not stored in Git)
 
