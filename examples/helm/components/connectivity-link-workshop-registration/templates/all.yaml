@@ -9,7 +9,7 @@ metadata:
   name: workshop-registration-data
   namespace: showroom
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   accessModes:
     - ReadWriteOnce
@@ -23,7 +23,7 @@ metadata:
   name: workshop-registration-app
   namespace: showroom
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"
 data:
   app.py: |
     #!/usr/bin/env python3
