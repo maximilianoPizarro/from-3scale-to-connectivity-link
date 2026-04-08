@@ -9,38 +9,70 @@ Esta página describe la arquitectura lógica del escenario Neuralbank: cómo en
 ## Vista de componentes
 
 ```mermaid
-graph LR
+graph TB
     DEV["👤 Desarrollador"]
-    HUB["🔴 Red Hat<br/>Developer Hub"]
-    GITEA["📦 Gitea"]
-    KC["🔐 Keycloak"]
-    ARGO["🔄 Argo CD"]
-    TEKTON["⚙️ Tekton<br/>Pipelines"]
-    OCP["☸️ OpenShift<br/>Workloads"]
-    GW["🌐 Gateway API<br/>Istio · Kuadrant"]
-    DS["💻 Dev Spaces"]
+
+    subgraph PLATFORM ["🔴 Plataforma OpenShift"]
+        HUB["Red Hat<br/>Developer Hub"]
+        KC["Keycloak<br/>SSO / OIDC"]
+        GITEA["Gitea<br/>SCM interno"]
+        ARGO["Argo CD<br/>GitOps"]
+        TEKTON["Tekton<br/>CI/CD Pipelines"]
+        DS["Dev Spaces<br/>IDE cloud"]
+    end
+
+    subgraph NEURALBANK ["🏦 Neuralbank Stack  (user-neuralbank)"]
+        MCP["customer-service-mcp<br/>Quarkus MCP Server"]
+        BACK["neuralbank-backend<br/>REST API créditos"]
+        FRONT["neuralbank-frontend<br/>SPA visualización"]
+    end
+
+    subgraph NETWORKING ["🌐 Gateway API · Istio · Kuadrant"]
+        GW["Gateway<br/>Listener TLS"]
+        HR["HTTPRoute"]
+        OIDC["OIDCPolicy"]
+        RL["RateLimitPolicy"]
+    end
 
     DEV --> HUB
-    HUB --> GITEA
-    HUB --> KC
-    HUB --> ARGO
-    GITEA --> ARGO
-    GITEA --> TEKTON
-    ARGO --> OCP
-    TEKTON --> OCP
-    OCP --> GW
     DEV --> DS
     DS --> GITEA
+    HUB --> GITEA
+    HUB --> KC
+    GITEA --> ARGO
+    GITEA --> TEKTON
+    ARGO --> MCP
+    ARGO --> BACK
+    ARGO --> FRONT
+    TEKTON --> MCP
+    TEKTON --> BACK
+    TEKTON --> FRONT
+    MCP --> BACK
+    FRONT --> BACK
+    GW --> HR
+    HR --> MCP
+    HR --> BACK
+    GW --> OIDC
+    GW --> RL
+    KC -.-> OIDC
 
-    style DEV fill:#151515,color:#fff,stroke:#EE0000
+    style DEV fill:#151515,color:#fff,stroke:#EE0000,stroke-width:2px
     style HUB fill:#EE0000,color:#fff,stroke:#151515
-    style GITEA fill:#609926,color:#fff,stroke:#151515
     style KC fill:#4078c0,color:#fff,stroke:#151515
+    style GITEA fill:#609926,color:#fff,stroke:#151515
     style ARGO fill:#ef7b4d,color:#fff,stroke:#151515
     style TEKTON fill:#fd495c,color:#fff,stroke:#151515
-    style OCP fill:#EE0000,color:#fff,stroke:#151515
-    style GW fill:#0066CC,color:#fff,stroke:#151515
     style DS fill:#6a1b9a,color:#fff,stroke:#151515
+    style MCP fill:#6a1b9a,color:#fff,stroke:#151515
+    style BACK fill:#EE0000,color:#fff,stroke:#151515
+    style FRONT fill:#0066CC,color:#fff,stroke:#151515
+    style GW fill:#0066CC,color:#fff,stroke:#151515
+    style HR fill:#0066CC,color:#fff,stroke:#151515
+    style OIDC fill:#4078c0,color:#fff,stroke:#151515
+    style RL fill:#ef7b4d,color:#fff,stroke:#151515
+    style PLATFORM fill:#1a1a1a,color:#fff,stroke:#EE0000,stroke-width:2px
+    style NEURALBANK fill:#1a1a1a,color:#fff,stroke:#0066CC,stroke-width:2px
+    style NETWORKING fill:#1a1a1a,color:#fff,stroke:#0066CC,stroke-width:2px
 ```
 
 ## Flujo principal: de la plantilla al despliegue
