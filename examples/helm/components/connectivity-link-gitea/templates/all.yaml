@@ -1,140 +1,10 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: gitea
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: gitea-data
-  namespace: gitea
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: gitea-config
-  namespace: gitea
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-data:
-  app.ini: |
-    [database]
-    DB_TYPE = sqlite3
-    PATH = /data/gitea/gitea.db
-
-    [server]
-    DOMAIN = gitea.{{ .Values.clusterDomain }}
-    ROOT_URL = https://gitea.{{ .Values.clusterDomain }}
-    HTTP_PORT = 3000
-    PROTOCOL = http
-    DISABLE_SSH = true
-
-    [service]
-    DISABLE_REGISTRATION = false
-    REQUIRE_SIGNIN_VIEW = false
-
-    [repository]
-    DEFAULT_BRANCH = main
-
-    [oauth2]
-    ENABLE = true
-
-    [api]
-    ENABLE_SWAGGER = true
-
-    [webhook]
-    ALLOWED_HOST_LIST = *
-    SKIP_TLS_VERIFY = true
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: gitea
-  namespace: gitea
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: gitea
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: gitea
-    spec:
-      containers:
-        - name: gitea
-          image: quay.io/gpte-devops-automation/gitea:latest
-          ports:
-            - containerPort: 3000
-              name: http
-          env:
-            - name: GITEA__database__DB_TYPE
-              value: sqlite3
-            - name: GITEA__database__PATH
-              value: /data/gitea/gitea.db
-          volumeMounts:
-            - name: gitea-data
-              mountPath: /data
-            - name: gitea-config
-              mountPath: /data/gitea/conf/app.ini
-              subPath: app.ini
-          resources:
-            requests:
-              cpu: 250m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          readinessProbe:
-            httpGet:
-              path: /api/v1/version
-              port: 3000
-            initialDelaySeconds: 10
-            periodSeconds: 10
-      volumes:
-        - name: gitea-data
-          persistentVolumeClaim:
-            claimName: gitea-data
-        - name: gitea-config
-          configMap:
-            name: gitea-config
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: gitea
-  namespace: gitea
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  selector:
-    app.kubernetes.io/name: gitea
-  ports:
-    - name: http
-      port: 3000
-      targetPort: 3000
----
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
   name: gitea
   namespace: gitea
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
 spec:
-  host: gitea.{{ .Values.clusterDomain }}
+  host: gitea-gitea.{{ .Values.clusterDomain }}
   port:
     targetPort: http
   tls:
@@ -142,7 +12,7 @@ spec:
     insecureEdgeTerminationPolicy: Redirect
   to:
     kind: Service
-    name: gitea
+    name: gitea-http-route
     weight: 100
   wildcardPolicy: None
 ---
@@ -152,7 +22,6 @@ metadata:
   name: gitea-admin-setup
   namespace: gitea
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
@@ -175,7 +44,7 @@ spec:
             - -c
             - |
               set -e
-              BASE="http://gitea.gitea.svc.cluster.local:3000"
+              BASE="http://gitea-http-route.gitea.svc.cluster.local:3000"
               until curl -sf "$BASE/api/v1/version"; do
                 sleep 3
               done

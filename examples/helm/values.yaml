@@ -205,7 +205,7 @@ connectivityLink:
       selfHeal: true
       skipDryRunOnMissingResource: true
     - id: gitea
-      enabled: false
+      enabled: true
       path: connectivity-link-gitea
       destinationNamespace: gitea
       syncWave: "3"
