@@ -5,7 +5,7 @@ nav_order: 1
 has_children: false
 ---
 
-[![OpenShift Commons](https://commons.openshift.org/images/RH_OpenShift_Commons_Logo.svg){: width="320" }](https://commons.openshift.org)
+[![OpenShift Commons]({{ site.baseurl }}/assets/images/openshift-commons-logo.svg){: width="320" }](https://commons.openshift.org)
 
 Presentado en [**OpenShift Commons**](https://commons.openshift.org) — la comunidad donde usuarios, partners, clientes y contribuidores se reúnen para colaborar y avanzar en el ecosistema OpenShift.
 {: .fs-4 }
