@@ -45,3 +45,4 @@ Tu namespace de trabajo es **`<user_name>-neuralbank`**. Todos los servicios que
 - **Gitea**: https://gitea.<cluster_domain>
 - **ArgoCD**: https://openshift-gitops-server-openshift-gitops.<cluster_domain>
 - **DevSpaces**: https://devspaces.<cluster_domain>
+- **Terminal Web**: disponible en el panel derecho del showroom (tab "Terminal") para ejecutar comandos `oc`, `curl`, etc.
