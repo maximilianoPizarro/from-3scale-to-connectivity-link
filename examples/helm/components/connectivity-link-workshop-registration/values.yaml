@@ -1,0 +1,16 @@
+registration:
+  enabled: true
+  maxUsers: 30
+  adminToken: "workshop-admin-2024"
+
+keycloak:
+  url: ""
+  realm: "backstage"
+  adminUser: "admin"
+  adminPassword: ""
+
+showroom:
+  url: ""
+
+deployer:
+  domain: ""

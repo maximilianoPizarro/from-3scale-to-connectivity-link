@@ -190,6 +190,21 @@ oc rollout restart deployment/lightspeed-app-server -n openshift-lightspeed
 
 > **Note**: The `litellm-secret` in `litemaas` (master-key, ui-password) and `postgres-secret` (db password) ship with default values in Git. Change them in production clusters via the same `oc patch secret` approach.
 
+### Service Access URLs
+
+All services use the cluster domain pattern `apps.<cluster-domain>`:
+
+| Service | URL Pattern |
+|---------|-------------|
+| **Developer Hub** | `https://backstage-developer-hub-developer-hub.apps.<domain>` |
+| **Gitea** | `https://gitea-gitea.apps.<domain>` |
+| **ArgoCD** | `https://openshift-gitops-server-openshift-gitops.apps.<domain>` |
+| **DevSpaces** | `https://devspaces.apps.<domain>` |
+| **Showroom** | `https://showroom.apps.<domain>` |
+| **n8n** | `https://n8n.apps.<domain>` |
+| **Registration Portal** | `https://workshop-registration.apps.<domain>` |
+| **Lightspeed** | Available from OpenShift Console |
+
 ## How It Works
 
 ```
@@ -239,6 +254,7 @@ field-content/
 │   │   ├── templates/                     # ArgoCD Application definitions
 │   │   ├── components/                    # Per-component Helm sub-charts
 │   │   │   ├── connectivity-link-*/       # Infrastructure components
+│   │   │   ├── connectivity-link-workshop-registration/  # Self-service registration portal
 │   │   │   ├── showroom/                  # Workshop lab guide
 │   │   │   └── ...
 │   │   └── software-templates/            # Backstage scaffolder templates

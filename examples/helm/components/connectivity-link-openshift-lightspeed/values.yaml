@@ -1,7 +1,7 @@
 clusterDomain: ""
-llmApiKey: ""
-llmEndpoint: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
-llmModel: "granite-3-2-8b-instruct"
+llmApiKey: "sk-no-key"
+llmEndpoint: "https://qwen3-8b-my-first-model.apps.ocp.qvvqq.sandbox503.opentlc.com/v1"
+llmModel: "qwen3-8b"
 
 # ============================================================
 # n8n — Workflow automation (from charts.openshift.io)

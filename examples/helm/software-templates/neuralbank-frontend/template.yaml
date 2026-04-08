@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: neuralbank-frontend
   title: "Neuralbank: Frontend"
-  description: "Crea el frontend de Neuralbank para visualización y gestión de créditos. Tema OpenShift Commons. Incluye pipeline Tekton y soporte DevSpaces."
+  description: "Creates Neuralbank's frontend for credit visualization and management. OpenShift Commons theme. Includes Tekton pipeline and DevSpaces support."
   tags:
     - frontend
     - html
@@ -13,31 +13,31 @@ spec:
   owner: platform-engineering
   type: website
   parameters:
-    - title: Información de la Aplicación
+    - title: Application Information
       required:
         - name
         - owner
       properties:
         name:
-          title: Nombre de la Aplicación
+          title: Application Name
           type: string
           default: neuralbank-frontend
           pattern: "^[a-z0-9-]+$"
           ui:autofocus: true
         description:
-          title: Descripción
+          title: Description
           type: string
-          default: "Frontend de visualización de créditos para Neuralbank"
+          default: "Neuralbank credit visualization frontend"
         owner:
-          title: Usuario (OpenShift username)
+          title: User (OpenShift username)
           type: string
-          description: "Tu usuario de OpenShift. Define el namespace de deploy: <usuario>-neuralbank"
+          description: "Your OpenShift username. Defines the deploy namespace: <username>-neuralbank"
           default: ${{ user.entity.metadata.name }}
           pattern: "^user[0-9]+$"
-          ui:help: "Ej: user1 → namespace user1-neuralbank"
+          ui:help: "E.g.: user1 → namespace user1-neuralbank"
   steps:
     - id: fetch-skeleton
-      name: Generar Skeleton
+      name: Generate Skeleton
       action: fetch:template
       input:
         url: ./skeleton
@@ -48,7 +48,7 @@ spec:
           namespace: "${{ parameters.owner }}-neuralbank"
           imageRegistry: "image-registry.openshift-image-registry.svc:5000"
     - id: publish
-      name: Publicar en Gitea
+      name: Publish to Gitea
       action: publish:gitea
       input:
         repoUrl: "gitea.gitea.svc.cluster.local:3000?owner=${{ parameters.owner }}&repo=${{ parameters.name }}"
@@ -56,15 +56,15 @@ spec:
         defaultBranch: main
         repoVisibility: public
     - id: register
-      name: Registrar en Catálogo
+      name: Register in Catalog
       action: catalog:register
       input:
         repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
         catalogInfoPath: /catalog-info.yaml
   output:
     links:
-      - title: Repositorio
+      - title: Repository
         url: ${{ steps['publish'].output.remoteUrl }}
-      - title: Ver en Catálogo
+      - title: View in Catalog
         icon: catalog
         entityRef: ${{ steps['register'].output.entityRef }}

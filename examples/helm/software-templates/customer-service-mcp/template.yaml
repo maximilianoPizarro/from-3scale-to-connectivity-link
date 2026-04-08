@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: neuralbank-customer-service-mcp
   title: "Neuralbank: Customer Service MCP"
-  description: "Crea un servidor MCP (Model Context Protocol) con Quarkus para el servicio de atención al cliente de Neuralbank. Incluye tools para consulta de crédito, información de clientes y actualización de estado. Genera Gateway, OIDCPolicy y RateLimitPolicy automáticamente."
+  description: "Creates an MCP (Model Context Protocol) server with Quarkus for Neuralbank's customer service. Includes tools for credit inquiry, customer information, and status updates. Automatically generates Gateway, OIDCPolicy, and RateLimitPolicy."
   tags:
     - java
     - quarkus
@@ -14,32 +14,32 @@ spec:
   owner: platform-engineering
   type: service
   parameters:
-    - title: Información de la Aplicación
+    - title: Application Information
       required:
         - name
         - owner
       properties:
         name:
-          title: Nombre de la Aplicación
+          title: Application Name
           type: string
-          description: Nombre único para el servicio MCP (ej. customer-service-mcp)
+          description: Unique name for the MCP service (e.g. customer-service-mcp)
           default: customer-service-mcp
           pattern: "^[a-z0-9-]+$"
           ui:autofocus: true
         description:
-          title: Descripción
+          title: Description
           type: string
-          default: "Servidor MCP de servicio al cliente para Neuralbank"
+          default: "MCP customer service server for Neuralbank"
         owner:
-          title: Usuario (OpenShift username)
+          title: User (OpenShift username)
           type: string
-          description: "Tu usuario de OpenShift. Define el namespace de deploy: <usuario>-neuralbank"
+          description: "Your OpenShift username. Defines the deploy namespace: <username>-neuralbank"
           default: ${{ user.entity.metadata.name }}
           pattern: "^user[0-9]+$"
-          ui:help: "Ej: user1 → namespace user1-neuralbank"
+          ui:help: "E.g.: user1 → namespace user1-neuralbank"
   steps:
     - id: fetch-skeleton
-      name: Generar Skeleton
+      name: Generate Skeleton
       action: fetch:template
       input:
         url: ./skeleton
@@ -50,7 +50,7 @@ spec:
           namespace: "${{ parameters.owner }}-neuralbank"
           imageRegistry: "image-registry.openshift-image-registry.svc:5000"
     - id: publish
-      name: Publicar en Gitea
+      name: Publish to Gitea
       action: publish:gitea
       input:
         repoUrl: "gitea.gitea.svc.cluster.local:3000?owner=${{ parameters.owner }}&repo=${{ parameters.name }}"
@@ -58,15 +58,15 @@ spec:
         defaultBranch: main
         repoVisibility: public
     - id: register
-      name: Registrar en Catálogo
+      name: Register in Catalog
       action: catalog:register
       input:
         repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
         catalogInfoPath: /catalog-info.yaml
   output:
     links:
-      - title: Repositorio
+      - title: Repository
         url: ${{ steps['publish'].output.remoteUrl }}
-      - title: Ver en Catálogo
+      - title: View in Catalog
         icon: catalog
         entityRef: ${{ steps['register'].output.entityRef }}

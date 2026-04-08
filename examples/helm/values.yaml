@@ -212,15 +212,23 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: false
+    - id: workshop-registration
+      enabled: true
+      path: connectivity-link-workshop-registration
+      destinationNamespace: showroom
+      syncWave: "10"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: false
 
 # ============================================================
 # Lightspeed / MCP — LLM provider config for OLS component
 # Keys are injected at deploy time (RHDP or --set), NOT in git
 # ============================================================
 lightspeed:
-  llmApiKey: ""
-  llmEndpoint: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
-  model: "granite-3-2-8b-instruct"
+  llmApiKey: "sk-no-key"
+  llmEndpoint: "https://qwen3-8b-my-first-model.apps.ocp.qvvqq.sandbox503.opentlc.com/v1"
+  model: "qwen3-8b"
 
 # ============================================================
 # LiteMaaS / MaaS (optional — injected by RHDP when enabled on order)
@@ -229,6 +237,13 @@ litemaas:
   apiUrl: ""
   apiKey: ""
   model: ""
+
+# ============================================================
+# Workshop Registration Portal
+# ============================================================
+workshopRegistration:
+  adminToken: "workshop-admin-2024"
+  keycloakAdminPassword: ""
 
 # ============================================================
 # Components - Enable/disable and configure each component
