@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Red Hat Developer Hub: De Cero a Producción"
+title: "From Zero To Hero with Red Hat Developer Hub"
 nav_order: 1
 has_children: false
 ---

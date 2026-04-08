@@ -1,5 +1,104 @@
+<style>
+  #lang-bar {
+    position: fixed;
+    top: 8px;
+    right: 16px;
+    z-index: 9999;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    background: #151515;
+    padding: 4px 10px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  #lang-bar .lang-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: none;
+    transition: all 0.2s;
+  }
+  #lang-bar .lang-btn.active {
+    background: #EE0000;
+    color: #fff;
+  }
+  #lang-bar .lang-btn:not(.active) {
+    background: #3c3c3c;
+    color: #aaa;
+    border: 1px solid #555;
+  }
+  #lang-bar .lang-btn:hover:not(.active) {
+    background: #555;
+    color: #fff;
+  }
+  #google_translate_element { display: none !important; }
+  .goog-te-banner-frame { display: none !important; }
+  body { top: 0 !important; }
+  .skiptranslate { display: none !important; }
+</style>
+
+<div id="lang-bar">
+  <span style="color:#aaa;font-size:0.75rem;margin-right:4px;">🌐</span>
+  <button class="lang-btn active" data-lang="es" onclick="switchLang('es')">ES</button>
+  <button class="lang-btn" data-lang="en" onclick="switchLang('en')">EN</button>
+</div>
+
+<div id="google_translate_element"></div>
+
 <script>
+function switchLang(lang) {
+  localStorage.setItem('SITE_LANG', lang);
+  document.querySelectorAll('#lang-bar .lang-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+  });
+  if (lang === 'en') {
+    loadGoogleTranslate();
+  } else {
+    // Restore original
+    var sel = document.querySelector('.goog-te-combo');
+    if (sel) { sel.value = ''; sel.dispatchEvent(new Event('change')); }
+    setTimeout(function() { location.reload(); }, 200);
+  }
+}
+
+function loadGoogleTranslate() {
+  if (window._gtLoaded) {
+    var sel = document.querySelector('.goog-te-combo');
+    if (sel) { sel.value = 'en'; sel.dispatchEvent(new Event('change')); }
+    return;
+  }
+  window.googleTranslateElementInit = function() {
+    new google.translate.TranslateElement({
+      pageLanguage: 'es',
+      includedLanguages: 'en',
+      autoDisplay: false
+    }, 'google_translate_element');
+    setTimeout(function() {
+      var sel = document.querySelector('.goog-te-combo');
+      if (sel) { sel.value = 'en'; sel.dispatchEvent(new Event('change')); }
+    }, 1000);
+  };
+  var s = document.createElement('script');
+  s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  document.head.appendChild(s);
+  window._gtLoaded = true;
+}
+
+// Copy code button
 document.addEventListener('DOMContentLoaded', function() {
+  // Restore language preference
+  var savedLang = localStorage.getItem('SITE_LANG');
+  if (savedLang === 'en') {
+    document.querySelectorAll('#lang-bar .lang-btn').forEach(function(b) {
+      b.classList.toggle('active', b.getAttribute('data-lang') === 'en');
+    });
+    setTimeout(loadGoogleTranslate, 500);
+  }
+
+  // Copy buttons on code blocks
   document.querySelectorAll('div.highlighter-rouge, figure.highlight').forEach(function(block) {
     if (block.querySelector('.copy-code-button')) return;
     var btn = document.createElement('button');
@@ -8,8 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', function() {
       var code = block.querySelector('code');
       if (!code) return;
-      var text = code.innerText;
-      navigator.clipboard.writeText(text).then(function() {
+      navigator.clipboard.writeText(code.innerText).then(function() {
         btn.textContent = 'Copied!';
         setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
       });
