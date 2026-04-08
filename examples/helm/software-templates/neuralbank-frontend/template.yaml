@@ -103,13 +103,12 @@ spec:
                 - ServerSideApply=true
     - id: create-webhook
       name: Create Gitea Webhook
-      action: roadiehq:utils:http:request
+      action: http:backstage:request
       input:
         method: POST
-        path: "https://gitea-gitea.${{ parameters.clusterDomain }}/api/v1/repos/ws-${{ parameters.owner }}/${{ parameters.name }}/hooks"
+        path: "/api/proxy/gitea/repos/ws-${{ parameters.owner }}/${{ parameters.name }}/hooks"
         headers:
           Content-Type: application/json
-          Authorization: "Basic Z2l0ZWFfYWRtaW46b3BlbnNoaWZ0"
         body:
           type: gitea
           config:

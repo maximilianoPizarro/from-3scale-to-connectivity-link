@@ -79,25 +79,56 @@ Each template generates a full application with CI/CD pipeline, connectivity-lin
 
 ### Scaffolding Flow (End-to-End CI/CD)
 
+All scaffolder steps use only actions registered in this RHDH instance:
+
+| Step | Scaffolder Action | Description |
+|------|-------------------|-------------|
+| 1 | `fetch:template` | Generates skeleton from template, injects user values (name, owner, namespace, clusterDomain) |
+| 2 | `publish:gitea` | Pushes generated code to Gitea `ws-userN` organization (plugin: `backstage-plugin-scaffolder-backend-module-gitea`) |
+| 3 | `catalog:register` | Registers Component + API + System entities in the Backstage catalog |
+| 4 | `http:backstage:request` | Creates ArgoCD Application via K8s API proxy (`/api/proxy/k8s-api/`) |
+| 5 | `http:backstage:request` | Creates Gitea webhook via Gitea API proxy (`/api/proxy/gitea/`) |
+
 ```
 User in Developer Hub
-  → Selects Software Template
-    → 1. fetch:template (generates skeleton with user values)
-    → 2. publish:gitea (pushes to Gitea ws-userN org)
-    → 3. catalog:register (registers Component + API + System in catalog)
-    → 4. create-argocd-app (creates ArgoCD Application via API)
-    → 5. create-webhook (creates Gitea webhook for CI/CD on push)
-    → ArgoCD syncs manifests/ → Deploys to userN-neuralbank namespace
-      → Deployment + Service
-      → Gateway (Istio, ClusterIP)
-      → HTTPRoute
-      → OIDCPolicy (Keycloak backstage realm)
-      → RateLimitPolicy (60 req/min per user)
-      → OpenShift Route (edge TLS → gateway-istio service)
-      → Pipeline + TriggerTemplate + TriggerBinding + EventListener
-      → Initial PipelineRun (first build)
+  → Selects Software Template (neuralbank-backend / frontend / customer-service-mcp)
+    → Step 1: fetch:template → generates skeleton with user values
+    → Step 2: publish:gitea → pushes to Gitea ws-userN org
+    → Step 3: catalog:register → registers Component + API + System in catalog
+    → Step 4: http:backstage:request → POST K8s API → creates ArgoCD Application in openshift-gitops
+    → Step 5: http:backstage:request → POST Gitea API → creates push webhook
+    → ArgoCD auto-syncs manifests/ → Deploys to userN-neuralbank namespace:
+        Deployment + Service
+        Gateway (Istio/Gateway API)
+        HTTPRoute
+        OIDCPolicy (Keycloak backstage realm)
+        RateLimitPolicy (60 req/min per user)
+        Pipeline + TriggerTemplate + TriggerBinding + EventListener
+        Initial PipelineRun (first build)
     → On git push → Gitea webhook → EventListener → New PipelineRun
 ```
+
+### Dynamic Plugins Enabled
+
+| Plugin | Source | Purpose |
+|--------|--------|---------|
+| `backstage-community-plugin-rbac` | Built-in | Role-based access control |
+| `backstage-community-plugin-catalog-backend-module-keycloak-dynamic` | Built-in | Keycloak user/group sync to catalog |
+| `backstage-plugin-kubernetes-backend` | OCI overlay | Kubernetes resource viewer |
+| `backstage-plugin-scaffolder-backend-module-gitea` | OCI overlay | `publish:gitea` scaffolder action |
+| `backstage-community-plugin-tekton` | OCI overlay | Tekton CI tab on entity pages |
+| `backstage-community-plugin-topology` | Built-in | Kubernetes topology view |
+| `roadiehq-scaffolder-backend-module-http-request-dynamic` | Built-in | `http:backstage:request` scaffolder action |
+| `roadiehq-backstage-plugin-argo-cd-backend-dynamic` | Built-in | ArgoCD status on entity pages |
+| `@kuadrant/kuadrant-backstage-plugin-backend-dynamic` | External | Kuadrant API Product provider |
+| `@kuadrant/kuadrant-backstage-plugin-frontend` | External | Kuadrant UI (API Products, API Keys) |
+
+### Backstage Proxy Endpoints
+
+| Proxy Path | Target | Auth | Used By |
+|------------|--------|------|---------|
+| `/api/proxy/gitea/*` | `https://gitea-gitea.<domain>/api/v1` | Basic (gitea_admin) | Webhook creation in scaffolder |
+| `/api/proxy/k8s-api/*` | `https://kubernetes.default.svc` | Bearer (SA token) | ArgoCD Application creation in scaffolder |
 
 **User sees in Developer Hub:**
 - Topology view (Deployments, Pods, Routes, Gateways)
