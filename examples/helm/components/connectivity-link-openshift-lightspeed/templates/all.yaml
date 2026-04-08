@@ -1,22 +1,6 @@
 ##
-## 1. LLM Credentials Secret (for OLS → LiteLLM endpoint)
-##    apitoken is injected via Helm values (NOT hardcoded in git)
-##
-apiVersion: v1
-kind: Secret
-metadata:
-  name: llm-credentials
-  namespace: openshift-lightspeed
-  labels:
-    app.kubernetes.io/part-of: connectivity-link-lightspeed
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-type: Opaque
-stringData:
-  apitoken: {{ .Values.llmApiKey | default "" | quote }}
----
-##
-## 2. OLSConfig — LiteLLM + MCP servers for tool calling
+## OLSConfig — LiteLLM + MCP servers for tool calling
+## NOTE: llm-credentials Secret must be created manually in openshift-lightspeed namespace
 ##
 apiVersion: ols.openshift.io/v1alpha1
 kind: OLSConfig
