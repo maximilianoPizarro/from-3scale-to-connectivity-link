@@ -71,11 +71,13 @@ spec:
         catalogInfoPath: /main/catalog-info.yaml
     - id: create-argocd-app
       name: Create ArgoCD Application
-      action: kubernetes:apply
+      action: http:backstage:request
       input:
-        namespaced: true
-        clusterRef: local
-        manifest: |
+        method: POST
+        path: /api/proxy/k8s-api/apis/argoproj.io/v1alpha1/namespaces/openshift-gitops/applications
+        headers:
+          Content-Type: application/json
+        body:
           apiVersion: argoproj.io/v1alpha1
           kind: Application
           metadata:
@@ -88,12 +90,12 @@ spec:
           spec:
             project: default
             source:
-              repoURL: https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}.git
+              repoURL: "https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}.git"
               targetRevision: main
               path: manifests
             destination:
-              server: https://kubernetes.default.svc
-              namespace: ${{ parameters.owner }}-neuralbank
+              server: "https://kubernetes.default.svc"
+              namespace: "${{ parameters.owner }}-neuralbank"
             syncPolicy:
               automated:
                 prune: true

@@ -330,6 +330,11 @@ data:
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
           headers:
             Authorization: "Basic Z2l0ZWFfYWRtaW46b3BlbnNoaWZ0"
+        '/k8s-api':
+          target: "https://kubernetes.default.svc"
+          allowedMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+          headers:
+            Authorization: "Bearer ${token}"
     argocd:
       appLocatorMethods:
         - type: 'config'
@@ -422,7 +427,7 @@ data:
         disabled: false
       - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
         disabled: false
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-scaffolder-backend-module-kubernetes-dynamic
+      - package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic
         disabled: false
       - package: "@kuadrant/kuadrant-backstage-plugin-backend-dynamic@v0.1.0"
         disabled: false
