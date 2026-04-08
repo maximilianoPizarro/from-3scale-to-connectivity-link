@@ -70,28 +70,24 @@ spec:
         catalogInfoPath: /main/catalog-info.yaml
     - id: create-argocd-app
       name: Create ArgoCD Application
-      action: http:backstage:request
+      action: argocd:create-resources
       input:
-        method: POST
-        path: /api/argocd/createArgo
-        headers:
-          Content-Type: application/json
-        body:
-          clusterName: "openshift-gitops"
-          namespace: "${{ parameters.owner }}-neuralbank"
-          projectName: "default"
-          appName: ${{ parameters.name }}
-          sourceRepo: "https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}.git"
-          sourcePath: "manifests"
-          labelValue: ${{ parameters.name }}
+        appName: ${{ parameters.name }}
+        argoInstance: openshift-gitops
+        namespace: "${{ parameters.owner }}-neuralbank"
+        repoUrl: "https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}.git"
+        path: manifests
+        projectName: default
+        labelValue: ${{ parameters.name }}
     - id: create-webhook
       name: Create Gitea Webhook
-      action: http:backstage:request
+      action: roadiehq:utils:http:request
       input:
         method: POST
-        path: "/api/proxy/gitea/repos/ws-${{ parameters.owner }}/${{ parameters.name }}/hooks"
+        path: "https://gitea-gitea.${{ parameters.clusterDomain }}/api/v1/repos/ws-${{ parameters.owner }}/${{ parameters.name }}/hooks"
         headers:
           Content-Type: application/json
+          Authorization: "Basic Z2l0ZWFfYWRtaW46b3BlbnNoaWZ0"
         body:
           type: gitea
           config:
