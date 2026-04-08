@@ -93,11 +93,12 @@ pre.mermaid {
 
 // ── Logo ───────────────────────────────────────────────
 .site-logo {
-  max-height: 36px;
-  width: 160px;
+  height: 40px;
+  width: 180px;
   background-size: contain !important;
   background-repeat: no-repeat !important;
   background-position: left center !important;
+  filter: brightness(0) invert(1);
 }
 
 // ── Tables ─────────────────────────────────────────────
