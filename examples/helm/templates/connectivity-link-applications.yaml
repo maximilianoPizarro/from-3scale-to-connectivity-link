@@ -160,7 +160,7 @@ spec:
           adminUser: admin
           adminPassword: {{ $.Values.workshopRegistration.keycloakAdminPassword | default "" | quote }}
         showroom:
-          url: {{ printf "https://showroom.%s" $domain | quote }}
+          url: {{ printf "https://showroom-showroom.%s" $domain | quote }}
     {{- else if eq .path "connectivity-link-neuralbank-stack" }}
     helm:
       valuesObject:

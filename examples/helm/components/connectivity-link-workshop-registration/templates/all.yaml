@@ -1,6 +1,6 @@
 {{- if .Values.registration.enabled }}
 {{- $domain := .Values.deployer.domain | default "apps.cluster.example.com" }}
-{{- $showroomUrl := .Values.showroom.url | default (printf "https://showroom.%s" $domain) }}
+{{- $showroomUrl := .Values.showroom.url | default (printf "https://showroom-showroom.%s" $domain) }}
 {{- $keycloakUrl := .Values.keycloak.url | default (printf "https://rhbk.%s" $domain) }}
 ---
 apiVersion: v1
