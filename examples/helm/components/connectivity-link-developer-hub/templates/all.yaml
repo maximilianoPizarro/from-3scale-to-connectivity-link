@@ -334,6 +334,7 @@ data:
         admin:
           users:
             - name: user:default/maximilianopizarro
+            - name: user:default/platformadmin
     enabled:
       kubernetes: true
       techdocs: true
@@ -506,7 +507,11 @@ data:
     in infrastructure, platformengineers, and rhdh groups get admin role\ng, user:default/maximilianopizarro,
     role:default/platformengineer\n# maximilianopizarro: full Kuadrant permissions
     (api-admin + api-owner for API keys, requests, approval)\ng, user:default/maximilianopizarro,
-    role:default/api-admin\ng, user:default/maximilianopizarro, role:default/api-owner\ng,
+    role:default/api-admin\ng, user:default/maximilianopizarro, role:default/api-owner\n\n#
+    platformadmin: full platform engineer permissions\ng, user:default/platformadmin,
+    role:default/platformengineer\ng, user:default/platformadmin, role:default/api-admin\ng,
+    user:default/platformadmin, role:default/api-owner\ng, user:default/platformadmin,
+    role:default/rhdhpai-users\ng, user:default/platformadmin, role:default/template-executers\ng,
     user:default/user1, role:default/authenticated\ng, user:default/user2, role:default/authenticated\ng, user:default/user3, role:default/authenticated\ng, user:default/user4, role:default/authenticated\ng, user:default/user5, role:default/authenticated\ng, user:default/user6, role:default/authenticated\ng, user:default/user7, role:default/authenticated\ng, user:default/user8, role:default/authenticated\ng, user:default/user9, role:default/authenticated\ng, user:default/user10, role:default/authenticated\ng, user:default/user11, role:default/authenticated\ng, user:default/user12, role:default/authenticated\ng, user:default/user13, role:default/authenticated\ng, user:default/user14, role:default/authenticated\ng, user:default/user15, role:default/authenticated\ng, user:default/user16, role:default/authenticated\ng, user:default/user17, role:default/authenticated\ng, user:default/user18, role:default/authenticated\ng, user:default/user19, role:default/authenticated\ng, user:default/user20, role:default/authenticated\ng, user:default/user21, role:default/authenticated\ng, user:default/user22, role:default/authenticated\ng, user:default/user23, role:default/authenticated\ng, user:default/user24, role:default/authenticated\ng, user:default/user25, role:default/authenticated\ng, user:default/user26, role:default/authenticated\ng, user:default/user27, role:default/authenticated\ng, user:default/user28, role:default/authenticated\ng, user:default/user29, role:default/authenticated\ng, user:default/user30, role:default/authenticated\n\n#
     Group assignments (Keycloak groups)\n# Assign rhdh group to platformengineer role
     (has all permissions including Adoption Insights)\ng, group:default/rhdh, role:default/platformengineer\n\n#
