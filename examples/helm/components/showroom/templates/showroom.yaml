@@ -87,8 +87,8 @@ metadata:
   namespace: {{ .Values.showroom.namespace }}
 data:
   user_data.yml: |
-    cluster_domain: __CLUSTER_DOMAIN__
-    user_name: __USER_NAME__
+    cluster_domain: {{ .Values.deployer.domain }}
+    user_name: {{ .Values.showroom.userName | default "admin" }}
     user_password: Welcome123!
     demo_namespace: {{ .Values.demo.namespace }}
     demo_app: {{ .Values.demo.appName }}
