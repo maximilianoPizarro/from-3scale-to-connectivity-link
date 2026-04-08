@@ -262,7 +262,7 @@ components:
 
   # --- Hello World Demo Application ---
   helloWorld:
-    enabled: true
+    enabled: false
     namespace: terminal-demo
     appName: hello-world
     replicas: 1
