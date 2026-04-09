@@ -6,7 +6,7 @@ metadata:
   description: >
     Removes a previously created component from the platform:
     deletes the Gitea repository, unregisters from the catalog, and sends
-    a notification via Mailpit. The ApplicationSet auto-prunes the ArgoCD
+    a notification. The ApplicationSet auto-prunes the ArgoCD
     Application when the repo disappears (~60s).
   tags:
     - cleanup
@@ -39,14 +39,34 @@ spec:
           pattern: "^user[0-9]+$"
           ui:help: "Auto-detected from your login. Change only if removing another user's component."
   steps:
-    - id: unregister-catalog
-      name: Unregister from Catalog
-      action: catalog:unregister
+    - id: delete-gitea-repo
+      name: Delete Gitea Repository
+      action: http:backstage:request
+      continueOnError: true
       input:
-        entityRef: "component:default/${{ parameters.owner }}-${{ parameters.name }}"
+        method: DELETE
+        path: "/api/proxy/gitea/repos/ws-${{ parameters.owner }}/${{ parameters.name }}"
+        headers:
+          Content-Type: application/json
+
+    - id: fetch-entity
+      name: Fetch Catalog Entity
+      action: http:backstage:request
+      continueOnError: true
+      input:
+        method: GET
+        path: "/api/catalog/entities/by-name/component/default/${{ parameters.owner }}-${{ parameters.name }}"
+
+    - id: delete-entity
+      name: Unregister from Catalog
+      action: http:backstage:request
+      continueOnError: true
+      input:
+        method: DELETE
+        path: "/api/catalog/entities/by-uid/${{ steps['fetch-entity'].output.body.metadata.uid }}"
 
     - id: notify
-      name: Send Notification (in-app + email via Mailpit)
+      name: Send Notification
       action: http:backstage:request
       input:
         method: POST
@@ -59,7 +79,7 @@ spec:
             entityRef: "user:default/${{ parameters.owner }}"
           payload:
             title: "Component removed from platform"
-            description: "Component **${{ parameters.owner }}-${{ parameters.name }}** has been removed. Gitea repository `ws-${{ parameters.owner }}/${{ parameters.name }}` deleted — ArgoCD Application will be auto-pruned by the ApplicationSet within 60 seconds."
+            description: "Component **${{ parameters.owner }}-${{ parameters.name }}** has been removed. Gitea repository deleted — ArgoCD Application will be auto-pruned by the ApplicationSet (~60s)."
             severity: high
             topic: cleanup
 
@@ -71,4 +91,4 @@ spec:
           1. Gitea repository `ws-${{ parameters.owner }}/${{ parameters.name }}` deleted
           2. ArgoCD Application auto-pruned by ApplicationSet (~60s)
           3. Backstage Catalog entity unregistered
-          4. Notification sent (in-app + email via Mailpit)
+          4. Notification sent
