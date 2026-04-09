@@ -73,7 +73,7 @@ spec:
                 "$GITEA/api/v1/users/${ADMIN_USER}/tokens" \
                 -u "${ADMIN_USER}:${ADMIN_PASS}" \
                 -H "Content-Type: application/json" \
-                -d '{"name":"argocd-scm","scopes":["read:organization","read:repository"]}')
+                -d '{"name":"argocd-scm","scopes":["read:organization","read:repository","read:issue","read:user"]}')
               TOKEN_VAL=$(echo "$TOKEN_RESP" | sed -n 's/.*"sha1":"\([^"]*\)".*/\1/p')
 
               if [ -z "$TOKEN_VAL" ]; then
