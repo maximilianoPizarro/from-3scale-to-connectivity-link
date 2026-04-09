@@ -464,7 +464,7 @@ data:
               authProvider: 'serviceAccount'
               serviceAccountToken: ${token}
               skipTLSVerify: true
-              skipMetricsLookup: false
+              skipMetricsLookup: true
       customResources:
         - group: 'tekton.dev'
           apiVersion: 'v1'
@@ -475,9 +475,6 @@ data:
         - group: 'route.openshift.io'
           apiVersion: 'v1'
           plural: 'routes'
-        - group: 'argoproj.io'
-          apiVersion: 'v1alpha1'
-          plural: 'rollouts'
     notifications:
       processors:
         email:
