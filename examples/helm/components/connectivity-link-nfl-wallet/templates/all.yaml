@@ -311,10 +311,11 @@ metadata:
   name: nfl-wallet-api
   namespace: nfl-wallet-prod
 spec:
-  displayName: "NFL Wallet API"
+  displayName: "NFL Wallet — Customer Service API"
   description: |
-    API REST de billetera digital para gestión de cuentas y transacciones.
+    API REST de gestión de clientes (CRUD, credit scoring, status management).
     Protegida con API Key (header X-API-Key) y rate limiting (120 req/min).
+    Base path: /api/v1/customers
   version: "v1"
   publishStatus: Published
   approvalMode: automatic

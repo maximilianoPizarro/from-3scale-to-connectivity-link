@@ -19,26 +19,32 @@ La API de NFL Wallet expone una interfaz Swagger UI para explorar y probar los e
 
 ## Endpoints disponibles
 
-### Billeteras
+### Customer Service (CRUD)
 
 | Método | Path | Descripción |
 |--------|------|-------------|
-| `GET` | `/api/wallets` | Listar todas las billeteras |
-| `POST` | `/api/wallets` | Crear nueva billetera |
-| `GET` | `/api/wallets/{id}` | Obtener billetera por ID |
+| `GET` | `/api/v1/customers` | Listar clientes (paginado, con filtros) |
+| `POST` | `/api/v1/customers` | Crear nuevo cliente |
+| `GET` | `/api/v1/customers/{customerId}` | Obtener cliente por ID |
+| `PUT` | `/api/v1/customers/{customerId}` | Actualizar cliente |
+| `DELETE` | `/api/v1/customers/{customerId}` | Eliminar cliente (soft delete) |
 
-### Transacciones
-
-| Método | Path | Descripción |
-|--------|------|-------------|
-| `GET` | `/api/wallets/{id}/transactions` | Listar transacciones |
-| `POST` | `/api/wallets/{id}/transactions` | Crear transacción |
-
-### Saldo
+### Credit Scoring
 
 | Método | Path | Descripción |
 |--------|------|-------------|
-| `GET` | `/api/wallets/{id}/balance` | Consultar saldo actual |
+| `GET` | `/api/v1/customers/{customerId}/credit-score` | Obtener score crediticio |
+| `POST` | `/api/v1/customers/{customerId}/credit-score/calculate` | Recalcular score |
+| `GET` | `/api/v1/customers/{customerId}/summary` | Resumen completo del cliente |
+
+### Customer Status
+
+| Método | Path | Descripción |
+|--------|------|-------------|
+| `POST` | `/api/v1/customers/{customerId}/activate` | Activar cliente |
+| `POST` | `/api/v1/customers/{customerId}/deactivate` | Desactivar cliente |
+| `POST` | `/api/v1/customers/{customerId}/block` | Bloquear cliente |
+| `POST` | `/api/v1/customers/{customerId}/unblock` | Desbloquear cliente |
 
 ## OpenAPI Spec
 
@@ -54,7 +60,7 @@ curl -H "X-API-Key: nfl-wallet-demo-key-2024" \
 ```
 Cliente                    Gateway Istio              Kuadrant/Authorino         nfl-wallet-api
   │                           │                            │                        │
-  │  GET /api/wallets         │                            │                        │
+  │  GET /api/v1/customers    │                            │                        │
   │  X-API-Key: demo-key      │                            │                        │
   │──────────────────────────▶│                            │                        │
   │                           │  Validate API Key          │                        │
@@ -70,6 +76,6 @@ Cliente                    Gateway Istio              Kuadrant/Authorino        
   │                           │  Forward request           │                        │
   │                           │───────────────────────────────────────────────────▶│
   │                           │                            │                        │
-  │  200 OK (wallets list)    │                            │                        │
+  │  200 OK (customers list)  │                            │                        │
   │◀──────────────────────────│◀───────────────────────────────────────────────────│
 ```

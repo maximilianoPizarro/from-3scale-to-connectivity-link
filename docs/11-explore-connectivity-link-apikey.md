@@ -78,7 +78,7 @@ Deberías ver: `nfl-wallet-demo-key-2024`
 ### Sin API Key (401 Unauthorized)
 
 ```bash
-curl -s https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/customers
+curl -s https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/v1/customers
 ```
 
 Respuesta esperada:
@@ -90,14 +90,14 @@ Respuesta esperada:
 
 ```bash
 curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
-  https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/customers | python3 -m json.tool
+  https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/v1/customers | python3 -m json.tool
 ```
 
 ### Con API Key readonly
 
 ```bash
 curl -s -H "X-API-Key: nfl-wallet-readonly-key-2024" \
-  https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/customers | python3 -m json.tool
+  https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/v1/customers | python3 -m json.tool
 ```
 
 ## Paso 5: Explorar el Rate Limiting
@@ -114,7 +114,7 @@ Prueba exceder el límite (en la terminal):
 for i in $(seq 1 130); do
   code=$(curl -s -o /dev/null -w '%{http_code}' \
     -H "X-API-Key: nfl-wallet-demo-key-2024" \
-    https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/customers)
+    https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/v1/customers)
   echo "Request $i: HTTP $code"
 done
 ```
@@ -143,7 +143,7 @@ Kuadrant detecta automáticamente el nuevo Secret. Prueba tu key:
 MY_KEY=$(oc get secret my-apikey-YOUR_USER -n nfl-wallet-prod -o jsonpath='{.data.api_key}' | base64 -d)
 
 curl -s -H "X-API-Key: $MY_KEY" \
-  https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/customers | python3 -m json.tool
+  https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/v1/customers | python3 -m json.tool
 ```
 
 ## Paso 7: Explorar el Swagger UI
@@ -182,7 +182,7 @@ Ambos se integran con el mismo stack: Istio Gateway + HTTPRoute + Kuadrant polic
 ```
 Cliente/Script           Istio Gateway              Kuadrant/Authorino         nfl-wallet-api
   │                           │                            │                        │
-  │  GET /api/customers       │                            │                        │
+  │  GET /api/v1/customers       │                            │                        │
   │  X-API-Key: demo-key      │                            │                        │
   │──────────────────────────▶│                            │                        │
   │                           │  Validate API Key          │                        │

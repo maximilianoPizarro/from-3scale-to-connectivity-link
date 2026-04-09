@@ -69,7 +69,7 @@ Enviar la API key en el header `X-API-Key`:
 
 ```bash
 curl -H "X-API-Key: nfl-wallet-demo-key-2024" \
-  https://nfl-wallet.apps.cluster-l9nhj.dynamic.redhatworkshops.io/api/wallets
+  https://nfl-wallet.apps.cluster-l9nhj.dynamic.redhatworkshops.io/api/v1/customers
 ```
 
 ### En Swagger UI
