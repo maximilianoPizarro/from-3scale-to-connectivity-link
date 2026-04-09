@@ -723,7 +723,7 @@ data:
     read, allow\np, role:default/authenticated, scaffolder.task.create, create, allow\np,
     role:default/authenticated, scaffolder.action.execute, use, allow\n\n# Kubernetes
     and Topology permissions for ALL users\np, role:default/authenticated, kubernetes.clusters.read,
-    read, allow\np, role:default/authenticated, kubernetes.resources.read, read, allow\n\n#
+    read, allow\np, role:default/authenticated, kubernetes.resources.read, read, allow\np, role:default/authenticated, kubernetes.proxy, use, allow\n\n#
     ArgoCD permissions for ALL users\np, role:default/authenticated, argocd.view.read,
     read, allow\n\n# Adoption
     Insights permissions for ALL users\np, role:default/authenticated, adoption-insights.events.read,
@@ -746,7 +746,7 @@ data:
     role:default/platformengineer, catalog.entity.read, read, allow\n\n# Kubernetes
     and Topology permissions for Platform Engineers\np, role:default/platformengineer,
     kubernetes.clusters.read, read, allow\np, role:default/platformengineer, kubernetes.resources.read,
-    read, allow\n\n# ArgoCD permissions for Platform Engineers\np, role:default/platformengineer,
+    read, allow\np, role:default/platformengineer, kubernetes.proxy, use, allow\n\n# ArgoCD permissions for Platform Engineers\np, role:default/platformengineer,
     argocd.view.read, read, allow\n\n# Kuadrant
     api-admin permissions for Platform Engineers (rbac-backend does not support role
     inheritance)\np, role:default/platformengineer, kuadrant.planpolicy.read, read,
