@@ -304,6 +304,46 @@ type: Opaque
 stringData:
   api_key: nfl-wallet-readonly-key-2024
 ---
+apiVersion: extensions.kuadrant.io/v1alpha1
+kind: PlanPolicy
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  name: nfl-wallet-plans
+  namespace: nfl-wallet-prod
+  labels:
+    backstage.io/kubernetes-id: nfl-wallet
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: nfl-wallet-api-route
+  plans:
+    - tier: free
+      predicate: |
+        has(auth.identity) && auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "free"
+      limits:
+        daily: 100
+        custom:
+          - limit: 10
+            window: "1m"
+    - tier: basic
+      predicate: |
+        has(auth.identity) && auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "basic"
+      limits:
+        daily: 1000
+        custom:
+          - limit: 60
+            window: "1m"
+    - tier: pro
+      predicate: |
+        has(auth.identity) && auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "pro"
+      limits:
+        daily: 10000
+        custom:
+          - limit: 300
+            window: "1m"
+---
 apiVersion: devportal.kuadrant.io/v1alpha1
 kind: APIProduct
 metadata:
