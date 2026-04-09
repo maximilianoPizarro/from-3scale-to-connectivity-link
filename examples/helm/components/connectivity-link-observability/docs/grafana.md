@@ -33,11 +33,15 @@ Estado y métricas de las policies de Kuadrant:
 - **Policy Enforcement**: métricas de enforcement por namespace
 
 ### Service Mesh Overview
-Vista general del mesh Istio:
+Vista general del mesh Istio en tiempo real (auto-refresh 30s):
 
-- **Traffic Flow**: visualización del tráfico entre servicios
-- **Waypoint Metrics**: métricas de ambient mesh waypoints
-- **mTLS Status**: estado de mTLS entre servicios
+- **Traffic Flow**: request rate entre servicios (source → destination)
+- **Success Rate**: porcentaje de respuestas 2xx por servicio (timeseries + gauge)
+- **Latency Distribution**: percentiles P50/P95/P99 por servicio destino
+- **TCP Traffic**: bytes enviados y recibidos por servicio (bar chart)
+- **Active Connections**: conexiones activas y rate de nuevas conexiones TCP
+- **Waypoint Metrics**: request rate y P95 latency a través de ambient mesh waypoints
+- **Error Breakdown**: errores 4xx y 5xx desglosados por código de respuesta y servicio destino (stacked)
 
 ## Datasources
 

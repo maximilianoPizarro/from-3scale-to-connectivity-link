@@ -48,6 +48,28 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
   labels:
+    k8s-app: ztunnel-monitor
+    openshift.io/user-monitoring: "true"
+  name: ztunnel-metrics
+  namespace: openshift-cluster-observability-operator
+spec:
+  namespaceSelector:
+    matchNames:
+    - ztunnel
+  podMetricsEndpoints:
+  - interval: 30s
+    path: /stats/prometheus
+    port: "15020"
+  selector:
+    matchLabels:
+      app: ztunnel
+---
+apiVersion: monitoring.rhobs/v1
+kind: PodMonitor
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
     k8s-app: waypoint-monitor
     openshift.io/user-monitoring: "true"
   name: istio-waypoints-monitor
@@ -57,16 +79,20 @@ spec:
     matchNames:
     - nfl-wallet-prod
     - nfl-wallet-test
+    - neuralbank-stack
+    - litemaas
+    - istio-system
   podMetricsEndpoints:
   - interval: 30s
     path: /stats/prometheus
     port: http-envoy-prom
+  - interval: 30s
+    path: /stats/prometheus
+    port: "15090"
   selector:
     matchExpressions:
-    - key: gateway.networking.k8s.io/gateway-name
-      operator: In
-      values:
-      - nfl-wallet-waypoint
+    - key: gateway.istio.io/managed
+      operator: Exists
 ---
 apiVersion: monitoring.rhobs/v1
 kind: PodMonitor
@@ -385,7 +411,7 @@ spec:
         url: http://connectivity-link-stack-alertmanager.openshift-cluster-observability-operator.svc.cluster.local:9093
       enabled: true
       thanosQuerier:
-        url: http://thanos-querier-connectivity-link-querier.openshift-cluster-observability-operator.svc.cluster.local:9090
+        url: http://thanos-querier-connectivity-link-querier.openshift-cluster-observability-operator.svc.cluster.local:10902
   type: Monitoring
 ---
 apiVersion: route.openshift.io/v1
@@ -398,7 +424,7 @@ metadata:
 spec:
   host: thanos-querier.apps.cluster-l9nhj.dynamic.redhatworkshops.io
   port:
-    targetPort: http
+    targetPort: 10902
   tls:
     termination: edge
   to:
@@ -469,7 +495,7 @@ spec:
     name: Thanos Querier
     type: prometheus
     access: proxy
-    url: http://thanos-querier-connectivity-link-querier.openshift-cluster-observability-operator.svc.cluster.local:9090
+    url: http://thanos-querier-connectivity-link-querier.openshift-cluster-observability-operator.svc.cluster.local:10902
     jsonData:
       timeInterval: "30s"
     editable: true
@@ -554,3 +580,423 @@ spec:
       "time": { "from": "now-1h", "to": "now" },
       "schemaVersion": 39
     }
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  name: service-mesh-overview
+  namespace: openshift-cluster-observability-operator
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-observability
+  json: |
+    {
+      "annotations": { "list": [] },
+      "title": "Service Mesh Overview",
+      "uid": "service-mesh-overview",
+      "version": 2,
+      "panels": [
+        {
+          "title": "Traffic Flow — Request Rate (source → destination)",
+          "description": "L7 HTTP request rate from gateways and waypoint proxies",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "fillOpacity": 15, "lineWidth": 2, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{reporter=\"destination\"}[5m])) by (source_workload, source_workload_namespace, destination_workload, destination_workload_namespace)",
+              "legendFormat": "{{`{{source_workload_namespace}}`}}/{{`{{source_workload}}`}} → {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Request Rate by Namespace",
+          "description": "Total request rate per destination namespace (L7 + L4 combined view)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "fillOpacity": 15, "lineWidth": 2, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{reporter=\"destination\"}[5m])) by (destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}} (L7)"
+            },
+            {
+              "expr": "sum(rate(istio_tcp_connections_opened_total{reporter=\"destination\"}[5m])) by (destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}} (TCP conn/s)"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Success Rate (2xx %)",
+          "description": "Percentage of successful (2xx) responses per destination service",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "custom": { "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "orange", "value": 0.95 },
+                  { "color": "green", "value": 0.99 }
+                ]
+              }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code=~\"2.*\", reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace) / sum(rate(istio_requests_total{reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Success Rate — Current",
+          "description": "Instant success rate gauge per destination service",
+          "type": "gauge",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "orange", "value": 0.95 },
+                  { "color": "green", "value": 0.99 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code=~\"2.*\", reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace) / sum(rate(istio_requests_total{reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}",
+              "instant": true
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Latency P50 / P95 / P99",
+          "description": "Request latency percentiles by destination service",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "custom": { "fillOpacity": 8, "lineWidth": 2, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\"}[5m])) by (le, destination_workload, destination_workload_namespace))",
+              "legendFormat": "P50 — {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\"}[5m])) by (le, destination_workload, destination_workload_namespace))",
+              "legendFormat": "P95 — {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\"}[5m])) by (le, destination_workload, destination_workload_namespace))",
+              "legendFormat": "P99 — {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "TCP Traffic — Bytes Sent",
+          "description": "TCP bytes sent rate from ztunnel L4 telemetry",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "fillOpacity": 20, "lineWidth": 2, "showPoints": "never", "drawStyle": "bars" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_tcp_sent_bytes_total{reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "TCP Traffic — Bytes Received",
+          "description": "TCP bytes received rate from ztunnel L4 telemetry",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "fillOpacity": 20, "lineWidth": 2, "showPoints": "never", "drawStyle": "bars" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_tcp_received_bytes_total{reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Active Connections (opened − closed rate)",
+          "description": "Net connection rate per destination from ztunnel",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cps",
+              "custom": { "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_tcp_connections_opened_total{reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "opened — {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            },
+            {
+              "expr": "sum(rate(istio_tcp_connections_closed_total{reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "closed — {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "TCP Connections Opened Rate",
+          "description": "Rate of new TCP connections per destination",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cps",
+              "custom": { "fillOpacity": 10, "lineWidth": 2, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_tcp_connections_opened_total{reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Waypoint — Request Rate (L7 via waypoint)",
+          "description": "L7 traffic handled by ambient mesh waypoint proxies",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "fillOpacity": 15, "lineWidth": 2, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{reporter=\"waypoint\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "[waypoint] {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            },
+            {
+              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", source_workload=~\".*waypoint.*\"}[5m])) by (destination_workload, destination_workload_namespace)",
+              "legendFormat": "[via-wp] {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            },
+            {
+              "expr": "sum(rate(istio_requests_total{reporter=\"destination\", destination_workload=~\".*waypoint.*\"}[5m])) by (source_workload, source_workload_namespace)",
+              "legendFormat": "[to-wp] {{`{{source_workload_namespace}}`}}/{{`{{source_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Waypoint — Latency P95",
+          "description": "P95 latency for traffic processed by waypoint proxies",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "custom": { "fillOpacity": 8, "lineWidth": 2, "showPoints": "never" }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"waypoint\"}[5m])) by (le, destination_workload, destination_workload_namespace))",
+              "legendFormat": "[waypoint] P95 — {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{reporter=\"destination\", source_workload=~\".*waypoint.*\"}[5m])) by (le, destination_workload, destination_workload_namespace))",
+              "legendFormat": "[via-wp] P95 — {{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Error Breakdown — 4xx by Destination",
+          "description": "Client error rate (4xx) per destination service and response code",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 56 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "fillOpacity": 15, "lineWidth": 2, "showPoints": "never", "stacking": { "mode": "normal" } }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code=~\"4.*\", reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace, response_code)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}} [{{`{{response_code}}`}}]"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Error Breakdown — 5xx by Destination",
+          "description": "Server error rate (5xx) per destination service and response code",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 56 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "fillOpacity": 15, "lineWidth": 2, "showPoints": "never", "stacking": { "mode": "normal" } }
+            }
+          },
+          "options": { "tooltip": { "mode": "multi" } },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code=~\"5.*\", reporter=\"destination\"}[5m])) by (destination_workload, destination_workload_namespace, response_code)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}/{{`{{destination_workload}}`}} [{{`{{response_code}}`}}]"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "DS_PROMETHEUS",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": { "text": "Prometheus (RHOBS)", "value": "Prometheus (RHOBS)" }
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "refresh": "30s",
+      "schemaVersion": 39
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  name: mesh-traffic-generator
+  namespace: openshift-cluster-observability-operator
+data:
+  generate.sh: |
+    #!/bin/sh
+    DOMAIN="{{ .Values.clusterDomain | default "apps.cluster-l9nhj.dynamic.redhatworkshops.io" }}"
+
+    TARGETS="
+    http://neuralbank-gateway-istio.neuralbank-stack.svc:80/q/health
+    http://neuralbank-gateway-istio.neuralbank-stack.svc:80/api/v1/customers
+    http://nfl-wallet-gateway-istio.nfl-wallet-prod.svc:80/q/health
+    http://nfl-wallet-gateway-istio.nfl-wallet-prod.svc:80/api/v1/wallets
+    http://nfl-wallet-gateway-istio.nfl-wallet-test.svc:80/q/health
+    http://litemaas-gateway-istio.litemaas.svc:80/api/health
+    http://litemaas-gateway-istio.litemaas.svc:80/v1/models
+    "
+
+    echo "=== Mesh Traffic Generator ==="
+    echo "Interval: ${INTERVAL:-10}s | Targets: $(echo "$TARGETS" | wc -w)"
+
+    while true; do
+      for url in $TARGETS; do
+        code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 --max-time 5 "$url" 2>/dev/null)
+        echo "$(date +%H:%M:%S) $code $url"
+      done
+
+      jitter=$((RANDOM % 5))
+      sleep $(( ${INTERVAL:-10} + jitter ))
+    done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  labels:
+    app: mesh-traffic-generator
+    app.kubernetes.io/part-of: observability
+  name: mesh-traffic-generator
+  namespace: openshift-cluster-observability-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mesh-traffic-generator
+  template:
+    metadata:
+      labels:
+        app: mesh-traffic-generator
+    spec:
+      containers:
+      - name: traffic-gen
+        image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+        command: ["/bin/sh", "/scripts/generate.sh"]
+        env:
+        - name: INTERVAL
+          value: "10"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+      volumes:
+      - name: scripts
+        configMap:
+          name: mesh-traffic-generator
+          defaultMode: 0755
+      terminationGracePeriodSeconds: 5

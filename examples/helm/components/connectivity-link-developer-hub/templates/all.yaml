@@ -419,6 +419,8 @@ data:
             realm: "${KEYCLOAK_REALM}"
             clientId: "${KEYCLOAK_CLIENT_ID}"
             clientSecret: "${KEYCLOAK_CLIENT_SECRET}"
+            userQuerySize: 500
+            groupQuerySize: 250
             schedule:
               frequency: { minutes: 1 }
               timeout: { minutes: 5 }
@@ -707,12 +709,12 @@ data:
     lightspeed.chat.delete, delete, allow\n\n# Kuadrant api-consumer permissions for
     ALL authenticated users (rbac-backend does not support role inheritance)\np, role:default/authenticated,
     kuadrant.apiproduct.read.all, read, allow\np, role:default/authenticated, kuadrant.apiproduct.list,
-    read, allow\np, role:default/authenticated, kuadrant.apikey.create, create, allow,
-    apiproduct:*/*\np, role:default/authenticated, kuadrant.apikey.read.own, read,
+    read, allow\np, role:default/authenticated, kuadrant.apikey.create, create, allow\np,
+    role:default/authenticated, kuadrant.apikey.read.own, read,
     allow\np, role:default/authenticated, kuadrant.apikey.read.all, read, allow\np,
     role:default/authenticated, kuadrant.apikey.update.own, update, allow\np, role:default/authenticated,
     kuadrant.apikey.delete.own, delete, allow\np, role:default/authenticated, kuadrant.apikey.list,
-    read, allow\n# HTTPRoutes: kuadrant.httproute.list (API publishing dropdown -
+    read, allow\np, role:default/authenticated, kuadrant.apikey.approve, update, allow\n# HTTPRoutes: kuadrant.httproute.list (API publishing dropdown -
     see permissions.ts)\np, role:default/authenticated, kuadrant.httproute.list, read,
     allow\n# AuthPolicy/RateLimitPolicy: list for reference (API Owners/Admins)\np,
     role:default/authenticated, kuadrant.authpolicy.list, read, allow\np, role:default/authenticated,
