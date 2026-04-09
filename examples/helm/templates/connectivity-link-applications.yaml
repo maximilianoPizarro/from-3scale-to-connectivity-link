@@ -106,7 +106,7 @@ spec:
     {{- if eq .path "connectivity-link-namespaces" }}
     helm:
       valuesObject:
-        userCount: {{ $.Values.userCount | default 30 }}
+        userCount: {{ $.Values.userCount | default 200 }}
     {{- else if eq .path "connectivity-link-devspaces" }}
     helm:
       valuesObject:
@@ -131,7 +131,7 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 30 }}
+        userCount: {{ $.Values.userCount | default 200 }}
     {{- else if eq .path "connectivity-link-mcp-gateway" }}
     helm:
       valuesObject:
@@ -140,17 +140,17 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 30 }}
+        userCount: {{ $.Values.userCount | default 200 }}
     {{- else if eq .path "connectivity-link-gitea" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 30 }}
+        userCount: {{ $.Values.userCount | default 200 }}
     {{- else if eq .path "connectivity-link-developer-hub" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 30 }}
+        userCount: {{ $.Values.userCount | default 200 }}
     {{- else if eq .path "connectivity-link-workshop-registration" }}
     helm:
       valuesObject:
@@ -158,7 +158,7 @@ spec:
           domain: {{ $domain }}
         registration:
           enabled: true
-          maxUsers: {{ $.Values.userCount | default 30 }}
+          maxUsers: {{ $.Values.userCount | default 200 }}
           adminToken: {{ $.Values.workshopRegistration.adminToken | default "workshop-admin-2024" | quote }}
         keycloak:
           url: {{ printf "https://rhbk.%s" $domain | quote }}

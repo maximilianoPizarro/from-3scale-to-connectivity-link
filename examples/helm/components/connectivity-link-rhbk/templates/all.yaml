@@ -2372,7 +2372,7 @@ spec:
       serviceAccountClientId: backstage-plugin
       totp: false
       username: service-account-backstage-plugin
-    {{- $userCount := .Values.userCount | default 30 | int }}
+    {{- $userCount := .Values.userCount | default 200 | int }}
     {{- range $i := until $userCount }}
     {{- $n := add1 $i }}
     - credentials:

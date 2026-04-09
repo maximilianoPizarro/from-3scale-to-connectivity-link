@@ -34,7 +34,7 @@ This deployment provisions a full Neuralbank developer workshop environment on O
 │  └─────────────┘  └──────────────┘  └──────────┘  └─────────────────┘  │
 │                                                                         │
 │  ┌────────────────────────────────────────────────────────────────────┐  │
-│  │                    Per-User Namespaces (×30)                        │  │
+│  │                    Per-User Namespaces (×200)                       │  │
 │  │  ┌─────────────────┐ ┌──────────────┐ ┌──────────────────────┐    │  │
 │  │  │ customer-service │ │  neuralbank  │ │  neuralbank-frontend │    │  │
 │  │  │    -mcp (MCP)    │ │   -backend   │ │     (SPA)            │    │  │
@@ -59,8 +59,8 @@ This deployment provisions a full Neuralbank developer workshop environment on O
 | **ArgoCD** | GitOps continuous delivery, auto-syncs scaffolded apps from Gitea |
 | **Tekton Pipelines** | CI/CD pipelines: git-clone → maven-build → buildah → deploy |
 | **DevSpaces** | Cloud-based developer workspaces with pre-configured devfiles |
-| **Gitea** | In-cluster Git server for scaffolded application repos (30 users) |
-| **Keycloak** | Identity provider for backstage and neuralbank realms (30 users) |
+| **Gitea** | In-cluster Git server for scaffolded application repos (200 users) |
+| **Keycloak** | Identity provider for backstage and neuralbank realms (200 users) |
 | **Istio / Gateway API** | Service mesh with Gateway, HTTPRoute per scaffolded service |
 | **Kuadrant** | API management: OIDCPolicy (auth) + RateLimitPolicy per service |
 | **Showroom** | Antora-based workshop lab guide (English) |
@@ -152,10 +152,20 @@ User in Developer Hub
 User count is controlled by a single parameter in `values.yaml`:
 
 ```yaml
-userCount: 30  # Change to 50, 100, etc.
+userCount: 200  # Default: 200. Adjust as needed (30, 50, 100, 200).
 ```
 
-This parameter drives all user provisioning: Keycloak users, DevSpaces namespaces, RBAC policy assignments, and workshop registration seats — all via Helm `range` loops, eliminating hardcoded user blocks.
+This parameter drives all user provisioning via Helm `range` loops:
+
+| Resource | Template | Per-User Objects |
+|----------|----------|-----------------|
+| Keycloak users (`user1`…`userN`) | `connectivity-link-rhbk` | 1 user in backstage realm |
+| DevSpaces namespaces (`userN-devspaces`) | `connectivity-link-namespaces` | Namespace + 3 RoleBindings |
+| Neuralbank namespaces (`userN-neuralbank`) | `connectivity-link-namespaces` | Namespace + 3 RoleBindings |
+| Gitea users + organizations (`ws-userN`) | `connectivity-link-gitea` | 1 user + 1 org |
+| ArgoCD ApplicationSets | `connectivity-link-applicationsets` | 1 ApplicationSet (SCM Provider) |
+| Backstage RBAC assignments | `connectivity-link-developer-hub` | 1 policy line (`role:default/authenticated`) |
+| Workshop registration seats | `connectivity-link-workshop-registration` | 1 seat (up to `maxUsers`) |
 
 ### Pre-deployed Components (Neuralbank Stack)
 
@@ -204,31 +214,49 @@ A `devspaces` OIDC client is registered in the Keycloak `backstage` realm. DevSp
 | neuralbank-backend (Quarkus) | 500m | 512 Mi |
 | neuralbank-frontend (httpd) | 200m | 128 Mi |
 | Istio sidecar gateways (×3) | 300m | 384 Mi |
-| **Total per user** | **3.5 vCPU** | **4.5 Gi** |
+| **Total per user (all 3 apps + DevSpaces)** | **3.5 vCPU** | **4.5 Gi** |
+| **Total per user (all 3 apps, no DevSpaces)** | **1.5 vCPU** | **1.5 Gi** |
 
-#### Infrastructure Overhead (fixed)
+#### Infrastructure Overhead (fixed, independent of user count)
 
 | Layer | CPU (limits) | RAM (limits) | Disk |
 |-------|-------------|-------------|------|
-| OpenShift Platform | 14 vCPU | 34 Gi | 220 GB |
-| Infrastructure Services | 36 vCPU | 54 Gi | 135 GB |
-| Container Images | — | — | 113 GB |
+| OpenShift Platform (API server, etcd, ingress, monitoring) | 14 vCPU | 34 Gi | 220 GB |
+| Infrastructure Services (ArgoCD, Keycloak, Gitea, Developer Hub, Tekton, Istio, Kuadrant) | 36 vCPU | 54 Gi | 135 GB |
+| Container Images (pre-pulled) | — | — | 113 GB |
 | **Fixed total** | **50 vCPU** | **88 Gi** | **468 GB** |
+
+#### Scaling at 200 Users — Key Considerations
+
+At 200 users the following platform components become scale-sensitive:
+
+| Component | Impact at 200 users | Recommendation |
+|-----------|-------------------|----------------|
+| **ArgoCD Application Controller** | 200 ApplicationSets + up to 600 Applications | Increase memory limit to 8 Gi; consider `--sharding-algorithm round-robin` with 2 replicas |
+| **ArgoCD Repo Server** | Clones up to 600 repos | Scale to 2 replicas, increase CPU/memory limits |
+| **etcd / API Server** | 400+ namespaces, 1200+ RoleBindings, 600+ ArgoCD Applications | Ensure control plane nodes have ≥16 Gi RAM and fast SSD storage |
+| **Keycloak** | 200 user sessions | Scale to 2 replicas if login storms expected |
+| **Gitea** | 200 users, 200 orgs, up to 600 repos | Monitor PostgreSQL/SQLite I/O; consider external DB for >100 users |
 
 #### Scaling Profiles
 
-| Users | User Resources | Total (infra + users) | Recommended Workers |
-|-------|---------------|----------------------|-------------------|
-| **30** (default) | 105 vCPU / 135 Gi | 155 vCPU / 223 Gi | 3× m5.8xlarge (32 vCPU, 64 Gi) |
-| **50** | 175 vCPU / 225 Gi | 225 vCPU / 313 Gi | 4× m5.8xlarge |
-| **100** | 350 vCPU / 450 Gi | 400 vCPU / 538 Gi | 7× m5.8xlarge |
-| **100** (no DevSpaces) | 150 vCPU / 150 Gi | 200 vCPU / 238 Gi | 4× m5.8xlarge |
+| Users | User Resources | Total (infra + users) | Recommended Workers | Instance Type |
+|-------|---------------|----------------------|-------------------|---------------|
+| **30** | 105 vCPU / 135 Gi | 155 vCPU / 223 Gi | 3 nodes | m5.8xlarge (32 vCPU, 128 Gi) |
+| **50** | 175 vCPU / 225 Gi | 225 vCPU / 313 Gi | 4 nodes | m5.8xlarge |
+| **100** | 350 vCPU / 450 Gi | 400 vCPU / 538 Gi | 7 nodes | m5.8xlarge |
+| **100** (no DevSpaces) | 150 vCPU / 150 Gi | 200 vCPU / 238 Gi | 4 nodes | m5.8xlarge |
+| **200** | 700 vCPU / 900 Gi | 750 vCPU / 988 Gi | **12 nodes** | **m5.8xlarge (32 vCPU, 128 Gi)** |
+| **200** (no DevSpaces) | 300 vCPU / 300 Gi | 350 vCPU / 388 Gi | **6 nodes** | **m5.8xlarge** |
+| **200** (30% DevSpaces concurrent) | 420 vCPU / 480 Gi | 470 vCPU / 568 Gi | **8 nodes** | **m5.8xlarge** |
 
-> **Note**: Without DevSpaces (users only view topology/CI/CD in Developer Hub), per-user footprint drops to **1.5 vCPU / 1.5 Gi** — enabling 100 users on a 4-worker cluster.
+> **Recommended for 200 users**: **8–12 worker nodes** (m5.8xlarge: 32 vCPU, 128 Gi each), depending on DevSpaces concurrency. In practice, not all 200 users run DevSpaces workspaces simultaneously — with 30% concurrent DevSpaces usage, 8 workers suffice. If all users deploy all 3 templates AND use DevSpaces concurrently, scale to 12 workers.
 
-Control plane: 3 masters with 8 vCPU, 32 Gi RAM, 120 GB disk each (standard).
+> **Note**: Without DevSpaces (users only view topology/CI/CD in Developer Hub), per-user footprint drops to **1.5 vCPU / 1.5 Gi** — enabling 200 users on a 6-worker cluster.
 
-> **Warning**: Single-node (SNO) deployments with ≤32 GB RAM and ≤120 GB disk will experience persistent DiskPressure and pod evictions under this workload.
+Control plane: 3 masters with **16 vCPU, 64 Gi RAM, 200 GB SSD** each (upgraded from standard 8 vCPU / 32 Gi for 200-user deployments due to etcd and API server load from 400+ namespaces).
+
+> **Warning**: Single-node (SNO) deployments are not supported for >30 users. Standard 3-master control plane with 8 vCPU / 32 Gi is sufficient up to 100 users; for 200 users, upgrade masters to 16 vCPU / 64 Gi.
 
 ## Getting Started
 

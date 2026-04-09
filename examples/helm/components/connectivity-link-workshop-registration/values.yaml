@@ -1,6 +1,6 @@
 registration:
   enabled: true
-  maxUsers: 30
+  maxUsers: 200
   adminToken: "workshop-admin-2024"
 
 keycloak:

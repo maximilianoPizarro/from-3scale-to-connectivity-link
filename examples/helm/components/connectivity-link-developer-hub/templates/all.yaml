@@ -434,8 +434,9 @@ data:
       reviveConsumedRequestBodies: true
       endpoints:
         '/gitea':
-          target: "https://gitea-gitea.{{ .Values.clusterDomain }}/api/v1"
+          target: "http://gitea-http.gitea.svc.cluster.local:3000/api/v1"
           credentials: dangerously-allow-unauthenticated
+          changeOrigin: true
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
           headers:
             Authorization: "Basic Z2l0ZWFfYWRtaW46b3BlbnNoaWZ0"
@@ -771,7 +772,7 @@ data:
     platformadmin: full platform engineer permissions\ng, user:default/platformadmin,
     role:default/platformengineer\ng, user:default/platformadmin, role:default/api-admin\ng,
     user:default/platformadmin, role:default/api-owner\ng, user:default/platformadmin,
-    role:default/rhdhpai-users\ng, user:default/platformadmin, role:default/template-executers\n{{ range $i := until (.Values.userCount | default 30 | int) }}g, user:default/user{{ add1 $i }}, role:default/authenticated\n{{ end }}\n#
+    role:default/rhdhpai-users\ng, user:default/platformadmin, role:default/template-executers\n{{ range $i := until (.Values.userCount | default 200 | int) }}g, user:default/user{{ add1 $i }}, role:default/authenticated\n{{ end }}\n#
     Group assignments (Keycloak groups)\n# Assign rhdh group to platformengineer role
     (has all permissions including Adoption Insights)\ng, group:default/rhdh, role:default/platformengineer\n\n#
     ==========================================================\n# 4. KUADRANT PLUGIN
@@ -889,6 +890,10 @@ data:
           - "'unsafe-eval'"
           - https://cdn.jsdelivr.net
     lightspeed:
+      servers:
+        - id: qwen3-8b
+          url: http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1
+          token: "${VLLM_API_KEY}"
       prompts:
         - title: "Getting Started with Developer Hub"
           message: "Can you guide me through the first steps to start using Red Hat Developer Hub as a developer?"

@@ -114,7 +114,7 @@ spec:
               echo "Gitea API token stored successfully."
   backoffLimit: 3
 ---
-{{- $userCount := .Values.userCount | default 30 | int }}
+{{- $userCount := .Values.userCount | default 200 | int }}
 {{- range $i := until $userCount }}
 {{- $user := printf "user%d" (add1 $i) }}
 {{- $org := printf "ws-%s" $user }}
@@ -131,8 +131,8 @@ spec:
     - scmProvider:
         gitea:
           owner: {{ $org }}
-          api: https://gitea-gitea.{{ $.Values.clusterDomain }}
-          insecure: true
+          api: http://gitea-http.gitea.svc.cluster.local:3000
+          allBranches: false
           tokenRef:
             secretName: gitea-argocd-token
             key: token
@@ -140,6 +140,7 @@ spec:
           - repositoryMatch: ".*"
             pathsExist:
               - manifests
+        requeueAfterSeconds: 60
   template:
     metadata:
       name: {{ $user }}-{{ "{{ .repository }}" }}

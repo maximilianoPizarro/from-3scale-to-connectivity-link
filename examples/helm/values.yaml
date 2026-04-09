@@ -249,9 +249,10 @@ litemaas:
 # ============================================================
 # User Scaling — single parameter controls all user provisioning
 # Keycloak users, DevSpaces namespaces, RBAC policy, workshop registration
-# Recommended: 30 (default), 50 (medium), 100 (large)
+# Recommended: 30 (small), 50 (medium), 100 (large), 200 (extra-large)
+# See README.md "Cluster Sizing" for node/resource recommendations
 # ============================================================
-userCount: 30
+userCount: 200
 
 # ============================================================
 # Workshop Registration Portal

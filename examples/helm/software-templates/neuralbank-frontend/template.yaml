@@ -71,6 +71,7 @@ spec:
     - id: create-webhook
       name: Create Gitea Webhook
       action: http:backstage:request
+      continueOnError: true
       input:
         method: POST
         path: "/api/proxy/gitea/repos/ws-${{ parameters.owner }}/${{ parameters.name }}/hooks"

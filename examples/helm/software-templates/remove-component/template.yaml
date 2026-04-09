@@ -5,9 +5,9 @@ metadata:
   title: "Remove Component (Cleanup)"
   description: >
     Removes a previously created component from the platform:
-    deletes the Gitea repository (ApplicationSet auto-prunes the ArgoCD Application),
-    and cleans up ClusterRoleBindings.
-    Catalog entities are automatically orphaned and removed.
+    deletes the Gitea repository, unregisters from the catalog, and sends
+    a notification via Mailpit. The ApplicationSet auto-prunes the ArgoCD
+    Application when the repo disappears (~60s).
   tags:
     - cleanup
     - admin
@@ -35,12 +35,9 @@ spec:
           title: Owner (username)
           type: string
           description: "Owner of the component (e.g. user1)"
+          default: ${{ user.entity.metadata.name }}
           pattern: "^user[0-9]+$"
-        clusterDomain:
-          title: Cluster Domain
-          type: string
-          default: "apps.cluster-l9nhj.dynamic.redhatworkshops.io"
-          ui:widget: hidden
+          ui:help: "Auto-detected from your login. Change only if removing another user's component."
   steps:
     - id: delete-gitea-repo
       name: Delete Gitea Repository
@@ -51,33 +48,6 @@ spec:
         headers:
           Content-Type: application/json
 
-    - id: delete-clusterrolebinding-trigger
-      name: Delete Trigger ClusterRoleBinding
-      action: http:backstage:request
-      input:
-        method: DELETE
-        path: "/api/proxy/k8s-api/apis/rbac.authorization.k8s.io/v1/clusterrolebindings/${{ parameters.owner }}-${{ parameters.name }}-trigger-clusterbinding"
-        headers:
-          Content-Type: application/json
-
-    - id: delete-clusterrolebinding-scc
-      name: Delete Pipeline SCC ClusterRoleBinding
-      action: http:backstage:request
-      input:
-        method: DELETE
-        path: "/api/proxy/k8s-api/apis/rbac.authorization.k8s.io/v1/clusterrolebindings/${{ parameters.owner }}-neuralbank-pipeline-scc-privileged"
-        headers:
-          Content-Type: application/json
-
-    - id: delete-namespace
-      name: Delete User Namespace
-      action: http:backstage:request
-      input:
-        method: DELETE
-        path: "/api/proxy/k8s-api/api/v1/namespaces/${{ parameters.owner }}-neuralbank"
-        headers:
-          Content-Type: application/json
-
     - id: unregister-catalog
       name: Unregister from Catalog
       action: catalog:unregister
@@ -85,7 +55,7 @@ spec:
         entityRef: "component:default/${{ parameters.owner }}-${{ parameters.name }}"
 
     - id: notify
-      name: Send Cleanup Notification
+      name: Send Notification (in-app + email via Mailpit)
       action: http:backstage:request
       input:
         method: POST
@@ -98,7 +68,7 @@ spec:
             entityRef: "user:default/${{ parameters.owner }}"
           payload:
             title: "Component removed from platform"
-            description: "Component **${{ parameters.owner }}-${{ parameters.name }}** has been removed. Deleted: Gitea repository (ws-${{ parameters.owner }}/${{ parameters.name }}), ClusterRoleBindings, namespace `${{ parameters.owner }}-neuralbank`, and catalog entity. ArgoCD Application will be auto-pruned by ApplicationSet."
+            description: "Component **${{ parameters.owner }}-${{ parameters.name }}** has been removed. Gitea repository `ws-${{ parameters.owner }}/${{ parameters.name }}` deleted — ArgoCD Application will be auto-pruned by the ApplicationSet within 60 seconds."
             severity: high
             topic: cleanup
 
@@ -106,9 +76,8 @@ spec:
     text:
       - title: Cleanup Complete
         content: |
-          Component **${{ parameters.owner }}-${{ parameters.name }}** owned by **${{ parameters.owner }}** has been removed from:
-          - Gitea (repository `ws-${{ parameters.owner }}/${{ parameters.name }}`)
-          - ArgoCD (Application auto-pruned by ApplicationSet)
-          - ClusterRoleBindings (trigger, pipeline SCC)
-          - OpenShift (namespace `${{ parameters.owner }}-neuralbank`)
-          - Backstage Catalog (entity unregistered)
+          Component **${{ parameters.owner }}-${{ parameters.name }}** has been removed:
+          1. Gitea repository `ws-${{ parameters.owner }}/${{ parameters.name }}` deleted
+          2. ArgoCD Application auto-pruned by ApplicationSet (~60s)
+          3. Backstage Catalog entity unregistered
+          4. Notification sent (in-app + email via Mailpit)
