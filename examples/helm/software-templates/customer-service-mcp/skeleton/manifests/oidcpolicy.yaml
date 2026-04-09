@@ -12,8 +12,8 @@ spec:
       authorizationHeader:
         prefix: Bearer
   provider:
-    clientID: backstage
-    issuerURL: https://rhbk.${{values.clusterDomain}}/realms/backstage
+    clientID: neuralbank-frontend
+    issuerURL: https://rhbk.${{values.clusterDomain}}/realms/neuralbank
   targetRef:
     group: gateway.networking.k8s.io
     kind: HTTPRoute
