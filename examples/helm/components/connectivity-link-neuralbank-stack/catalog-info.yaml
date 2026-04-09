@@ -90,7 +90,7 @@ kind: Component
 metadata:
   name: neuralbank-stack-frontend
   namespace: default
-  description: "Neuralbank Frontend — SPA web para visualización de créditos con tema OpenShift Commons"
+  description: "Neuralbank Frontend — SPA web para visualización de créditos"
   annotations:
     backstage.io/kubernetes-id: neuralbank-stack
     backstage.io/kubernetes-namespace: neuralbank-stack

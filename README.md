@@ -75,7 +75,7 @@ Each template generates a full application with CI/CD pipeline, connectivity-lin
 |----------|------|-------------|
 | **customer-service-mcp** | Quarkus MCP Server | MCP server with `@Tool`/`@ToolArg` annotations, REST client to backend, SSE transport. Includes MCP Inspector in DevSpaces. |
 | **neuralbank-backend** | Quarkus REST API | Credit management API (`/api/customers`, `/api/credits`, `/api/credits/{id}/update`) |
-| **neuralbank-frontend** | Static HTML/CSS/JS | Credit visualization SPA with OpenShift Commons theme (Red Hat palette) |
+| **neuralbank-frontend** | Static HTML/CSS/JS | Credit visualization SPA with Neuralbank theme (Red Hat palette) |
 
 ### Scaffolding Flow (End-to-End CI/CD)
 
@@ -395,7 +395,7 @@ metadata:
 
 ## Documentation
 
-- [Workshop (GitHub Pages)](https://maximilianopizarro.github.io/field-sourced-content-template/) - Full workshop guide for OpenShift Commons
+- [Workshop (GitHub Pages)](https://maximilianopizarro.github.io/field-sourced-content-template/) - Full workshop guide
 - [examples/helm/README.md](examples/helm/README.md) - Helm deployment guide
 - [examples/ansible/README.md](examples/ansible/README.md) - Ansible deployment guide
 - [docs/ansible-developer-guide.md](docs/ansible-developer-guide.md) - In-depth Ansible patterns
