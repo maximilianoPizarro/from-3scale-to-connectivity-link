@@ -442,6 +442,11 @@ data:
           allowedMethods: ['GET', 'POST', 'PUT', 'DELETE']
           headers:
             Authorization: "Basic Z2l0ZWFfYWRtaW46b3BlbnNoaWZ0"
+        '/mailpit':
+          target: "http://n8n-mailpit.openshift-lightspeed.svc:8025"
+          changeOrigin: true
+          allowedMethods: ['GET', 'POST']
+          credentials: dangerously-allow-unauthenticated
         '/k8s-api':
           target: "https://kubernetes.default.svc"
           changeOrigin: true

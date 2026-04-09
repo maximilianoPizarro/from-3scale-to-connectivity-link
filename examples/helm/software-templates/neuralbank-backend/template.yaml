@@ -70,23 +70,23 @@ spec:
         repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
         catalogInfoPath: /main/catalog-info.yaml
     - id: notify
-      name: Send Notification
+      name: Send Email Notification
       action: http:backstage:request
       input:
         method: POST
-        path: /notifications
+        path: /api/proxy/mailpit/api/v1/send
         headers:
           Content-Type: application/json
         body:
-          recipients:
-            type: entity
-            entityRef: "user:default/${{ parameters.owner }}"
-          payload:
-            title: "Neuralbank Backend deployed successfully"
-            description: "Your component **${{ parameters.owner }}-${{ parameters.name }}** has been created and deployed to namespace `${{ parameters.owner }}-neuralbank`. The CI/CD pipeline is building your application. Repository: ws-${{ parameters.owner }}/${{ parameters.name }}"
-            link: "/catalog/default/component/${{ parameters.owner }}-${{ parameters.name }}"
-            severity: normal
-            topic: scaffolder
+          From:
+            Email: "developer-hub@redhat.local"
+            Name: "Red Hat Developer Hub"
+          To:
+            - Email: "${{ parameters.owner }}@redhat.local"
+              Name: "${{ parameters.owner }}"
+          Subject: "Neuralbank Backend deployed successfully"
+          Text: "Your component ${{ parameters.owner }}-${{ parameters.name }} has been created and deployed to namespace ${{ parameters.owner }}-neuralbank. The CI/CD pipeline is building your application. Repository: ws-${{ parameters.owner }}/${{ parameters.name }}"
+          HTML: "<h2>Component Created Successfully</h2><p>Your component <strong>${{ parameters.owner }}-${{ parameters.name }}</strong> has been created and deployed to namespace <code>${{ parameters.owner }}-neuralbank</code>.</p><p>The CI/CD pipeline is building your application.</p><p>Repository: <code>ws-${{ parameters.owner }}/${{ parameters.name }}</code></p>"
   output:
     links:
       - title: Repository
