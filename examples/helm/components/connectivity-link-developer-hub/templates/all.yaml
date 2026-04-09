@@ -657,7 +657,11 @@ data:
     Scaffolder permissions for ALL users\np, role:default/authenticated,
     scaffolder-template, read, allow\np, role:default/authenticated, scaffolder.task.read,
     read, allow\np, role:default/authenticated, scaffolder.task.create, create, allow\np,
-    role:default/authenticated, scaffolder.action.execute, use, allow\n\n# Adoption
+    role:default/authenticated, scaffolder.action.execute, use, allow\n\n# Kubernetes
+    and Topology permissions for ALL users\np, role:default/authenticated, kubernetes.clusters.read,
+    read, allow\np, role:default/authenticated, kubernetes.resources.read, read, allow\n\n#
+    ArgoCD permissions for ALL users\np, role:default/authenticated, argocd.view.read,
+    read, allow\n\n# Adoption
     Insights permissions for ALL users\np, role:default/authenticated, adoption-insights.events.read,
     read, allow\n\n# ==========================================================\n#
     2. PLATFORM ENGINEER ROLE (Full Admin Permissions)\n# ==========================================================\n#
