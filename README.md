@@ -359,6 +359,11 @@ All services use the cluster domain pattern `apps.<cluster-domain>`:
 | **DevSpaces** | `https://devspaces.apps.<domain>` |
 | **Showroom** | `https://showroom.apps.<domain>` |
 | **Registration Portal** | `https://workshop-registration.apps.<domain>` |
+| **Keycloak** | `https://rhbk.apps.<domain>` |
+| **Mailpit** | `https://n8n-mailpit-openshift-lightspeed.apps.<domain>` |
+| **Grafana** | `https://grafana-observability.apps.<domain>` |
+| **Kiali** | `https://kiali-openshift-cluster-observability-operator.apps.<domain>` |
+| **Thanos Querier** | `https://thanos-querier.apps.<domain>` |
 | **Lightspeed** | Available from OpenShift Console |
 
 ## How It Works

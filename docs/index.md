@@ -46,6 +46,10 @@ Tu namespace de trabajo es **`YOUR_USER-neuralbank`**. Todos los servicios que c
 - **Gitea**: `https://gitea-gitea.YOUR_CLUSTER_DOMAIN`
 - **ArgoCD**: `https://openshift-gitops-server-openshift-gitops.YOUR_CLUSTER_DOMAIN`
 - **DevSpaces**: `https://devspaces.YOUR_CLUSTER_DOMAIN`
+- **Mailpit**: `https://n8n-mailpit-openshift-lightspeed.YOUR_CLUSTER_DOMAIN`
+- **Grafana**: `https://grafana-observability.YOUR_CLUSTER_DOMAIN`
+- **Kiali**: `https://kiali-openshift-cluster-observability-operator.YOUR_CLUSTER_DOMAIN`
+- **Thanos Querier**: `https://thanos-querier.YOUR_CLUSTER_DOMAIN`
 - **Lightspeed**: disponible en el menú lateral de Developer Hub (icono de chat IA)
 - **Terminal Web**: disponible en el panel derecho del showroom (tab "Terminal") para ejecutar comandos `oc`, `curl`, etc.
 
