@@ -136,10 +136,16 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
+    {{- else if eq .path "connectivity-link-applicationsets" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "connectivity-link-gitea" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "connectivity-link-developer-hub" }}
     helm:
       valuesObject:

@@ -67,8 +67,8 @@ spec:
                 cat /tmp/org_resp >&2 || true
                 exit 1
               fi
-              echo "Creating 30 users and orgs..."
-              for i in $(seq 1 30); do
+              echo "Creating {{ .Values.userCount | default 30 }} users and orgs..."
+              for i in $(seq 1 {{ .Values.userCount | default 30 }}); do
                 U="user${i}"
                 ORG="ws-${U}"
                 U_JSON=$(printf '{"username":"%s","password":"Welcome123!","email":"%s@developer-hub.local","must_change_password":false,"send_notify":false}' "$U" "$U")

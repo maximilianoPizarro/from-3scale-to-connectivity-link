@@ -69,40 +69,6 @@ spec:
       input:
         repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
         catalogInfoPath: /main/catalog-info.yaml
-    - id: create-argocd-app
-      name: Create ArgoCD Application
-      action: http:backstage:request
-      input:
-        method: POST
-        path: /api/proxy/k8s-api/apis/argoproj.io/v1alpha1/namespaces/openshift-gitops/applications
-        headers:
-          Content-Type: application/json
-        body:
-          apiVersion: argoproj.io/v1alpha1
-          kind: Application
-          metadata:
-            name: "${{ parameters.owner }}-${{ parameters.name }}"
-            namespace: openshift-gitops
-            labels:
-              backstage.io/kubernetes-id: "${{ parameters.owner }}-${{ parameters.name }}"
-            finalizers:
-              - resources-finalizer.argocd.argoproj.io
-          spec:
-            project: default
-            source:
-              repoURL: "https://gitea-gitea.${{ parameters.clusterDomain }}/ws-${{ parameters.owner }}/${{ parameters.name }}.git"
-              targetRevision: main
-              path: manifests
-            destination:
-              server: "https://kubernetes.default.svc"
-              namespace: "${{ parameters.owner }}-neuralbank"
-            syncPolicy:
-              automated:
-                prune: true
-                selfHeal: true
-              syncOptions:
-                - CreateNamespace=true
-                - ServerSideApply=true
     - id: create-webhook
       name: Create Gitea Webhook
       action: http:backstage:request

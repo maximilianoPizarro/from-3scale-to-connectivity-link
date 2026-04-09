@@ -212,6 +212,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: false
+    - id: connectivity-link-applicationsets
+      enabled: true
+      path: connectivity-link-applicationsets
+      destinationNamespace: openshift-gitops
+      syncWave: "4"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: workshop-registration
       enabled: true
       path: connectivity-link-workshop-registration

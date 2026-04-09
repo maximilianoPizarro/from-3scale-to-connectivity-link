@@ -5,8 +5,8 @@ metadata:
   title: "Remove Component (Cleanup)"
   description: >
     Removes a previously created component from the platform:
-    deletes the ArgoCD Application (which cascades namespace resources),
-    deletes the Gitea repository, and cleans up ClusterRoleBindings.
+    deletes the Gitea repository (ApplicationSet auto-prunes the ArgoCD Application),
+    and cleans up ClusterRoleBindings.
     Catalog entities are automatically orphaned and removed.
   tags:
     - cleanup
@@ -42,15 +42,6 @@ spec:
           default: "apps.cluster-l9nhj.dynamic.redhatworkshops.io"
           ui:widget: hidden
   steps:
-    - id: delete-argocd-app
-      name: Delete ArgoCD Application
-      action: http:backstage:request
-      input:
-        method: DELETE
-        path: "/api/proxy/k8s-api/apis/argoproj.io/v1alpha1/namespaces/openshift-gitops/applications/${{ parameters.owner }}-${{ parameters.name }}?propagationPolicy=Foreground"
-        headers:
-          Content-Type: application/json
-
     - id: delete-gitea-repo
       name: Delete Gitea Repository
       action: http:backstage:request
@@ -107,7 +98,7 @@ spec:
             entityRef: "user:default/${{ parameters.owner }}"
           payload:
             title: "Component removed from platform"
-            description: "Component **${{ parameters.owner }}-${{ parameters.name }}** has been removed. Deleted: ArgoCD Application, Gitea repository (ws-${{ parameters.owner }}/${{ parameters.name }}), ClusterRoleBindings, namespace `${{ parameters.owner }}-neuralbank`, and catalog entity."
+            description: "Component **${{ parameters.owner }}-${{ parameters.name }}** has been removed. Deleted: Gitea repository (ws-${{ parameters.owner }}/${{ parameters.name }}), ClusterRoleBindings, namespace `${{ parameters.owner }}-neuralbank`, and catalog entity. ArgoCD Application will be auto-pruned by ApplicationSet."
             severity: high
             topic: cleanup
 
@@ -116,8 +107,8 @@ spec:
       - title: Cleanup Complete
         content: |
           Component **${{ parameters.owner }}-${{ parameters.name }}** owned by **${{ parameters.owner }}** has been removed from:
-          - ArgoCD (Application `${{ parameters.owner }}-${{ parameters.name }}` deleted with cascade)
           - Gitea (repository `ws-${{ parameters.owner }}/${{ parameters.name }}`)
+          - ArgoCD (Application auto-pruned by ApplicationSet)
           - ClusterRoleBindings (trigger, pipeline SCC)
           - OpenShift (namespace `${{ parameters.owner }}-neuralbank`)
           - Backstage Catalog (entity unregistered)
