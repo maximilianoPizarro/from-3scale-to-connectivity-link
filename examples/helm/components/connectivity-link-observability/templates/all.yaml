@@ -1088,25 +1088,26 @@ metadata:
 data:
   generate.sh: |
     #!/bin/sh
-    TARGETS="
-    http://neuralbank-gateway-istio.neuralbank-stack.svc:8080/q/health
-    http://neuralbank-gateway-istio.neuralbank-stack.svc:8080/api/v1/customers
-    http://neuralbank-backend-svc.neuralbank-stack.svc:8080/q/health
-    http://nfl-wallet-gateway-istio.nfl-wallet-prod.svc:8080/q/health
-    http://nfl-wallet-gateway-istio.nfl-wallet-prod.svc:8080/api/v1/customers
-    http://nfl-wallet-api.nfl-wallet-prod.svc:8080/q/health
-    http://litemaas-gateway-istio.litemaas.svc:8080/api/health
-    http://backend.litemaas.svc:8080/api/health
-    "
+    DOMAIN="{{ .Values.clusterDomain | default "apps.cluster-l9nhj.dynamic.redhatworkshops.io" }}"
+    NB_HOST="neuralbank.${DOMAIN}"
+    NFL_HOST="nfl-wallet.${DOMAIN}"
+    LM_HOST="litemaas.${DOMAIN}"
 
     echo "=== Mesh Traffic Generator ==="
-    echo "Targets: $(echo $TARGETS | wc -w) | Interval: ${INTERVAL:-5}s"
+    echo "Interval: ${INTERVAL:-5}s | Domain: ${DOMAIN}"
+
+    hit() { curl -sk -o /dev/null -w "%{http_code} $2\n" --connect-timeout 2 --max-time 4 -H "Host: $1" "$2"; }
 
     while true; do
-      for url in $TARGETS; do
-        curl -sk -o /dev/null -w "%{http_code} $url\n" \
-          --connect-timeout 2 --max-time 4 "$url" &
-      done
+      hit "$NB_HOST" "http://neuralbank-gateway-istio.neuralbank-stack.svc:8080/q/health" &
+      hit "$NB_HOST" "http://neuralbank-gateway-istio.neuralbank-stack.svc:8080/api/v1/customers" &
+      hit "$NFL_HOST" "http://nfl-wallet-gateway-istio.nfl-wallet-prod.svc:8080/q/health" &
+      hit "$NFL_HOST" "http://nfl-wallet-gateway-istio.nfl-wallet-prod.svc:8080/api/v1/customers" &
+      hit "$LM_HOST" "http://litemaas-gateway-istio.litemaas.svc:8080/api/health" &
+      curl -sk -o /dev/null -w "%{http_code} neuralbank-backend-svc/q/health\n" \
+        --connect-timeout 2 --max-time 4 "http://neuralbank-backend-svc.neuralbank-stack.svc:8080/q/health" &
+      curl -sk -o /dev/null -w "%{http_code} nfl-wallet-api/q/health\n" \
+        --connect-timeout 2 --max-time 4 "http://nfl-wallet-api.nfl-wallet-prod.svc:8080/q/health" &
       wait
       sleep $(( ${INTERVAL:-5} + RANDOM % 3 ))
     done
