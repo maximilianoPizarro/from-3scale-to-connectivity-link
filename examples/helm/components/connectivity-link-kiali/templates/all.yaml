@@ -12,8 +12,8 @@ spec:
   external_services:
     grafana:
       enabled: true
-      external_url: https://grafana-nfl-wallet-service.apps.cluster-l9nhj.dynamic.redhatworkshops.io
-      internal_url: http://grafana-nfl-wallet-service.openshift-cluster-observability-operator.svc.cluster.local:3000
+      external_url: https://grafana-observability.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+      internal_url: http://grafana-observability-service.openshift-cluster-observability-operator.svc.cluster.local:3000
     prometheus:
       url: http://connectivity-link-stack-prometheus.openshift-cluster-observability-operator.svc.cluster.local:9090
     tracing:

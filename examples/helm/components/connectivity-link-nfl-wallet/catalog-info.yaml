@@ -1,0 +1,243 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: nfl-wallet-system
+  namespace: default
+  description: "NFL Wallet — plataforma de billetera digital con API protegida por Kuadrant API Key"
+  tags:
+    - nfl-wallet
+    - fintech
+    - api-key
+    - kuadrant
+spec:
+  owner: platform-engineering
+  domain: fintech
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: nfl-wallet
+  namespace: default
+  description: "NFL Wallet API — servicio REST de billetera digital con autenticación API Key vía Kuadrant AuthPolicy"
+  annotations:
+    backstage.io/kubernetes-id: nfl-wallet
+    backstage.io/kubernetes-namespace: nfl-wallet-prod
+    argocd/app-name: field-content-connectivity-link-nfl-wallet
+    argocd/app-namespace: openshift-gitops
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - quarkus
+    - java
+    - rest-api
+    - api-key
+    - kuadrant
+  links:
+    - url: https://nfl-wallet.apps.cluster-l9nhj.dynamic.redhatworkshops.io/q/swagger-ui
+      title: Swagger UI
+      icon: api
+    - url: https://nfl-wallet.apps.cluster-l9nhj.dynamic.redhatworkshops.io/api
+      title: API Endpoint
+      icon: api
+    - url: https://grafana-observability.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+      title: Grafana Dashboards
+      icon: dashboard
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-engineering
+  system: nfl-wallet-system
+  providesApis:
+    - nfl-wallet-api
+  dependsOn:
+    - component:default/nfl-wallet-database
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: nfl-wallet-database
+  namespace: default
+  description: "NFL Wallet Database — PostgreSQL para persistencia de cuentas y transacciones"
+  annotations:
+    backstage.io/kubernetes-id: nfl-wallet
+    backstage.io/kubernetes-namespace: nfl-wallet-prod
+    backstage.io/kubernetes-label-selector: app=nfl-wallet-db
+    argocd/app-name: field-content-connectivity-link-nfl-wallet
+    argocd/app-namespace: openshift-gitops
+  tags:
+    - postgresql
+    - database
+spec:
+  type: database
+  lifecycle: production
+  owner: platform-engineering
+  system: nfl-wallet-system
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: nfl-wallet-api
+  namespace: default
+  description: "NFL Wallet REST API — endpoints de billetera digital protegidos con API Key (header X-API-Key)"
+  tags:
+    - rest
+    - openapi
+    - api-key
+    - kuadrant
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-engineering
+  system: nfl-wallet-system
+  definition: |
+    openapi: "3.0.3"
+    info:
+      title: NFL Wallet API
+      description: |
+        API REST para gestión de billeteras digitales, cuentas y transacciones.
+        Protegida por Kuadrant AuthPolicy con autenticación API Key.
+        Incluye RateLimitPolicy de 120 req/min.
+      version: "1.0.0"
+      contact:
+        name: Platform Engineering
+    servers:
+      - url: https://nfl-wallet.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+        description: Producción (nfl-wallet-prod)
+    security:
+      - ApiKeyAuth: []
+    paths:
+      /api/wallets:
+        get:
+          summary: Listar billeteras
+          description: Retorna todas las billeteras registradas
+          responses:
+            '200':
+              description: Lista de billeteras
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Wallet'
+            '401':
+              description: API key inválida o faltante
+        post:
+          summary: Crear billetera
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/WalletCreate'
+          responses:
+            '201':
+              description: Billetera creada
+            '401':
+              description: API key inválida o faltante
+      /api/wallets/{id}:
+        get:
+          summary: Obtener billetera por ID
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            '200':
+              description: Datos de la billetera
+            '404':
+              description: Billetera no encontrada
+      /api/wallets/{id}/transactions:
+        get:
+          summary: Listar transacciones de una billetera
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            '200':
+              description: Lista de transacciones
+        post:
+          summary: Crear transacción
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/TransactionCreate'
+          responses:
+            '201':
+              description: Transacción registrada
+      /api/wallets/{id}/balance:
+        get:
+          summary: Consultar saldo
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: integer
+          responses:
+            '200':
+              description: Saldo actual de la billetera
+    components:
+      securitySchemes:
+        ApiKeyAuth:
+          type: apiKey
+          in: header
+          name: X-API-Key
+          description: |
+            API Key para autenticación. Enviar en header X-API-Key.
+            Keys disponibles: nfl-wallet-demo-key-2024 (admin), nfl-wallet-readonly-key-2024 (readonly)
+      schemas:
+        Wallet:
+          type: object
+          properties:
+            id:
+              type: integer
+            owner:
+              type: string
+            balance:
+              type: number
+              format: double
+            currency:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+        WalletCreate:
+          type: object
+          required:
+            - owner
+            - currency
+          properties:
+            owner:
+              type: string
+            currency:
+              type: string
+              default: ARS
+        TransactionCreate:
+          type: object
+          required:
+            - amount
+            - type
+          properties:
+            amount:
+              type: number
+              format: double
+            type:
+              type: string
+              enum: [deposit, withdrawal, transfer]
+            description:
+              type: string

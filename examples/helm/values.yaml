@@ -228,6 +228,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: connectivity-link-nfl-wallet
+      enabled: true
+      path: connectivity-link-nfl-wallet
+      destinationNamespace: nfl-wallet-prod
+      syncWave: "7"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: workshop-registration
       enabled: true
       path: connectivity-link-workshop-registration

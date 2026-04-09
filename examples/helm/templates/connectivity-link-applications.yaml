@@ -171,6 +171,10 @@ spec:
           adminPassword: {{ $.Values.workshopRegistration.keycloakAdminPassword | default "" | quote }}
         showroom:
           url: {{ printf "https://showroom-showroom.%s" $domain | quote }}
+    {{- else if eq .path "connectivity-link-nfl-wallet" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
     {{- else if eq .path "connectivity-link-neuralbank-stack" }}
     helm:
       valuesObject:

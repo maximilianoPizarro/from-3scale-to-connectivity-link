@@ -406,3 +406,151 @@ spec:
     name: thanos-querier-connectivity-link-querier
     weight: 100
   wildcardPolicy: None
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: grafana-observability
+    dashboards: grafana-observability
+  name: grafana-observability
+  namespace: openshift-cluster-observability-operator
+spec:
+  config:
+    auth:
+      disable_login_form: "false"
+    auth.anonymous:
+      enabled: "true"
+      org_role: Viewer
+    security:
+      admin_password: openshift
+      admin_user: admin
+  route:
+    spec:
+      host: grafana-observability.{{ .Values.clusterDomain | default "apps.cluster-l9nhj.dynamic.redhatworkshops.io" }}
+      tls:
+        termination: edge
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  name: prometheus-rhobs
+  namespace: openshift-cluster-observability-operator
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-observability
+  datasource:
+    name: Prometheus (RHOBS)
+    type: prometheus
+    access: proxy
+    url: http://connectivity-link-stack-prometheus.openshift-cluster-observability-operator.svc.cluster.local:9090
+    isDefault: true
+    jsonData:
+      timeInterval: "30s"
+    editable: true
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  name: thanos-querier
+  namespace: openshift-cluster-observability-operator
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-observability
+  datasource:
+    name: Thanos Querier
+    type: prometheus
+    access: proxy
+    url: http://thanos-querier-connectivity-link-querier.openshift-cluster-observability-operator.svc.cluster.local:9090
+    jsonData:
+      timeInterval: "30s"
+    editable: true
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  name: api-gateway-metrics
+  namespace: openshift-cluster-observability-operator
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana-observability
+  json: |
+    {
+      "annotations": { "list": [] },
+      "title": "API Gateway Metrics",
+      "uid": "api-gateway-metrics",
+      "version": 1,
+      "panels": [
+        {
+          "title": "Request Rate by Gateway",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total[5m])) by (destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Error Rate (4xx/5xx)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(istio_requests_total{response_code=~\"[45].*\"}[5m])) by (destination_workload_namespace)",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "P95 Latency (ms)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket[5m])) by (le, destination_workload_namespace))",
+              "legendFormat": "{{`{{destination_workload_namespace}}`}}"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        },
+        {
+          "title": "Rate Limit Rejections",
+          "type": "stat",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "targets": [
+            {
+              "expr": "sum(increase(ratelimit_service_rate_limit_total{status=\"over_limit\"}[1h]))",
+              "legendFormat": "Rejected"
+            }
+          ],
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
+        }
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "DS_PROMETHEUS",
+            "type": "datasource",
+            "query": "prometheus",
+            "current": { "text": "Prometheus (RHOBS)", "value": "Prometheus (RHOBS)" }
+          }
+        ]
+      },
+      "time": { "from": "now-1h", "to": "now" },
+      "schemaVersion": 39
+    }

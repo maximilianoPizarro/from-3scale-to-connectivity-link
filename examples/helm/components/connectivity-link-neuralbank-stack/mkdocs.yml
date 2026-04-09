@@ -1,0 +1,6 @@
+site_name: Neuralbank Stack
+site_description: Aplicación financiera de demostración pre-desplegada
+nav:
+  - Home: index.md
+plugins:
+  - techdocs-core

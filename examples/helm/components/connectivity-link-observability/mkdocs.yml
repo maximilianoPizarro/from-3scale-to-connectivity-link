@@ -1,0 +1,8 @@
+site_name: Platform Observability
+site_description: Grafana, Prometheus y stack de observabilidad del cluster
+nav:
+  - Home: index.md
+  - Acceso a Grafana: grafana.md
+  - Arquitectura: architecture.md
+plugins:
+  - techdocs-core
