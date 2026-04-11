@@ -286,8 +286,7 @@ connectivityLink:
       targetRevision: "1.16.0"
       destinationNamespace: openshift-lightspeed
       syncWave: "8"
-      values:
-        namespace: openshift-lightspeed
+      values: {}
 
 # ============================================================
 # Lightspeed / MCP — LLM provider config for OLS component
