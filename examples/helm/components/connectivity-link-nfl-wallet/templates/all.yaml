@@ -372,8 +372,8 @@ spec:
   documentation:
     openAPISpecURL: "https://nfl-wallet.{{ .Values.clusterDomain }}/q/openapi"
     swaggerUI: "https://nfl-wallet.{{ .Values.clusterDomain }}/q/swagger-ui"
-    techdocsRef: "url:https://github.com/maximilianoPizarro/field-sourced-content-template/tree/main/examples/helm/components/connectivity-link-nfl-wallet"
-    gitRepository: "https://github.com/maximilianoPizarro/field-sourced-content-template"
+    techdocsRef: "url:https://github.com/maximilianoPizarro/test-drive-pe-oscg/tree/main/examples/helm/components/connectivity-link-nfl-wallet"
+    gitRepository: "https://github.com/maximilianoPizarro/test-drive-pe-oscg"
   targetRef:
     group: gateway.networking.k8s.io
     kind: HTTPRoute

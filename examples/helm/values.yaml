@@ -6,7 +6,7 @@
 # ============================================================
 gitops:
   # Repository containing the component charts (your fork or this template)
-  repoUrl: "https://github.com/maximilianoPizarro/field-sourced-content-template.git"
+  repoUrl: "https://github.com/maximilianoPizarro/test-drive-pe-oscg.git"
   revision: "main"
   basePath: "examples/helm"
 

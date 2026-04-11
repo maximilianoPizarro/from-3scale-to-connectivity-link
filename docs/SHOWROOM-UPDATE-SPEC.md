@@ -84,7 +84,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/rhpds/field-sourced-content-template
+    repoURL: https://github.com/rhpds/test-drive-pe-oscg
     path: examples/helm
     helm:
       parameters:

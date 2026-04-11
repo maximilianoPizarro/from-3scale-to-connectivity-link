@@ -1,6 +1,6 @@
 title: "From Zero To Hero with Red Hat Developer Hub"
 description: "Workshop — Neuralbank on OpenShift — Red Hat Developer Hub"
-baseurl: "/field-sourced-content-template"
+baseurl: "/test-drive-pe-oscg"
 url: "https://maximilianopizarro.github.io"
 remote_theme: just-the-docs/just-the-docs@v0.10.0
 color_scheme: custom
@@ -10,7 +10,7 @@ aux_links:
   "Red Hat Developers":
     - "https://developers.redhat.com"
   "GitHub":
-    - "https://github.com/maximilianoPizarro/field-sourced-content-template"
+    - "https://github.com/maximilianoPizarro/test-drive-pe-oscg"
 aux_links_new_tab: true
 
 footer_content: 'Created by <a href="https://github.com/maximilianoPizarro">maximilianoPizarro</a> · Powered by <a href="https://developers.redhat.com/rhdh">Red Hat Developer Hub</a>'

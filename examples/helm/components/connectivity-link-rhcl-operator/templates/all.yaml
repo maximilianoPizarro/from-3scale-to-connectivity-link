@@ -371,7 +371,7 @@ spec:
   documentation:
     openAPISpecURL: "https://neuralbank.apps.cluster-l9nhj.dynamic.redhatworkshops.io/q/openapi"
     swaggerUI: "https://neuralbank.apps.cluster-l9nhj.dynamic.redhatworkshops.io/q/swagger-ui"
-    gitRepository: "https://github.com/maximilianoPizarro/field-sourced-content-template"
+    gitRepository: "https://github.com/maximilianoPizarro/test-drive-pe-oscg"
   targetRef:
     group: gateway.networking.k8s.io
     kind: HTTPRoute

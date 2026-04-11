@@ -271,7 +271,7 @@ Control plane: 3 masters with **16 vCPU, 64 Gi RAM, 200 GB SSD** each (upgraded 
 
 ```bash
 # Clone this template
-git clone https://github.com/maximilianoPizarro/field-sourced-content-template.git my-content
+git clone https://github.com/maximilianoPizarro/test-drive-pe-oscg.git my-content
 cd my-content
 
 # Choose an example and start customizing
@@ -400,7 +400,7 @@ metadata:
 
 ## Documentation
 
-- [Workshop (GitHub Pages)](https://maximilianopizarro.github.io/field-sourced-content-template/) - Full workshop guide
+- [Workshop (GitHub Pages)](https://maximilianopizarro.github.io/test-drive-pe-oscg/) - Full workshop guide
 - [examples/helm/README.md](examples/helm/README.md) - Helm deployment guide
 - [examples/ansible/README.md](examples/ansible/README.md) - Ansible deployment guide
 - [docs/ansible-developer-guide.md](docs/ansible-developer-guide.md) - In-depth Ansible patterns
