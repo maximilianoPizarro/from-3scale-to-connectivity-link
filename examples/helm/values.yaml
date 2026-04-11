@@ -250,6 +250,10 @@ connectivityLink:
       destinationNamespace: gitea
       syncWave: "3"
       values:
+        global:
+          compatibility:
+            openshift:
+              adaptSecurityContext: force
         gitea:
           admin:
             username: gitea_admin
