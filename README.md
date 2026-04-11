@@ -287,6 +287,14 @@ RHDP environments have memory quotas applied to the sandbox namespace. The total
 >
 > **Tip**: When in doubt, start with fewer large workers rather than many small ones, and verify quota availability before scaling up.
 
+##### Provisioning Time
+
+| Configuration | Workers | Time (approx.) |
+|---------------|---------|----------------|
+| 200 users, 128Gi workers | 6 nodes | ~43 minutes |
+
+> Measured on RHDP KubeVirt environment. Time includes worker VM creation, node join, operator installation, and ArgoCD initial sync of all components.
+
 ##### Sizing Rationale
 
 | Component | Per-user footprint | 100 users (50% concurrent) | 200 users (50% concurrent) |

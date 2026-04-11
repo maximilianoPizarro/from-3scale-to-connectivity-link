@@ -156,14 +156,6 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
-    - id: connectivity-link-litemaas
-      enabled: true
-      path: connectivity-link-litemaas
-      destinationNamespace: litemaas
-      syncWave: "6"
-      prune: true
-      selfHeal: true
-      skipDryRunOnMissingResource: true
     - id: connectivity-link-openshift-ai
       enabled: true
       path: connectivity-link-openshift-ai
@@ -253,14 +245,6 @@ lightspeed:
   llmApiKey: "sk-no-key"
   llmEndpoint: "https://qwen3-8b-my-first-model.apps.ocp.qvvqq.sandbox503.opentlc.com/v1"
   model: "qwen3-8b"
-
-# ============================================================
-# LiteMaaS / MaaS (optional — injected by RHDP when enabled on order)
-# ============================================================
-litemaas:
-  apiUrl: ""
-  apiKey: ""
-  model: ""
 
 # ============================================================
 # User Scaling — single parameter controls all user provisioning
