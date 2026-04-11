@@ -227,6 +227,7 @@ spec:
       - SkipDryRunOnMissingResource=true
       {{- end }}
 {{- end }}
+{{- end }}
 # ============================================================
 # Helm Chart Applications — third-party charts from external repos
 # ============================================================
