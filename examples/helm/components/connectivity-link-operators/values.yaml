@@ -1,4 +1,5 @@
 # Default values — servicemeshoperator3 is also in templates/servicemeshoperator3.yaml (avoid duplicate Subscription)
+clusterDomain: "apps.cluster.example.com"
 channel: stable-4.20
 version: 4.20.4
 subscriptions:

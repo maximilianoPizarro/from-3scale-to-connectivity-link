@@ -1,0 +1,85 @@
+{{- $domain := .Values.clusterDomain | default "apps.cluster.example.com" }}
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: workshop-registration-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://workshop-registration.{{ $domain }}
+  location: ApplicationMenu
+  text: Workshop Registration
+  applicationMenu:
+    section: Workshop Tools
+    imageURL: https://raw.githubusercontent.com/openshift/console/master/frontend/public/imgs/logos/openshift-platform.svg
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: gitea-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://gitea-gitea.{{ $domain }}
+  location: ApplicationMenu
+  text: Gitea
+  applicationMenu:
+    section: Workshop Tools
+    imageURL: https://about.gitea.com/gitea.png
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: kiali-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://kiali-openshift-cluster-observability-operator.{{ $domain }}
+  location: ApplicationMenu
+  text: Kiali
+  applicationMenu:
+    section: Observability
+    imageURL: https://raw.githubusercontent.com/kiali/kiali/master/frontend/public/favicon.ico
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: jaeger-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://jaeger.{{ $domain }}
+  location: ApplicationMenu
+  text: Jaeger
+  applicationMenu:
+    section: Observability
+    imageURL: https://www.jaegertracing.io/img/jaeger-icon-reverse-color.svg
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: grafana-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://grafana-observability.{{ $domain }}
+  location: ApplicationMenu
+  text: Grafana
+  applicationMenu:
+    section: Observability
+    imageURL: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: rhbk-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://rhbk.{{ $domain }}/admin/master/console
+  location: ApplicationMenu
+  text: Red Hat Build of Keycloak
+  applicationMenu:
+    section: Workshop Tools
+    imageURL: https://www.keycloak.org/resources/images/icon.svg

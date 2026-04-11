@@ -415,12 +415,36 @@ All services use the cluster domain pattern `apps.<cluster-domain>`:
 | **DevSpaces** | `https://devspaces.apps.<domain>` |
 | **Showroom** | `https://showroom.apps.<domain>` |
 | **Registration Portal** | `https://workshop-registration.apps.<domain>` |
+| **Registration Admin** | `https://workshop-registration.apps.<domain>/admin` |
 | **Keycloak** | `https://rhbk.apps.<domain>` |
 | **Mailpit** | `https://n8n-mailpit-openshift-lightspeed.apps.<domain>` |
 | **Grafana** | `https://grafana-observability.apps.<domain>` |
 | **Kiali** | `https://kiali-openshift-cluster-observability-operator.apps.<domain>` |
 | **Thanos Querier** | `https://thanos-querier.apps.<domain>` |
 | **Lightspeed** | Available from OpenShift Console |
+
+#### Registration Portal API Endpoints
+
+Base URL: `https://workshop-registration.apps.<domain>`
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/` | No | Registration form (visitors enter email) |
+| `GET` | `/admin` | No | Admin dashboard login page |
+| `GET` | `/api/health` | No | Health check — returns `{ status, registered, maxUsers }` |
+| `POST` | `/api/register` | No | Register a visitor — body: `{ "email": "..." }`, returns `{ username, redirect }` |
+| `GET` | `/api/users` | Yes | List all registered visitors — returns `{ users, maxUsers, available }` |
+| `POST` | `/api/users/delete` | Yes | Remove a visitor — body: `{ "username": "userN" }` |
+| `POST` | `/api/reset` | Yes | Clear all registrations |
+
+**Auth**: endpoints marked "Yes" require the admin token via header `X-Admin-Token`, query param `?token=`, or `Authorization: Bearer <token>`.
+
+**Example — check registered visitors:**
+
+```bash
+curl -s https://workshop-registration.apps.<domain>/api/health
+curl -s -H "X-Admin-Token: <token>" https://workshop-registration.apps.<domain>/api/users
+```
 
 ## How It Works
 

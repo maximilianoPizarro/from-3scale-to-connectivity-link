@@ -1,0 +1,103 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: console-plugin-enabler
+  namespace: openshift-operators
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: console-plugin-enabler
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+rules:
+- apiGroups: ["operator.openshift.io"]
+  resources: ["consoles"]
+  verbs: ["get", "patch", "update"]
+- apiGroups: ["console.openshift.io"]
+  resources: ["consoleplugins"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: console-plugin-enabler
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: console-plugin-enabler
+subjects:
+- kind: ServiceAccount
+  name: console-plugin-enabler
+  namespace: openshift-operators
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: enable-console-plugins
+  namespace: openshift-operators
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: console-plugin-enabler
+      containers:
+      - name: enable-plugins
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          DESIRED="pipelines-console-plugin kuadrant-console-plugin"
+
+          for PLUGIN in $DESIRED; do
+            echo "Waiting for ConsolePlugin $PLUGIN..."
+            FOUND=false
+            for i in $(seq 1 24); do
+              if oc get consoleplugin "$PLUGIN" >/dev/null 2>&1; then
+                echo "  $PLUGIN exists."
+                FOUND=true
+                break
+              fi
+              echo "  attempt $i/24..."
+              sleep 5
+            done
+            if [ "$FOUND" = "false" ]; then
+              echo "WARNING: $PLUGIN not found after 120s, skipping."
+            fi
+          done
+
+          CURRENT=$(oc get console.operator.openshift.io cluster \
+            -o jsonpath='{.spec.plugins[*]}' 2>/dev/null || echo "")
+
+          MERGED="$CURRENT"
+          for PLUGIN in $DESIRED; do
+            if oc get consoleplugin "$PLUGIN" >/dev/null 2>&1; then
+              if ! echo "$MERGED" | tr ' ' '\n' | grep -qx "$PLUGIN"; then
+                MERGED="$MERGED $PLUGIN"
+              fi
+            fi
+          done
+          MERGED=$(echo "$MERGED" | xargs)
+
+          if [ "$MERGED" = "$(echo $CURRENT | xargs)" ]; then
+            echo "All plugins already enabled: $CURRENT"
+            exit 0
+          fi
+
+          JSON_ARRAY=$(echo "$MERGED" | tr ' ' '\n' | \
+            awk 'BEGIN{printf "["} NR>1{printf ","} {printf "\"%s\"",$0} END{printf "]"}')
+          oc patch console.operator.openshift.io cluster --type=merge \
+            -p "{\"spec\":{\"plugins\":$JSON_ARRAY}}"
+          echo "Console plugins enabled: $MERGED"

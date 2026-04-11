@@ -114,6 +114,7 @@ spec:
     {{- else if eq .path "connectivity-link-operators" }}
     helm:
       valuesObject:
+        clusterDomain: {{ $domain }}
         channel: {{ $.Values.connectivityLink.operators.channel | quote }}
         version: {{ $.Values.connectivityLink.operators.version | quote }}
         subscriptions: {{ $.Values.connectivityLink.operators.subscriptions | toJson }}
