@@ -258,6 +258,52 @@ Control plane: 3 masters with **16 vCPU, 64 Gi RAM, 200 GB SSD** each (upgraded 
 
 > **Warning**: Single-node (SNO) deployments are not supported for >30 users. Standard 3-master control plane with 8 vCPU / 32 Gi is sufficient up to 100 users; for 200 users, upgrade masters to 16 vCPU / 64 Gi.
 
+#### RHDP Provisioning (KubeVirt / OpenShift CNV)
+
+When ordering from RHDP, the provisioning form exposes three parameters for worker nodes:
+
+| Parameter | Description |
+|-----------|-------------|
+| **OpenShift Worker count** | Number of KubeVirt worker VMs to create |
+| **OpenShift Worker memory** | Guest memory per worker VM |
+| **OpenShift Worker CPU** | vCPU cores per worker VM |
+
+##### Resource Quota Considerations
+
+RHDP environments have memory quotas applied to the sandbox namespace. The total quota covers all resources: control planes, bastion, workers, and system pods. The infrastructure base (control planes + bastion + overhead) consumes a significant portion of the quota, so plan worker sizing carefully to avoid exceeding the limit.
+
+> **Important**: Exceeding the namespace quota causes worker VM creation to fail. The error manifests as the `virt-launcher` pod being forbidden, and the provisioning task exhausts all retries. Always verify available quota before ordering.
+
+##### Recommended RHDP Values
+
+| Users | Worker count | Worker memory | Worker CPU | Total worker resources |
+|-------|-------------|--------------|-----------|----------------------|
+| **100** | **4** | **128Gi** | **32** | 512Gi RAM / 128 vCPU |
+| **100** (conservative) | **5** | **64Gi** | **16** | 320Gi RAM / 80 vCPU |
+| **200** | **7** | **128Gi** | **32** | 896Gi RAM / 224 vCPU |
+| **200** (conservative) | **8** | **64Gi** | **16** | 512Gi RAM / 128 vCPU |
+
+> **Tip**: When in doubt, start with fewer large workers rather than many small ones, and verify quota availability before scaling up.
+
+##### Sizing Rationale
+
+| Component | Per-user footprint | 100 users (50% concurrent) | 200 users (50% concurrent) |
+|-----------|-------------------|---------------------------|---------------------------|
+| DevSpaces workspaces | 2–4Gi RAM, 1–2 vCPU | ~200Gi / 100 vCPU | ~400Gi / 200 vCPU |
+| Scaffolded apps (3 per user) | 1.5Gi RAM, 1.5 vCPU | ~75Gi / 75 vCPU | ~150Gi / 150 vCPU |
+| Infrastructure (fixed) | — | ~100–150Gi / 30–50 vCPU | ~100–150Gi / 30–50 vCPU |
+| **Total worker requirement** | — | **~375–425Gi** | **~650–700Gi** |
+
+Adjust `userCount` in `values.yaml` to match:
+
+```yaml
+# For 100 users
+userCount: 100
+
+# For 200 users
+userCount: 200
+```
+
 ## Getting Started
 
 ### Choose Your Pattern
@@ -312,7 +358,7 @@ TOKEN=$(curl -sk "$KEYCLOAK_URL/realms/master/protocol/openid-connect/token" \
 curl -sk "$KEYCLOAK_URL/admin/realms/backstage/users" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"username":"platformadmin","enabled":true,"emailVerified":true,"credentials":[{"type":"password","value":"Welcome123!","temporary":false}]}'
+  -d '{"username":"platformadmin","enabled":true,"emailVerified":true,"credentials":[{"type":"password","value":"<CHOOSE_A_SECURE_PASSWORD>","temporary":false}]}'
 ```
 
 Platform Engineer permissions include: full catalog CRUD, scaffolder execution, RBAC administration, Lightspeed chat, Kuadrant API product management (create/update/delete/approve), and Adoption Insights.
@@ -345,7 +391,7 @@ oc rollout restart deployment/lightspeed-app-server -n openshift-lightspeed
 | `llm-credentials` | `openshift-lightspeed` | `apitoken` | OLS (Lightspeed) → LiteLLM |
 | `backend-secret` | `litemaas` | `litellm-api-key` | LiteMaaS backend → LiteLLM |
 
-> **Note**: The `litellm-secret` in `litemaas` (master-key, ui-password) and `postgres-secret` (db password) ship with default values in Git. Change them in production clusters via the same `oc patch secret` approach.
+> **Note**: After deployment, review and rotate all default secret values (LiteLLM master-key, UI password, database credentials) using the `oc patch secret` approach shown above.
 
 ### Service Access URLs
 
