@@ -227,4 +227,43 @@ spec:
       - SkipDryRunOnMissingResource=true
       {{- end }}
 {{- end }}
+# ============================================================
+# Helm Chart Applications — third-party charts from external repos
+# ============================================================
+{{- range .Values.connectivityLink.helmApps }}
+{{- if and . .enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $.Release.Name }}-helm-{{ .id }}
+  namespace: {{ $.Values.argocd.namespace }}
+  labels:
+    demo.redhat.com/application: "field-content"
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .syncWave | quote }}
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ $.Values.argocd.project }}
+  source:
+    repoURL: {{ .repoURL }}
+    chart: {{ .chart }}
+    targetRevision: {{ .targetRevision }}
+    helm:
+      releaseName: {{ .chart }}
+      valuesObject:
+        {{- toYaml .values | nindent 8 }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .destinationNamespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
+{{- end }}
 {{- end }}
