@@ -152,11 +152,11 @@ subjects:
 ---
 apiVersion: v1
 data:
-  CORS_ORIGIN: https://litemaas.apps.cluster-l9nhj.dynamic.redhatworkshops.io
-  FRONTEND_HOST: litemaas.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+  CORS_ORIGIN: https://litemaas.apps.cluster-94mvp.dynamic.redhatworkshops.io
+  FRONTEND_HOST: litemaas.apps.cluster-94mvp.dynamic.redhatworkshops.io
   LITELLM_API_URL: http://litellm:4000
-  OAUTH_CALLBACK_URL: https://litemaas.apps.cluster-l9nhj.dynamic.redhatworkshops.io/api/auth/callback
-  OAUTH_ISSUER: https://oauth-openshift.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+  OAUTH_CALLBACK_URL: https://litemaas.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/auth/callback
+  OAUTH_ISSUER: https://oauth-openshift.apps.cluster-94mvp.dynamic.redhatworkshops.io
 kind: ConfigMap
 metadata:
   name: litemaas-cluster-config
@@ -358,7 +358,7 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: "0"
         - name: LITELLM_API_URL
-          value: https://litemaas.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+          value: https://litemaas.apps.cluster-94mvp.dynamic.redhatworkshops.io
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
@@ -739,7 +739,7 @@ metadata:
   namespace: litemaas
 spec:
   hostnames:
-  - litemaas.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+  - litemaas.apps.cluster-94mvp.dynamic.redhatworkshops.io
   parentRefs:
   - name: litemaas-gateway
     namespace: litemaas
@@ -819,7 +819,7 @@ metadata:
   name: litemaas-via-gateway
   namespace: litemaas
 spec:
-  host: litemaas.apps.cluster-l9nhj.dynamic.redhatworkshops.io
+  host: litemaas.apps.cluster-94mvp.dynamic.redhatworkshops.io
   port:
     targetPort: http
   tls:
