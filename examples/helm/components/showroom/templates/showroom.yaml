@@ -58,9 +58,12 @@ data:
           expires off;
           proxy_cache off;
           proxy_pass_request_headers on;
-          proxy_set_header Accept-Encoding "gzip";
+          proxy_set_header Accept-Encoding "";
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Proto $scheme;
+          sub_filter '</body>' '<div style="position:fixed;bottom:12px;right:12px;z-index:9999;background:rgba(255,255,255,0.9);border-radius:8px;padding:4px 8px;box-shadow:0 1px 4px rgba(0,0,0,0.15)"><img src="https://maximilianopizarro.github.io/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OSC" style="height:36px"></div></body>';
+          sub_filter_once on;
+          sub_filter_types text/html;
         }
         {{- if .Values.showroom.terminal.enabled }}
         location /terminal/ {

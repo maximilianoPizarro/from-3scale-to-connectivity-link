@@ -7,6 +7,11 @@ has_children: false
 
 ---
 
+<div style="text-align:center;margin:24px 0;">
+  <img src="{{ site.baseurl }}/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons" style="height:80px;">
+  <h3 style="margin:8px 0 0;color:#6a6e73;">OpenShift Commons Gathering — Edición Buenos Aires, Argentina 2026</h3>
+</div>
+
 ## Bienvenido al Workshop
 
 En este workshop aprenderás a utilizar **Red Hat Developer Hub** como portal de desarrollo self-service para construir, desplegar y gestionar aplicaciones en OpenShift.
