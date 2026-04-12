@@ -290,7 +290,11 @@ connectivityLink:
       targetRevision: "1.16.0"
       destinationNamespace: openshift-lightspeed
       syncWave: "8"
-      values: {}
+      values:
+        mailpit:
+          enabled: true
+          route:
+            enabled: true
 
 # ============================================================
 # Lightspeed / MCP — LLM provider config for OLS component
