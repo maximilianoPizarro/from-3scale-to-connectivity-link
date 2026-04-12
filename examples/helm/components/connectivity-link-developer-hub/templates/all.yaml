@@ -1631,3 +1631,65 @@ spec:
           echo "Restarting Developer Hub to pick up new password..."
           oc rollout restart deployment/backstage-developer-hub -n developer-hub
           echo "ArgoCD password synced successfully"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/hook: PostSync
+  name: rhdh-welcome-notification
+  namespace: developer-hub
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: notify
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        env:
+        - name: BACKEND_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: secrets-rhdh
+              key: BACKEND_SECRET
+        - name: CLUSTER_DOMAIN
+          value: "{{ .Values.clusterDomain }}"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          RHDH_URL="https://backstage-developer-hub-developer-hub.${CLUSTER_DOMAIN}"
+          MAILPIT_URL="https://n8n-mailpit-openshift-lightspeed.${CLUSTER_DOMAIN}"
+
+          echo "Waiting for Developer Hub to be ready..."
+          for i in $(seq 1 60); do
+            STATUS=$(curl -sk -o /dev/null -w '%{http_code}' "${RHDH_URL}/api/notifications" \
+              -H "Authorization: Bearer ${BACKEND_SECRET}")
+            if [ "$STATUS" = "200" ]; then
+              echo "Developer Hub notifications API is ready"
+              break
+            fi
+            echo "Attempt $i: HTTP $STATUS, retrying in 10s..."
+            sleep 10
+          done
+
+          echo "Sending welcome notification..."
+          curl -sk -X POST "${RHDH_URL}/api/notifications" \
+            -H "Authorization: Bearer ${BACKEND_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"recipients\": {\"type\": \"broadcast\"},
+              \"payload\": {
+                \"title\": \"Workshop Email Notifications\",
+                \"description\": \"Your workshop email inbox is ready. Click to view notifications sent by Developer Hub scaffolder templates, pipeline results, and system alerts.\",
+                \"link\": \"${MAILPIT_URL}\",
+                \"severity\": \"normal\",
+                \"topic\": \"workshop-mailpit\"
+              }
+            }"
+
+          echo ""
+          echo "Notification sent successfully"
