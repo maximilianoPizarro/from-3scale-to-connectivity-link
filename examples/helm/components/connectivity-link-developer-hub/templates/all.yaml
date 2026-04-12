@@ -388,12 +388,23 @@ data:
                 - resolver: preferredUsernameMatchingUserEntityName
                 - resolver: emailMatchingUserEntityProfileEmail
     backend:
+      actions:
+        pluginSources:
+          - 'software-catalog-mcp-tool'
+          - 'techdocs-mcp-tool'
       auth:
         externalAccess:
           - type: static
             options:
               token: ${BACKEND_SECRET}
               subject: admin-curl-access
+          - type: static
+            options:
+              token: ${MCP_TOKEN}
+              subject: mcp-clients
+            accessRestrictions:
+              - plugin: mcp-actions
+              - plugin: catalog
       baseUrl: "${RHDH_BASE_URL}"
       cors:
         origin: "${RHDH_BASE_URL}"
@@ -655,6 +666,12 @@ data:
       - package: ./dynamic-plugins/dist/backstage-plugin-signals
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-plugin-signals-backend-dynamic
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-plugin-mcp-actions-backend:bs_1.45.3__0.1.5
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool:bs_1.45.3__0.4.1
+        disabled: false
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-techdocs-mcp-tool:bs_1.45.3__0.3.2
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar
         disabled: false
