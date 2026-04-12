@@ -44,6 +44,55 @@ subjects:
   name: {{ .Values.showroom.name }}
   namespace: {{ .Values.showroom.namespace }}
 ---
+# Showroom secret-reader Role — scoped to nfl-wallet-prod and neuralbank-stack only
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: showroom-secret-reader
+  namespace: nfl-wallet-prod
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: showroom-secret-reader
+  namespace: nfl-wallet-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: showroom-secret-reader
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.showroom.name }}
+  namespace: {{ .Values.showroom.namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: showroom-secret-reader
+  namespace: neuralbank-stack
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: showroom-secret-reader
+  namespace: neuralbank-stack
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: showroom-secret-reader
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.showroom.name }}
+  namespace: {{ .Values.showroom.namespace }}
+---
 # Showroom Nginx ConfigMap
 kind: ConfigMap
 metadata:
