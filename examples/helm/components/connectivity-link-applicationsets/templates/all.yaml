@@ -234,6 +234,18 @@ spec:
                         "${GITEA}/api/v1/repos/${ORG}/${REPO}/hooks" 2>/dev/null || echo "[]")
 
                       LISTENER_SVC="http://el-${REPO}-listener.${NS}.svc.cluster.local:8080"
+                      LISTENER_EXT="https://el-${REPO}-listener-${NS}.${DOMAIN}"
+
+                      # Migrate old external-URL webhooks to internal service URL
+                      OLD_HOOK_ID=$(echo "$HOOKS" | grep -o "\"id\":[0-9]*" | head -1 | sed 's/"id"://')
+                      if [ -n "$OLD_HOOK_ID" ] && echo "$HOOKS" | grep -q "$LISTENER_EXT"; then
+                        echo "Migrating webhook ${OLD_HOOK_ID} for ${ORG}/${REPO}: external → internal"
+                        curl -sS -o /dev/null -X PATCH \
+                          "${GITEA}/api/v1/repos/${ORG}/${REPO}/hooks/${OLD_HOOK_ID}" \
+                          -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                          -H "Content-Type: application/json" \
+                          -d "{\"config\":{\"url\":\"${LISTENER_SVC}\",\"content_type\":\"json\"},\"active\":true}" || true
+                      fi
 
                       if echo "$HOOKS" | grep -q "$LISTENER_SVC"; then
                         RUNS_RESP=$(curl -sS \
@@ -262,7 +274,6 @@ spec:
                         -H "Content-Type: application/json" \
                         -d "{\"type\":\"gitea\",\"config\":{\"url\":\"${LISTENER_SVC}\",\"content_type\":\"json\"},\"events\":[\"push\"],\"active\":true}" || true
 
-                      # Trigger initial build right after webhook creation
                       BRANCH_INFO=$(curl -sS -u "${ADMIN_USER}:${ADMIN_PASS}" \
                         "${GITEA}/api/v1/repos/${ORG}/${REPO}/branches/main" 2>/dev/null || true)
                       LATEST_SHA=$(echo "$BRANCH_INFO" | grep -o '"id":"[a-f0-9]*"' | head -1 | sed 's/"id":"//;s/"//g' || true)
