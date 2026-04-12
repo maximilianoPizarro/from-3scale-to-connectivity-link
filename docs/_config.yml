@@ -13,7 +13,7 @@ aux_links:
     - "https://github.com/maximilianoPizarro/test-drive-pe-oscg"
 aux_links_new_tab: true
 
-footer_content: '<img src="/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:24px;vertical-align:middle;margin-right:6px;">OpenShift Commons Gathering — Edición Buenos Aires, Argentina 2026 · Created by <a href="https://maximilianopizarro.github.io/" target="_blank">Maximiliano Pizarro</a> · Powered by <a href="https://developers.redhat.com/rhdh" target="_blank">Red Hat Developer Hub</a>'
+footer_content: '<img src="/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:24px;vertical-align:middle;margin-right:6px;">OpenShift Commons Gathering — Buenos Aires 2026 · Created by <a href="https://maximilianopizarro.github.io/" target="_blank">Maximiliano Pizarro</a> · Powered by <a href="https://developers.redhat.com/rhdh" target="_blank">Red Hat Developer Hub</a>'
 
 favicon_ico: "/test-drive-pe-oscg/assets/images/favicon.ico"
 

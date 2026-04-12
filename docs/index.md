@@ -9,7 +9,7 @@ has_children: false
 
 <div style="text-align:center;margin:24px 0;">
   <img src="{{ site.baseurl }}/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons" style="height:80px;">
-  <h3 style="margin:8px 0 0;color:#6a6e73;">OpenShift Commons Gathering — Edición Buenos Aires, Argentina 2026</h3>
+  <h3 style="margin:8px 0 0;color:#6a6e73;">OpenShift Commons Gathering — Buenos Aires 2026</h3>
 </div>
 
 ## Bienvenido al Workshop
