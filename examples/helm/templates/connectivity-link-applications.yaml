@@ -151,9 +151,9 @@ spec:
         version: {{ $.Values.connectivityLink.operators.version | quote }}
         subscriptions: {{ $.Values.connectivityLink.operators.subscriptions | toJson }}
     {{- else if eq .path "connectivity-link-openshift-lightspeed" }}
-    {{- $llmKey := $.Values.lightspeed.llmApiKey | default $.Values.litemaas.apiKey }}
-    {{- $llmEndpoint := $.Values.lightspeed.llmEndpoint | default $.Values.litemaas.apiUrl }}
-    {{- $llmModel := $.Values.lightspeed.model | default $.Values.litemaas.model | default "granite-3-2-8b-instruct" }}
+    {{- $llmKey := $.Values.lightspeed.llmApiKey }}
+    {{- $llmEndpoint := $.Values.lightspeed.llmEndpoint }}
+    {{- $llmModel := $.Values.lightspeed.model | default "granite-3-2-8b-instruct" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
@@ -219,15 +219,8 @@ spec:
         {{- $_ := set $kc "tokenEndpoint" (printf "https://rhbk.%s/realms/neuralbank/protocol/openid-connect/token" $domain) }}
         {{- $_ := set $kc "postLogoutRedirectUri" (printf "https://neuralbank.%s" $domain) }}
         {{- $_ := set $nb "keycloak" $kc }}
-        {{- if $.Values.litemaas.apiUrl }}
-        {{- $_ := set $nb.api "baseUrl" $.Values.litemaas.apiUrl }}
-        {{- end }}
         {{- toYaml $nb | nindent 8 }}
     {{- else if eq .path "connectivity-link-kiali" }}
-    helm:
-      valuesObject:
-        clusterDomain: {{ $domain }}
-    {{- else if eq .path "connectivity-link-litemaas" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
