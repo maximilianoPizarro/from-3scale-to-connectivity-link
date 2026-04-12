@@ -2,6 +2,6 @@
 enabled: true
 clusterDomain: ""
 userCount: 200
-llmEndpoint: ""
-llmModel: "qwen3-8b"
-llmApiKey: "sk-no-key"
+litellmUrl: "http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1"
+litellmModel: "qwen3"
+litellmApiKey: "sk-openshift-mcp-1234"

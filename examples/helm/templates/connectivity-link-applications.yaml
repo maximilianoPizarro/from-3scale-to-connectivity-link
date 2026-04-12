@@ -184,16 +184,10 @@ spec:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
     {{- else if eq .path "connectivity-link-developer-hub" }}
-    {{- $llmEndpointDH := $.Values.lightspeed.llmEndpoint }}
-    {{- $llmModelDH := $.Values.lightspeed.model | default "granite-3-2-8b-instruct" }}
-    {{- $llmApiKeyDH := $.Values.lightspeed.llmApiKey | default "sk-no-key" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
-        llmEndpoint: {{ $llmEndpointDH | quote }}
-        llmModel: {{ $llmModelDH | quote }}
-        llmApiKey: {{ $llmApiKeyDH | quote }}
     {{- else if eq .path "connectivity-link-workshop-registration" }}
     helm:
       valuesObject:
