@@ -1017,7 +1017,7 @@ spec:
               value: lightspeed_conversations
             - name: POSTGRESQL_HOST
               value: lightspeed-postgresql-db-service
-      backoffLimit: 3
+  backoffLimit: 3
 ---
 apiVersion: v1
 kind: ConfigMap
