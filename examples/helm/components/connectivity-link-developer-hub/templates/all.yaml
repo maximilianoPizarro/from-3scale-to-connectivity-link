@@ -363,6 +363,8 @@ data:
     app:
       title: Developer Hub
       baseUrl: "${RHDH_BASE_URL}"
+    workshop:
+      clusterDomain: {{ .Values.clusterDomain }}
     integrations:
       gitea:
         - host: gitea-gitea.{{ .Values.clusterDomain }}
@@ -410,6 +412,9 @@ data:
           - host: raw.githubusercontent.com
           - host: gitea-gitea.{{ .Values.clusterDomain }}
     signInPage: oidc
+    scaffolder:
+      defaultValues:
+        clusterDomain: {{ .Values.clusterDomain }}
     catalog:
       providers:
         keycloakOrg:

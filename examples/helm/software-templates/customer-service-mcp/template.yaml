@@ -40,8 +40,13 @@ spec:
         clusterDomain:
           title: Cluster Domain
           type: string
+<<<<<<< HEAD
           default: "apps.cluster-8dvx7.dynamic.redhatworkshops.io"
+=======
+          default: "apps.cluster.example.com"
+>>>>>>> 4ca3102 (fix: dynamic clusterDomain for scaffolder templates)
           ui:widget: hidden
+          description: "Auto-populated from app config workshop.clusterDomain"
   steps:
     - id: fetch-skeleton
       name: Generate Skeleton
