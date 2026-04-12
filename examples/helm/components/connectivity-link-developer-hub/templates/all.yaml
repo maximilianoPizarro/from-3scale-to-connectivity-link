@@ -1043,11 +1043,13 @@ kind: ClusterRole
 metadata:
   name: rhdh-argocd-secret-reader
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "0"
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
+  verbs: ["get", "patch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
   verbs: ["get", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1055,8 +1057,7 @@ kind: ClusterRoleBinding
 metadata:
   name: rhdh-argocd-secret-reader-binding
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "0"
 subjects:
 - kind: ServiceAccount
   name: rhdh-argocd-sync
@@ -1072,8 +1073,7 @@ metadata:
   name: rhdh-argocd-sync
   namespace: developer-hub
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "0"
 ---
 apiVersion: batch/v1
 kind: Job
@@ -1081,9 +1081,8 @@ metadata:
   name: rhdh-argocd-password-sync
   namespace: developer-hub
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
-    argocd.argoproj.io/sync-wave: "1"
 spec:
   backoffLimit: 5
   template:
@@ -1104,8 +1103,18 @@ spec:
             echo "ERROR: Could not read ArgoCD admin password"
             exit 1
           fi
+
+          CURRENT=$(oc get secret secrets-rhdh -n developer-hub -o jsonpath='{.data.ARGOCD_INSTANCE_2_PASSWORD}' | base64 -d)
+          if [ "$CURRENT" = "$ARGOCD_PWD" ]; then
+            echo "ArgoCD password already up to date"
+            exit 0
+          fi
+
           echo "Patching secrets-rhdh with real ArgoCD password..."
           ENCODED=$(echo -n "$ARGOCD_PWD" | base64 -w0)
           oc patch secret secrets-rhdh -n developer-hub --type='json' \
             -p="[{\"op\":\"replace\",\"path\":\"/data/ARGOCD_INSTANCE_2_PASSWORD\",\"value\":\"$ENCODED\"}]"
+
+          echo "Restarting Developer Hub to pick up new password..."
+          oc rollout restart deployment/backstage-developer-hub -n developer-hub
           echo "ArgoCD password synced successfully"
