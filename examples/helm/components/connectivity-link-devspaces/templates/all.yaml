@@ -148,7 +148,7 @@ spec:
               controller.devfile.io/mount-to-devworkspace: "true"
               controller.devfile.io/watch-secret: "true"
             annotations:
-              controller.devfile.io/mount-path: /etc/secret
+              controller.devfile.io/mount-path: /home/user
               controller.devfile.io/mount-as: subpath
           type: Opaque
           stringData:
