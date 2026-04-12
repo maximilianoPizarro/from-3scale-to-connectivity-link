@@ -1043,7 +1043,8 @@ kind: ClusterRole
 metadata:
   name: rhdh-argocd-secret-reader
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
@@ -1054,7 +1055,8 @@ kind: ClusterRoleBinding
 metadata:
   name: rhdh-argocd-secret-reader-binding
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 subjects:
 - kind: ServiceAccount
   name: rhdh-argocd-sync
@@ -1070,7 +1072,8 @@ metadata:
   name: rhdh-argocd-sync
   namespace: developer-hub
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 ---
 apiVersion: batch/v1
 kind: Job
@@ -1078,8 +1081,9 @@ metadata:
   name: rhdh-argocd-password-sync
   namespace: developer-hub
   annotations:
-    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   backoffLimit: 5
   template:
