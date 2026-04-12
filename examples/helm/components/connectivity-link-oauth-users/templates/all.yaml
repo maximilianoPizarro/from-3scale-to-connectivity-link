@@ -49,6 +49,44 @@ subjects:
   name: oauth-patcher
   namespace: openshift-config
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: workshop-connectivity-link-viewer
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+- apiGroups: ["gateway.networking.k8s.io"]
+  resources: ["gateways", "httproutes", "grpcroutes", "referencegrants"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["kuadrant.io"]
+  resources: ["authpolicies", "ratelimitpolicies", "dnspolicies", "tlspolicies", "tokenratelimitpolicies"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["gateway.kuadrant.io"]
+  resources: ["policies"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["extensions.istio.io"]
+  resources: ["wasmplugins"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.istio.io"]
+  resources: ["envoyfilters"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: workshop-connectivity-link-viewer
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: workshop-connectivity-link-viewer
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:authenticated
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
