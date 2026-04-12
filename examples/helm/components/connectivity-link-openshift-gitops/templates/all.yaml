@@ -21,6 +21,20 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: ServerSideApply=true
 spec:
+  rbac:
+    defaultPolicy: ''
+    scopes: '[groups, preferred_username]'
+    policy: |
+      g, system:cluster-admins, role:admin
+      g, admin, role:admin
+      {{- $userCount := .Values.userCount | default 200 | int }}
+      {{- range $i := until $userCount }}
+      {{- $user := printf "user%d" (add1 $i) }}
+      p, {{ $user }}, applications, get, default/{{ $user }}-*, allow
+      p, {{ $user }}, applications, sync, default/{{ $user }}-*, allow
+      p, {{ $user }}, applications, action/*, default/{{ $user }}-*, allow
+      p, {{ $user }}, logs, get, default/{{ $user }}-*, allow
+      {{- end }}
   controller:
     resources:
       limits:

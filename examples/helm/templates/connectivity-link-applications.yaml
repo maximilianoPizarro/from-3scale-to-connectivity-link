@@ -134,7 +134,12 @@ spec:
     targetRevision: {{ $.Values.gitops.revision }}
     path: {{ $.Values.gitops.basePath }}/components/{{ .path }}
     {{- $domain := $.Values.deployer.domain | default "apps.cluster.example.com" }}
-    {{- if eq .path "connectivity-link-namespaces" }}
+    {{- if eq .path "connectivity-link-openshift-gitops" }}
+    helm:
+      valuesObject:
+        userCount: {{ $.Values.userCount | default 200 }}
+        clusterDomain: {{ $domain }}
+    {{- else if eq .path "connectivity-link-namespaces" }}
     helm:
       valuesObject:
         userCount: {{ $.Values.userCount | default 200 }}

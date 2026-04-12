@@ -1,2 +1,4 @@
 # Vendored from https://gitlab.com/maximilianoPizarro/connectivity-link (openshift-gitops)
 enabled: true
+userCount: 200
+clusterDomain: ""
