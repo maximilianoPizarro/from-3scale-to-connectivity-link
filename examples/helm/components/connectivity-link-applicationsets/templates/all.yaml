@@ -41,6 +41,28 @@ subjects:
   name: gitea-token-creator
   namespace: openshift-gitops
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gitea-webhook-sync-pipelines
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns"]
+  verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gitea-webhook-sync-pipelines
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gitea-webhook-sync-pipelines
+subjects:
+- kind: ServiceAccount
+  name: gitea-token-creator
+  namespace: openshift-gitops
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -212,8 +234,25 @@ spec:
                         "${GITEA}/api/v1/repos/${ORG}/${REPO}/hooks" 2>/dev/null || echo "[]")
 
                       LISTENER_URL="https://el-${REPO}-listener-${NS}.${DOMAIN}"
+                      LISTENER_SVC="http://el-${REPO}-listener.${NS}.svc.cluster.local:8080"
 
                       if echo "$HOOKS" | grep -q "$LISTENER_URL"; then
+                        RUNS_RESP=$(curl -sS \
+                          "$KUBE_API/apis/tekton.dev/v1/namespaces/${NS}/pipelineruns?labelSelector=tekton.dev/pipeline=${REPO}-build&limit=1" \
+                          -H "Authorization: Bearer $KUBE_TOKEN" --cacert "$CA" 2>/dev/null || echo '{"items":[]}')
+                        if echo "$RUNS_RESP" | grep -q '"items":\[\]'; then
+                          echo "No pipeline runs for ${ORG}/${REPO}, triggering initial build..."
+                          BRANCH_INFO=$(curl -sS -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                            "${GITEA}/api/v1/repos/${ORG}/${REPO}/branches/main" 2>/dev/null || true)
+                          LATEST_SHA=$(echo "$BRANCH_INFO" | grep -o '"id":"[a-f0-9]*"' | head -1 | sed 's/"id":"//;s/"//g' || true)
+                          CLONE_URL="https://gitea-gitea.${DOMAIN}/${ORG}/${REPO}.git"
+                          if [ -n "$LATEST_SHA" ]; then
+                            curl -sS -o /dev/null -X POST "$LISTENER_SVC" \
+                              -H "Content-Type: application/json" \
+                              -d "{\"ref\":\"refs/heads/main\",\"after\":\"${LATEST_SHA}\",\"repository\":{\"clone_url\":\"${CLONE_URL}\",\"full_name\":\"${ORG}/${REPO}\"}}" || true
+                            echo "Triggered initial build for ${ORG}/${REPO}"
+                          fi
+                        fi
                         continue
                       fi
 
@@ -223,6 +262,20 @@ spec:
                         -u "${ADMIN_USER}:${ADMIN_PASS}" \
                         -H "Content-Type: application/json" \
                         -d "{\"type\":\"gitea\",\"config\":{\"url\":\"${LISTENER_URL}\",\"content_type\":\"json\"},\"events\":[\"push\"],\"active\":true}" || true
+
+                      # Trigger initial build right after webhook creation
+                      BRANCH_INFO=$(curl -sS -u "${ADMIN_USER}:${ADMIN_PASS}" \
+                        "${GITEA}/api/v1/repos/${ORG}/${REPO}/branches/main" 2>/dev/null || true)
+                      LATEST_SHA=$(echo "$BRANCH_INFO" | grep -o '"id":"[a-f0-9]*"' | head -1 | sed 's/"id":"//;s/"//g' || true)
+                      CLONE_URL="https://gitea-gitea.${DOMAIN}/${ORG}/${REPO}.git"
+                      if [ -n "$LATEST_SHA" ]; then
+                        echo "Triggering initial build for ${ORG}/${REPO}..."
+                        sleep 2
+                        curl -sS -o /dev/null -X POST "$LISTENER_SVC" \
+                          -H "Content-Type: application/json" \
+                          -d "{\"ref\":\"refs/heads/main\",\"after\":\"${LATEST_SHA}\",\"repository\":{\"clone_url\":\"${CLONE_URL}\",\"full_name\":\"${ORG}/${REPO}\"}}" || true
+                        echo "Triggered initial build for ${ORG}/${REPO}"
+                      fi
                     done
                   done
                   echo "Webhook sync complete."
