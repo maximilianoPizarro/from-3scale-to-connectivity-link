@@ -283,6 +283,12 @@ connectivityLink:
       syncWave: "8"
       values:
         namespace: openshift-lightspeed
+        litellm:
+          model:
+            name: qwen25-7b-instruct
+            modelId: qwen25-7b-instruct
+            apiBase: "https://qwen25-7b-instruct-my-first-model.apps.ocp.xbgvw.sandbox67.opentlc.com/v1"
+            apiKey: "sk-no-key"
     - id: n8n
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/n8n-helm-chart/"
@@ -302,8 +308,8 @@ connectivityLink:
 # ============================================================
 lightspeed:
   llmApiKey: "sk-no-key"
-  llmEndpoint: "https://qwen3-8b-my-first-model.apps.ocp.qvvqq.sandbox503.opentlc.com/v1"
-  model: "qwen3-8b"
+  llmEndpoint: "https://qwen25-7b-instruct-my-first-model.apps.ocp.xbgvw.sandbox67.opentlc.com/v1"
+  model: "qwen25-7b-instruct"
 
 # ============================================================
 # User Scaling — single parameter controls all user provisioning
