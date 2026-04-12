@@ -696,6 +696,14 @@ spec:
           defaultMode: 493
           name: postgres-init-script
         name: postgres-init-script
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  revisionHistoryLimit: 10
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
   volumeClaimTemplates:
   - metadata:
       name: postgres-storage
@@ -705,6 +713,7 @@ spec:
       resources:
         requests:
           storage: 10Gi
+      volumeMode: Filesystem
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
@@ -741,19 +750,27 @@ spec:
   hostnames:
   - litemaas.{{ .Values.clusterDomain }}
   parentRefs:
-  - name: litemaas-gateway
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: litemaas-gateway
     namespace: litemaas
   rules:
   - backendRefs:
-    - name: backend
+    - group: ""
+      kind: Service
+      name: backend
       port: 8080
+      weight: 1
     matches:
     - path:
         type: PathPrefix
         value: /api
   - backendRefs:
-    - name: litellm
+    - group: ""
+      kind: Service
+      name: litellm
       port: 4000
+      weight: 1
     matches:
     - path:
         type: PathPrefix
@@ -762,8 +779,11 @@ spec:
         type: PathPrefix
         value: /q
   - backendRefs:
-    - name: frontend
+    - group: ""
+      kind: Service
+      name: frontend
       port: 8080
+      weight: 1
     matches:
     - path:
         type: PathPrefix
