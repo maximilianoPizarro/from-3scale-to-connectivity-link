@@ -649,7 +649,120 @@ spec:
     secretName: trusted-headers-public-key
 ---
 ##
-## 8. Route — OpenShift route to expose the gateway
+## 8. MCP Server Registrations — connect openshift-mcp-server backends to the gateway
+##
+apiVersion: v1
+kind: Service
+metadata:
+  name: openshift-mcp-server-proxy
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  type: ExternalName
+  externalName: openshift-mcp-server.openshift-lightspeed.svc.cluster.local
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-mcp-server-proxy
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  type: ExternalName
+  externalName: openshift-mcp-server-k8s-mcp.openshift-lightspeed.svc.cluster.local
+  ports:
+    - port: 8085
+      protocol: TCP
+      targetPort: 8085
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: openshift-mcp-server-route
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  hostnames:
+    - mcp-gateway.{{ .Values.clusterDomain }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: mcp-gateway
+      namespace: mcp-system
+      sectionName: mcp
+  rules:
+    - backendRefs:
+        - name: openshift-mcp-server-proxy
+          port: 8080
+      matches:
+        - path:
+            type: PathPrefix
+            value: /openshift-mcp-server/mcp
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: k8s-mcp-server-route
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  hostnames:
+    - mcp-gateway.{{ .Values.clusterDomain }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: mcp-gateway
+      namespace: mcp-system
+      sectionName: mcp
+  rules:
+    - backendRefs:
+        - name: k8s-mcp-server-proxy
+          port: 8085
+      matches:
+        - path:
+            type: PathPrefix
+            value: /k8s-mcp-server/mcp
+---
+apiVersion: mcp.kuadrant.io/v1alpha1
+kind: MCPServerRegistration
+metadata:
+  name: openshift-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    name: openshift-mcp-server-route
+  toolPrefix: ocp
+  path: /mcp
+---
+apiVersion: mcp.kuadrant.io/v1alpha1
+kind: MCPServerRegistration
+metadata:
+  name: kubernetes-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    name: k8s-mcp-server-route
+  toolPrefix: k8s
+  path: /mcp
+---
+##
+## 9. Route — OpenShift route to expose the gateway
 ##
 apiVersion: route.openshift.io/v1
 kind: Route

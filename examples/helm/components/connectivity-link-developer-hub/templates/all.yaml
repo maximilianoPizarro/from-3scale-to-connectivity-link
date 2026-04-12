@@ -898,8 +898,8 @@ data:
           - https://cdn.jsdelivr.net
     lightspeed:
       servers:
-        - id: qwen3-8b
-          url: http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1
+        - id: {{ .Values.llmModel | default "qwen3-8b" }}
+          url: {{ .Values.llmEndpoint | default "http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1" }}
           token: "${VLLM_API_KEY}"
       prompts:
         - title: "Getting Started with Developer Hub"
@@ -940,12 +940,12 @@ metadata:
   namespace: developer-hub
 type: Opaque
 stringData:
-  VLLM_URL: "http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1"
-  VLLM_API_KEY: "sk-openshift-mcp-1234"
+  VLLM_URL: {{ .Values.llmEndpoint | default "http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1" | quote }}
+  VLLM_API_KEY: {{ .Values.llmApiKey | default "sk-no-key" | quote }}
   VLLM_MAX_TOKENS: "4096"
   VLLM_TLS_VERIFY: "false"
   VALIDATION_PROVIDER: "vllm"
-  VALIDATION_MODEL_NAME: "qwen3-8b"
+  VALIDATION_MODEL_NAME: {{ .Values.llmModel | default "qwen3-8b" | quote }}
 ---
 apiVersion: rhdh.redhat.com/v1alpha5
 kind: Backstage

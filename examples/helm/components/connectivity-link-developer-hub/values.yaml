@@ -2,3 +2,6 @@
 enabled: true
 clusterDomain: ""
 userCount: 200
+llmEndpoint: ""
+llmModel: "qwen3-8b"
+llmApiKey: "sk-no-key"

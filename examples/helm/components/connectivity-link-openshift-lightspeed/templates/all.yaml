@@ -1,6 +1,19 @@
 ##
+## LLM credentials for OLS provider
+##
+apiVersion: v1
+kind: Secret
+metadata:
+  name: llm-credentials
+  namespace: openshift-lightspeed
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+type: Opaque
+stringData:
+  apitoken: {{ .Values.llmApiKey | default "sk-no-key" | quote }}
+---
+##
 ## OLSConfig — LiteLLM + MCP servers for tool calling
-## NOTE: llm-credentials Secret must be created manually in openshift-lightspeed namespace
 ##
 apiVersion: ols.openshift.io/v1alpha1
 kind: OLSConfig
