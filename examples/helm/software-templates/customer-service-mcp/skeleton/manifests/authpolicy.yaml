@@ -1,7 +1,7 @@
 apiVersion: kuadrant.io/v1
 kind: AuthPolicy
 metadata:
-  name: ${{values.name}}-apikey
+  name: ${{values.name}}-auth
   namespace: ${{values.namespace}}
   labels:
     app.kubernetes.io/name: ${{values.name}}
@@ -24,14 +24,20 @@ spec:
           credentials:
             customHeader:
               name: X-API-Key
-          metrics: false
           priority: 0
+        oidc:
+          jwt:
+            issuerUrl: https://rhbk.${{values.clusterDomain}}/realms/neuralbank
+          credentials:
+            authorizationHeader:
+              prefix: Bearer
+          priority: 1
       response:
         success: {}
         unauthenticated:
           code: 401
           body:
-            value: '{"error":"Invalid or missing API key. Include header X-API-Key with a valid key."}'
+            value: '{"error":"Authentication required. Use X-API-Key header or Bearer token."}'
           headers:
             content-type:
               value: "application/json"
