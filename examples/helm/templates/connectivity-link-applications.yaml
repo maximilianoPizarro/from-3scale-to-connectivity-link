@@ -193,6 +193,7 @@ spec:
       valuesObject:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
+        gitopsRevision: {{ $.Values.gitops.revision }}
     {{- else if eq .path "connectivity-link-workshop-registration" }}
     helm:
       valuesObject:

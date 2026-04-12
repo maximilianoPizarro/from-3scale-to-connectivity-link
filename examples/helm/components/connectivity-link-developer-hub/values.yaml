@@ -1,6 +1,7 @@
 # Vendored from https://gitlab.com/maximilianoPizarro/connectivity-link (developer-hub)
 enabled: true
 clusterDomain: ""
+gitopsRevision: "main"
 userCount: 200
 litellmUrl: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
 litellmModel: "qwen25-7b-instruct"
