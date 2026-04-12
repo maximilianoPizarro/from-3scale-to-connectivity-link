@@ -931,7 +931,7 @@ stringData:
   RHDH_CALLBACK_URL: "https://backstage-developer-hub-developer-hub.{{ .Values.clusterDomain }}/api/auth/oidc/handler/frame"
   ARGOCD_INSTANCE_2_URL: "https://openshift-gitops-server-openshift-gitops.{{ .Values.clusterDomain }}"
   ARGOCD_INSTANCE_2_USERNAME: "admin"
-  ARGOCD_INSTANCE_2_PASSWORD: "{{ .Values.argocdAdminPassword | default "change-me" }}"
+  ARGOCD_INSTANCE_2_PASSWORD: "placeholder"
   MCP_TOKEN: "{{ .Values.mcpToken | default "IpIbd50gbMb1p2+iCigrhkm21pZwbn0g" }}"
 ---
 apiVersion: v1
@@ -1037,3 +1037,71 @@ spec:
                     subPath: lightspeed-stack.yaml
                   - mountPath: /tmp/data
                     name: shared-storage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rhdh-argocd-secret-reader
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rhdh-argocd-secret-reader-binding
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+subjects:
+- kind: ServiceAccount
+  name: rhdh-argocd-sync
+  namespace: developer-hub
+roleRef:
+  kind: ClusterRole
+  name: rhdh-argocd-secret-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: rhdh-argocd-sync
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rhdh-argocd-password-sync
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      serviceAccountName: rhdh-argocd-sync
+      restartPolicy: OnFailure
+      containers:
+      - name: sync
+        image: registry.redhat.io/openshift4/ose-cli:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          echo "Reading ArgoCD admin password from openshift-gitops namespace..."
+          ARGOCD_PWD=$(oc get secret openshift-gitops-cluster -n openshift-gitops -o jsonpath='{.data.admin\.password}' | base64 -d)
+          if [ -z "$ARGOCD_PWD" ]; then
+            echo "ERROR: Could not read ArgoCD admin password"
+            exit 1
+          fi
+          echo "Patching secrets-rhdh with real ArgoCD password..."
+          ENCODED=$(echo -n "$ARGOCD_PWD" | base64 -w0)
+          oc patch secret secrets-rhdh -n developer-hub --type='json' \
+            -p="[{\"op\":\"replace\",\"path\":\"/data/ARGOCD_INSTANCE_2_PASSWORD\",\"value\":\"$ENCODED\"}]"
+          echo "ArgoCD password synced successfully"
