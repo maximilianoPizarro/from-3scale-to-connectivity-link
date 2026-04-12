@@ -722,36 +722,54 @@ data:
                     importName: MarkdownCard
                     config:
                       layouts:
-                        xl: { w: 6, h: 6 }
-                        lg: { w: 6, h: 6 }
-                        md: { w: 6, h: 6 }
+                        xl: { w: 4, h: 8 }
+                        lg: { w: 4, h: 8 }
+                        md: { w: 6, h: 8 }
                         sm: { w: 12, h: 6 }
                         xs: { w: 12, h: 6 }
                         xxs: { w: 12, h: 6 }
                       props:
-                        title: "Workshop Tools"
+                        title: "Workshop Platform"
                         content: |
-                          * [ArgoCD (GitOps)](https://openshift-gitops-server-openshift-gitops.{{ .Values.clusterDomain }}) - Continuous Delivery & GitOps
-                          * [Gitea](https://gitea-gitea.{{ .Values.clusterDomain }}) - Source Code Repositories
-                          * [Red Hat Build of Keycloak](https://rhbk.{{ .Values.clusterDomain }}/admin/master/console) - Identity & Access Management
-                          * [Workshop Registration](https://workshop-registration.{{ .Values.clusterDomain }}) - Workshop Sign-up
-                          * [Mailpit](https://n8n-mailpit-openshift-lightspeed.{{ .Values.clusterDomain }}) - Email Testing
+                          * [ArgoCD (GitOps)](https://openshift-gitops-server-openshift-gitops.{{ .Values.clusterDomain }}) — Continuous Delivery
+                          * [Gitea](https://gitea-gitea.{{ .Values.clusterDomain }}) — Source Code Repos
+                          * [Keycloak](https://rhbk.{{ .Values.clusterDomain }}/admin/master/console) — Identity & SSO
+                          * [Workshop Registration](https://workshop-registration.{{ .Values.clusterDomain }}) — Sign-up Portal
+                          * [Mailpit](https://n8n-mailpit-openshift-lightspeed.{{ .Values.clusterDomain }}) — Email Testing
+                          * [OpenShift Console](https://console-openshift-console.{{ .Values.clusterDomain }}) — Cluster Console
                   - mountPoint: home.page/cards
                     importName: MarkdownCard
                     config:
                       layouts:
-                        xl: { w: 6, h: 6, x: 6 }
-                        lg: { w: 6, h: 6, x: 6 }
-                        md: { w: 6, h: 6, x: 6 }
+                        xl: { w: 4, h: 8, x: 4 }
+                        lg: { w: 4, h: 8, x: 4 }
+                        md: { w: 6, h: 8, x: 6 }
                         sm: { w: 12, h: 6 }
                         xs: { w: 12, h: 6 }
                         xxs: { w: 12, h: 6 }
                       props:
                         title: "Observability"
                         content: |
-                          * [Grafana](https://grafana-observability.{{ .Values.clusterDomain }}) - Monitoring Dashboards
-                          * [Kiali](https://kiali-openshift-cluster-observability-operator.{{ .Values.clusterDomain }}) - Service Mesh Observability
-                          * [Jaeger](https://jaeger.{{ .Values.clusterDomain }}) - Distributed Tracing
+                          * [Grafana](https://grafana-observability.{{ .Values.clusterDomain }}) — Monitoring Dashboards
+                          * [Kiali](https://kiali-openshift-cluster-observability-operator.{{ .Values.clusterDomain }}) — Service Mesh
+                          * [Jaeger](https://jaeger.{{ .Values.clusterDomain }}) — Distributed Tracing
+                  - mountPoint: home.page/cards
+                    importName: MarkdownCard
+                    config:
+                      layouts:
+                        xl: { w: 4, h: 8, x: 8 }
+                        lg: { w: 4, h: 8, x: 8 }
+                        md: { w: 12, h: 6 }
+                        sm: { w: 12, h: 6 }
+                        xs: { w: 12, h: 6 }
+                        xxs: { w: 12, h: 6 }
+                      props:
+                        title: "Documentation & AI"
+                        content: |
+                          * [Workshop Guide](https://showroom-from-zero-to-hero.{{ .Values.clusterDomain }}) — Showroom
+                          * [GitHub Pages](https://maximilianopizarro.github.io/test-drive-pe-oscg/) — Reference Docs
+                          * [Lightspeed](/lightspeed) — AI Chat Assistant
+                          * [Kuadrant API Management](/kuadrant) — API Products
                   - mountPoint: home.page/cards
                     importName: CatalogStarredEntitiesCard
                     config:
