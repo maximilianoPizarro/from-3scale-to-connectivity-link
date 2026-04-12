@@ -863,26 +863,189 @@ metadata:
 type: kubernetes.io/service-account-token
 ---
 apiVersion: v1
+kind: Secret
+metadata:
+  name: lightspeed-postgres-secret
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+type: Opaque
+stringData:
+  username: lightspeed_user
+  password: lightspeed_password_123
+  admin_password: lightspeed_admin_password_123
+  database: lightspeed_conversations
+  host: lightspeed-postgresql-db-service
+  port: "5432"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: lightspeed-postgresql-db
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  serviceName: lightspeed-postgresql-db-service
+  selector:
+    matchLabels:
+      app: lightspeed-postgresql-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: lightspeed-postgresql-db
+    spec:
+      containers:
+        - name: postgresql-db
+          image: registry.redhat.io/rhel8/postgresql-15:latest
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/pgsql/data
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-secret
+                  key: username
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-secret
+                  key: password
+            - name: POSTGRESQL_DATABASE
+              value: lightspeed_conversations
+            - name: POSTGRESQL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-secret
+                  key: admin_password
+            - name: POSTGRESQL_INITDB_ARGS
+              value: "--auth-host=md5 --auth-local=trust"
+            - name: POSTGRESQL_PGCTLTIMEOUT
+              value: "60"
+          ports:
+            - containerPort: 5432
+              name: postgresql
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lightspeed-postgresql-db-service
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selector:
+    app: lightspeed-postgresql-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgresql
+  type: ClusterIP
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: lightspeed-postgres-init-db
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-database
+          image: registry.redhat.io/rhel8/postgresql-15:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Waiting for PostgreSQL to be ready..."
+              until PGPASSWORD=$POSTGRESQL_ADMIN_PASSWORD psql -h $POSTGRESQL_HOST -U postgres -d postgres -c '\q' 2>/dev/null; do
+                echo "PostgreSQL is not ready yet. Waiting..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready."
+              DB_EXISTS=$(PGPASSWORD=$POSTGRESQL_ADMIN_PASSWORD psql -h $POSTGRESQL_HOST -U postgres -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='lightspeed_db'")
+              if [ "$DB_EXISTS" != "1" ]; then
+                echo "Creating database lightspeed_db..."
+                PGPASSWORD=$POSTGRESQL_ADMIN_PASSWORD psql -h $POSTGRESQL_HOST -U postgres -d postgres -c "CREATE DATABASE lightspeed_db;"
+              else
+                echo "Database lightspeed_db already exists."
+              fi
+              echo "Granting permissions to $POSTGRESQL_USER..."
+              PGPASSWORD=$POSTGRESQL_ADMIN_PASSWORD psql -h $POSTGRESQL_HOST -U postgres -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE lightspeed_db TO $POSTGRESQL_USER;"
+              PGPASSWORD=$POSTGRESQL_ADMIN_PASSWORD psql -h $POSTGRESQL_HOST -U postgres -d lightspeed_db -c "GRANT ALL ON SCHEMA public TO $POSTGRESQL_USER;"
+              echo "Database lightspeed_db created successfully!"
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-secret
+                  key: username
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-secret
+                  key: password
+            - name: POSTGRESQL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lightspeed-postgres-secret
+                  key: admin_password
+            - name: POSTGRESQL_DATABASE
+              value: lightspeed_conversations
+            - name: POSTGRESQL_HOST
+              value: lightspeed-postgresql-db-service
+      backoffLimit: 3
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: lightspeed-stack
   namespace: developer-hub
 data:
   lightspeed-stack.yaml: |
-    name: Lightspeed Core Service (LCS)
+    name: lightspeed-stack
     service:
-      host: 0.0.0.0
-      auth_enabled: false
-      workers: 1
-      color_log: true
-      access_log: true
+      host: "0.0.0.0"
+      port: 8080
     llama_stack:
-      use_as_library_client: false
-      url: http://localhost:8321
+      url: "http://localhost:8321"
+    inference:
+      default_provider: vllm
+      default_model: {{ .Values.litellmModel | default "qwen25-7b-instruct" }}
     user_data_collection:
-      feedback_enabled: true
       feedback_storage: "/tmp/data/feedback"
       transcripts_storage: "/tmp/data/transcripts"
+    conversation_cache:
+      type: postgres
+      postgres:
+        host: lightspeed-postgresql-db-service
+        port: 5432
+        db: lightspeed_conversations
+        user: lightspeed_user
+        password: lightspeed_password_123
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -904,9 +1067,9 @@ data:
           - https://cdn.jsdelivr.net
     lightspeed:
       servers:
-        - id: {{ .Values.litellmModel | default "qwen3" }}
-          url: {{ .Values.litellmUrl | default "http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1" }}
-          token: "${VLLM_API_KEY}"
+        - id: "${LLM_SERVER_ID}"
+          url: "${LLM_SERVER_URL}"
+          token: "${LLM_SERVER_TOKEN}"
       prompts:
         - title: "Getting Started with Developer Hub"
           message: "Can you guide me through the first steps to start using Red Hat Developer Hub as a developer?"
@@ -946,12 +1109,223 @@ metadata:
   namespace: developer-hub
 type: Opaque
 stringData:
-  VLLM_URL: {{ .Values.litellmUrl | default "http://openshift-mcp-server-helm-litellm.openshift-lightspeed.svc:4000/v1" | quote }}
+  VLLM_URL: {{ .Values.litellmUrl | default "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1" | quote }}
   VLLM_API_KEY: {{ .Values.litellmApiKey | default "sk-openshift-mcp-1234" | quote }}
   VLLM_MAX_TOKENS: "4096"
   VLLM_TLS_VERIFY: "false"
   VALIDATION_PROVIDER: "vllm"
-  VALIDATION_MODEL_NAME: {{ .Values.litellmModel | default "qwen3" | quote }}
+  VALIDATION_MODEL_NAME: {{ .Values.litellmModel | default "qwen25-7b-instruct" | quote }}
+  MCP_TOKEN: "backstage"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lightspeed-secrets
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: "true"
+type: Opaque
+stringData:
+  LIGHTSPEED_SERVER_ID: {{ .Values.litellmModel | default "qwen25-7b-instruct" | quote }}
+  LIGHTSPEED_SERVICE_PORT: "8080"
+  LIGHTSPEED_QUESTION_VALIDATION: "true"
+  LLM_SERVER_ID: {{ .Values.litellmModel | default "qwen25-7b-instruct" | quote }}
+  LLM_SERVER_URL: "http://localhost:8080"
+  LLM_SERVER_TOKEN: ""
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: llama-stack-config
+  namespace: developer-hub
+  labels:
+    rhdh.redhat.com/ext-config-sync: 'true'
+  annotations:
+    rhdh.redhat.com/backstage-name: developer-hub
+data:
+  run.yaml: |
+    version: '2'
+    image_name: minimal-viable-llama-stack-configuration
+    apis:
+      - agents
+      - datasetio
+      - eval
+      - inference
+      - safety
+      - scoring
+      - telemetry
+      - tool_runtime
+      - vector_io
+    benchmarks: []
+    container_image: null
+    datasets: []
+    external_providers_dir: "/app-root/config/providers.d"
+    inference_store:
+      db_path: .llama/distributions/ollama/inference_store.db
+      type: sqlite
+    metadata_store:
+      db_path: .llama/distributions/ollama/registry.db
+      namespace: null
+      type: sqlite
+    models:
+    - model_id: sentence-transformers/all-mpnet-base-v2
+      metadata:
+        embedding_dimension: 768
+      model_type: embedding
+      provider_id: sentence-transformers
+      provider_model_id: "/app-root/embeddings_model"
+    providers:
+      agents:
+      - config:
+          persistence_store:
+            db_path: .llama/distributions/ollama/agents_store.db
+            namespace: null
+            type: sqlite
+          responses_store:
+            db_path: .llama/distributions/ollama/responses_store.db
+            type: sqlite
+        provider_id: meta-reference
+        provider_type: inline::meta-reference
+      datasetio:
+      - config:
+          kvstore:
+            db_path: .llama/distributions/ollama/huggingface_datasetio.db
+            namespace: null
+            type: sqlite
+        provider_id: huggingface
+        provider_type: remote::huggingface
+      - config:
+          kvstore:
+            db_path: .llama/distributions/ollama/localfs_datasetio.db
+            namespace: null
+            type: sqlite
+        provider_id: localfs
+        provider_type: inline::localfs
+      eval:
+      - config:
+          kvstore:
+            db_path: .llama/distributions/ollama/meta_reference_eval.db
+            namespace: null
+            type: sqlite
+        provider_id: meta-reference
+        provider_type: inline::meta-reference
+      inference:
+        - provider_id: vllm
+          provider_type: remote::vllm
+          config:
+            url: ${env.VLLM_URL}
+            api_token: ${env.VLLM_API_KEY}
+            max_tokens: ${env.VLLM_MAX_TOKENS:=4096}
+            tls_verify: ${env.VLLM_TLS_VERIFY:=true}
+        - provider_id: sentence-transformers
+          provider_type: inline::sentence-transformers
+          config: {}
+      safety:
+        - config:
+            excluded_categories: []
+          provider_id: llama-guard
+          provider_type: inline::llama-guard
+        - provider_id: lightspeed_question_validity
+          provider_type: inline::lightspeed_question_validity
+          config:
+            model_id: ${env.VALIDATION_PROVIDER:=vllm}/${env.VALIDATION_MODEL_NAME}
+            model_prompt: |-
+              Instructions:
+              You are a question classification tool. You are an expert in the following categories:
+              - Backstage
+              - Red Hat Developer Hub (RHDH)
+              - Kubernetes
+              - Openshift
+              - CI/CD
+              - GitOps
+              - Pipelines
+              - Developer Portals
+              - Deployments
+              - Software Catalogs
+              - Software Templates
+              - Tech Docs
+
+              Your job is to determine if a user's question is related to the categories you are an expert in. If the question is related to those categories, \
+              or any features that may be related to those categories, you will answer with ${allowed}.
+              If a question is not related to your expert categories, answer with ${rejected}.
+              You do not need to explain your answer.
+              Below are some example questions:
+              Example Question:
+              Why is the sky blue?
+              Example Response:
+              ${rejected}
+              Example Question:
+              Can you help configure my cluster to automatically scale?
+              Example Response:
+              ${allowed}
+              Example Question:
+              How do I create import an existing software template in Backstage?
+              Example Response:
+              ${allowed}
+              Question:
+              ${message}
+              Response:
+            invalid_question_response: |-
+              Hi, I'm the Red Hat Developer Hub Lightspeed assistant, I can help you with questions about Red Hat Developer Hub or Backstage.
+              Please ensure your question is about these topics, and feel free to ask again!
+      scoring:
+      - config: {}
+        provider_id: basic
+        provider_type: inline::basic
+      - config: {}
+        provider_id: llm-as-judge
+        provider_type: inline::llm-as-judge
+      - config:
+          openai_api_key: '********'
+        provider_id: braintrust
+        provider_type: inline::braintrust
+      telemetry:
+      - config:
+          service_name: 'lightspeed-stack-telemetry'
+          sinks: sqlite
+          sqlite_db_path: .llama/distributions/ollama/trace_store.db
+        provider_id: meta-reference
+        provider_type: inline::meta-reference
+      tool_runtime:
+      - provider_id: rag-runtime
+        provider_type: inline::rag-runtime
+        config: {}
+      vector_io:
+      - config:
+          kvstore:
+            db_path: .llama/distributions/ollama/faiss_store.db
+            namespace: null
+            type: sqlite
+        provider_id: faiss
+        provider_type: inline::faiss
+      - provider_id: rhdh-docs
+        provider_type: inline::faiss
+        config:
+          kvstore:
+            type: sqlite
+            namespace:
+            db_path: /app-root/vector_db/rhdh_product_docs/1.8/faiss_store.db
+    scoring_fns: []
+    server:
+      auth: null
+      host: null
+      port: 8321
+      quota: null
+      tls_cafile: null
+      tls_certfile: null
+      tls_keyfile: null
+    shields:
+      - shield_id: lightspeed_question_validity-shield
+        provider_id: lightspeed_question_validity
+    tool_groups:
+    - provider_id: rag-runtime
+      toolgroup_id: builtin::rag
+      description: "Only use for questions specifically about Red Hat Developer Hub (RHDH). Searches technical documentation for RHDH installation, discovery, configuration, release, upgrade, control access, integration, observability, and extending with plugins. Do not use for any other topic outside RHDH."
+    vector_dbs:
+    - embedding_dimension: 768
+      embedding_model: sentence-transformers/all-mpnet-base-v2
+      provider_id: rhdh-docs
+      vector_db_id: rhdh-product-docs-1_8
 ---
 apiVersion: rhdh.redhat.com/v1alpha5
 kind: Backstage
@@ -973,6 +1347,7 @@ spec:
       - name: secrets-rhdh
       - name: rhdh-argocd-credentials
       - name: llama-stack-secrets
+      - name: lightspeed-secrets
       - key: token
         name: developer-hub-k8s-sa-token
     extraFiles:
@@ -1002,6 +1377,9 @@ spec:
               - name: lightspeed-stack
                 configMap:
                   name: lightspeed-stack
+              - name: llama-stack-config
+                configMap:
+                  name: llama-stack-config
               - name: shared-storage
                 emptyDir: {}
               - name: rag-data-volume
@@ -1035,6 +1413,9 @@ spec:
                   - mountPath: /app-root/vector_db/rhdh_product_docs
                     name: rag-data-volume
                     subPath: rhdh_product_docs
+                  - mountPath: /app-root/config/run.yaml
+                    name: llama-stack-config
+                    subPath: run.yaml
               - name: lightspeed-core
                 image: "quay.io/lightspeed-core/lightspeed-stack:dev-20251021-ee9f08f"
                 volumeMounts:
