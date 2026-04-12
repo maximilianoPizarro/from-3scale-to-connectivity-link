@@ -8,6 +8,6 @@ metadata:
 spec:
   params:
     - name: git-url
-      value: $(body.repository.clone_url)
+      value: http://gitea-http.gitea.svc.cluster.local:3000/$(body.repository.full_name).git
     - name: git-revision
       value: $(body.after)
