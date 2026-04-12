@@ -12,12 +12,10 @@ Update guide for syncing Showroom components with upstream sources.
 
 | Source | Repository | Purpose |
 |--------|------------|---------|
-| **Ansible Collection** | https://github.com/agnosticd/agnosticd-v2 → `showroom/` | Role defaults, deployment logic |
 | **Helm Chart** | https://github.com/rhpds/showroom-deployer | `showroom-single-pod` chart |
 
 ## Quick Reference: Current Versions
 
-Check upstream at: `~/devel/git/agDv2/showroom/roles/ocp4_workload_showroom/defaults/main.yaml`
 
 | Component | Variable | Current |
 |-----------|----------|---------|
@@ -26,13 +24,6 @@ Check upstream at: `~/devel/git/agDv2/showroom/roles/ocp4_workload_showroom/defa
 | Chart version | `showroom_deployer_chart_version` | `^2.0.0` |
 
 ## Files to Update
-
-### Ansible Example
-
-| File | What to Update |
-|------|----------------|
-| `examples/ansible/playbooks/roles/deploy-showroom/defaults/main.yml` | Image versions, chart version |
-| `examples/ansible/playbooks/roles/deploy-showroom/tasks/main.yml` | Helm values structure (if changed) |
 
 ### Helm Example
 
@@ -46,20 +37,15 @@ Check upstream at: `~/devel/git/agDv2/showroom/roles/ocp4_workload_showroom/defa
 ### 1. Check Upstream Defaults
 
 ```bash
-# Compare upstream with our ansible role
-diff ~/devel/git/agDv2/showroom/roles/ocp4_workload_showroom/defaults/main.yaml \
-     ~/devel/field-content/examples/ansible/playbooks/roles/deploy-showroom/defaults/main.yml
+# Check upstream chart for changes
+helm repo update
 ```
 
 ### 2. Update Image Versions
 
-Key variables to sync from upstream `defaults/main.yaml`:
+Key variables to sync:
 
 ```yaml
-# In ansible example: examples/ansible/playbooks/roles/deploy-showroom/defaults/main.yml
-showroom_content_image: quay.io/rhpds/showroom-content:vX.X.X
-showroom_terminal_image: quay.io/rhpds/openshift-showroom-terminal-ocp:latest
-
 # In helm example: examples/helm/values.yaml
 showroom:
   content:
@@ -68,8 +54,7 @@ showroom:
 
 ### 3. Check Helm Values Structure
 
-If upstream `tasks/deploy_showroom.yaml` changes the `release_values` structure, update:
-- `examples/ansible/playbooks/roles/deploy-showroom/tasks/main.yml`
+If upstream chart changes the `release_values` structure, update the Helm values accordingly.
 
 ### 4. Test Deployment
 

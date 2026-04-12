@@ -4,7 +4,23 @@ title: "Connectivity Link: OIDC (Neuralbank)"
 nav_order: 10
 ---
 
-En este módulo explorarás cómo **Red Hat Connectivity Link** protege la API de Neuralbank con **OIDCPolicy** (Keycloak) y **RateLimitPolicy**.
+En este módulo explorarás cómo **Red Hat Connectivity Link** protege la API del **neuralbank-stack pre-desplegado** con **OIDCPolicy** (Keycloak) y **RateLimitPolicy**.
+
+> **Importante:** Este módulo cubre el stack `neuralbank-stack` pre-desplegado que usa `OIDCPolicy` con flujo interactivo de Keycloak. Las aplicaciones que scaffoldeaste usan `AuthPolicy` con API Key como método principal (ver módulo 4).
+
+### Flujo 3D — OIDC vs API Key
+
+<div id="auth-flow-3d"></div>
+<script>document.addEventListener('DOMContentLoaded', function() { initAuthFlow3D('auth-flow-3d'); });</script>
+
+> Arrastrá para rotar. Click en **⛶ Fullscreen** para pantalla completa. El flujo muestra las dos rutas: OIDC (arriba, via Keycloak) y API Key (abajo, via Secrets).
+
+## Acceso al frontend (flujo OIDC)
+
+El frontend pre-desplegado tiene login interactivo:
+- **URL**: `https://neuralbank.YOUR_CLUSTER_DOMAIN`
+- **Credenciales**: `YOUR_USER` / `Welcome123!`
+- Tras el login, Keycloak redirige de vuelta con un JWT en cookie.
 
 ## Arquitectura del patrón OIDC
 

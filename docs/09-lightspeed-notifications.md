@@ -65,6 +65,13 @@ Los componentes se ejecutan como sidecars junto al backend de Developer Hub:
 
 **MCP Gateway** es una extensión comunitaria del operador **Kuadrant** que permite registrar, exponer y gestionar servidores MCP (Model Context Protocol) a través del API Gateway de forma declarativa.
 
+### Flujo interactivo 3D — MCP Gateway
+
+<div id="mcp-gateway-3d"></div>
+<script>document.addEventListener('DOMContentLoaded', function() { initMCPGateway3D('mcp-gateway-3d'); });</script>
+
+> Arrastrá para rotar. Click en **⛶ Fullscreen** para ver a pantalla completa. Las partículas muestran cómo OpenShift Lightspeed llama herramientas a través del MCP Gateway hacia los servidores MCP y el clúster.
+
 ### Flujo de registro MCP
 
 ```mermaid

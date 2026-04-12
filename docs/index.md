@@ -76,3 +76,8 @@ Tu namespace de trabajo es **`YOUR_USER-neuralbank`**. Todos los servicios que c
 </div>
 
 > Hacé click en cualquier imagen para agrandarla.
+
+### Flujo del Workshop
+
+<div id="onboarding-3d-index"></div>
+<script>document.addEventListener('DOMContentLoaded', function() { initOnboarding3D('onboarding-3d-index'); });</script>

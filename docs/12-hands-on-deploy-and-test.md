@@ -66,41 +66,72 @@ Las tres aplicaciones deben mostrar `Synced` y `Healthy`.
 oc get pipelinerun -n YOUR_USER-neuralbank
 ```
 
-## Step 6: Test OIDC (Neuralbank)
+## Step 6: Test APIs scaffoldeadas (API Key)
 
-Referencia completa en el módulo [Connectivity Link: OIDC](10-explore-connectivity-link-oidc.html).
+Las aplicaciones scaffoldeadas usan **API Key** como método principal de autenticación:
 
 ```bash
-NEURALBANK_HOST=$(oc get httproute -n neuralbank-stack -o jsonpath='{.items[0].spec.hostnames[0]}')
-KC_HOST="https://rhbk.YOUR_CLUSTER_DOMAIN"
+# Obtener la API Key del backend
+API_KEY=$(oc get secret -n YOUR_USER-neuralbank \
+  -l "app=neuralbank-backend,kuadrant.io/apikey=true" \
+  -o jsonpath='{.items[0].data.api_key}' | base64 -d)
 
-TOKEN=$(curl -sk "$KC_HOST/realms/neuralbank/protocol/openid-connect/token" \
-  -d "client_id=neuralbank" -d "username=robert.anderson@email.com" \
-  -d "password=Welcome123" -d "grant_type=password" \
+# Test backend
+curl -s -H "X-API-Key: $API_KEY" \
+  "https://YOUR_USER-neuralbank-backend.YOUR_CLUSTER_DOMAIN/api/customers" \
+  | python3 -m json.tool | head -10
+```
+
+## Step 7: Test OIDC (neuralbank-stack pre-desplegado)
+
+El stack pre-desplegado usa `OIDCPolicy` con **flujo interactivo de Keycloak**. Referencia completa: [Connectivity Link: OIDC](10-explore-connectivity-link-oidc.html).
+
+**Frontend con OIDC**: Abre `https://neuralbank.YOUR_CLUSTER_DOMAIN` — serás redirigido al login de Keycloak (`YOUR_USER` / `Welcome123!`).
+
+```bash
+# Test programático con Bearer token
+TOKEN=$(curl -s -X POST \
+  "https://rhbk.YOUR_CLUSTER_DOMAIN/realms/neuralbank/protocol/openid-connect/token" \
+  -d "client_id=neuralbank-frontend" -d "username=YOUR_USER" \
+  -d "password=Welcome123!" -d "grant_type=password" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
 
-curl -sk "https://$NEURALBANK_HOST/api/v1/customers" \
+curl -s "https://neuralbank.YOUR_CLUSTER_DOMAIN/api/v1/customers" \
   -H "Authorization: Bearer $TOKEN" | python3 -m json.tool | head -10
 ```
 
-## Step 7: Test API Key (NFL Wallet)
+## Step 8: Test API Key (NFL Wallet)
 
-Referencia completa en el módulo [Connectivity Link: API Key](11-explore-connectivity-link-apikey.html).
+Referencia completa: [Connectivity Link: API Key](11-explore-connectivity-link-apikey.html).
 
 ```bash
-NFL_HOST=$(oc get httproute -n nfl-wallet-prod -o jsonpath='{.items[0].spec.hostnames[0]}')
-API_KEY=$(oc get secret nfl-api-key-1 -n nfl-wallet-prod -o jsonpath='{.data.api_key}' | base64 -d)
+NFL_KEY=$(oc get secret nfl-wallet-apikey-admin -n nfl-wallet-prod \
+  -o jsonpath='{.data.api_key}' | base64 -d)
 
-curl -sk "https://$NFL_HOST/api/teams" -H "X-API-Key: $API_KEY" | python3 -m json.tool | head -10
+curl -s -H "X-API-Key: $NFL_KEY" \
+  "https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/v1/customers" \
+  | python3 -m json.tool | head -10
 ```
 
-## Step 8: Verificar frontend
+## Step 9: Verificar frontend scaffoldeado
 
-Abre en el browser: `https://neuralbank.YOUR_CLUSTER_DOMAIN`
+El frontend scaffoldeado usa **API Key** (sin login OIDC):
 
-## Step 9: Explorar en Developer Hub
+- **URL**: `https://YOUR_USER-neuralbank-frontend.YOUR_CLUSTER_DOMAIN`
+- Ingresar la API Key en el campo de input del SPA
+
+## Step 10: Explorar en Developer Hub
 
 1. **Catalog** → busca tus componentes `YOUR_USER-*`.
 2. Verifica las pestañas: **CI** (pipelines), **CD** (ArgoCD), **Topology**, **Kubernetes**, **API**, **Docs**.
 3. Revisa las **Notificaciones** (campana) y los emails en **Mailpit**.
 4. Prueba **Lightspeed**: pregunta sobre tus componentes.
+
+## Modelos de autenticación
+
+| | `neuralbank-stack` (pre-desplegado) | Apps scaffoldeadas | NFL Wallet |
+|---|---|---|---|
+| **Tipo de AuthPolicy** | `OIDCPolicy` CR | `AuthPolicy` (API Key + JWT) | `AuthPolicy` (API Key) |
+| **Login interactivo** | ✅ Redirect a Keycloak | ❌ API Key manual | ❌ API Key manual |
+| **URL Frontend** | `neuralbank.YOUR_CLUSTER_DOMAIN` | `YOUR_USER-neuralbank-frontend.YOUR_CLUSTER_DOMAIN` | N/A |
+| **Credenciales** | `YOUR_USER` / `Welcome123!` | API Key de Secret | API Key de Secret |
