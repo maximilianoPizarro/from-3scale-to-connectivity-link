@@ -804,7 +804,7 @@ spec:
     spec:
       containers:
         - name: argocd-mcp
-          image: node:18-alpine
+          image: registry.redhat.io/ubi9/nodejs-22:latest
           command: ["npx"]
           args: ["argocd-mcp@latest", "http"]
           ports:
@@ -812,8 +812,6 @@ spec:
               containerPort: 3000
               protocol: TCP
           env:
-            - name: HOME
-              value: "/tmp"
             - name: ARGOCD_BASE_URL
               value: "https://openshift-gitops-server.openshift-gitops.svc.cluster.local"
             - name: ARGOCD_API_TOKEN
@@ -834,14 +832,14 @@ spec:
             httpGet:
               path: /mcp
               port: 3000
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 15
             failureThreshold: 5
           livenessProbe:
             httpGet:
               path: /mcp
               port: 3000
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 30
           securityContext:
             allowPrivilegeEscalation: false
