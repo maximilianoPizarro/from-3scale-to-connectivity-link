@@ -113,7 +113,7 @@ spec:
       url: "http://mcp-gateway-istio.mcp-system.svc.cluster.local:8080/mcp"
       timeout: 120
     - name: rhdh-catalog
-      url: "http://backstage-developer-hub.developer-hub.svc.cluster.local/api/mcp-actions/v1/sse"
+      url: "http://backstage-developer-hub.developer-hub.svc.cluster.local/api/mcp-actions/v1"
       timeout: 120
       headers:
         - name: Authorization
