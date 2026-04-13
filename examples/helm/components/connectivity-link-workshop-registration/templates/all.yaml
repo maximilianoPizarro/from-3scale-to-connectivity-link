@@ -274,13 +274,11 @@ data:
     </head>
     <body>
     <div class="header">
-      <img src="https://maximilianopizarro.github.io/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:40px">
-      <span style="color:#ccc;font-size:0.75rem;line-height:1.3;">OpenShift Commons Gathering<br>Buenos Aires 2026</span>
       <h1>From Zero To Hero with Red Hat Developer Hub</h1>
     </div>
     <div class="main">
       <div class="card" id="register-card">
-        <div style="text-align:center;margin-bottom:24px"><img src="https://maximilianopizarro.github.io/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:60px"></div>
+        <div style="text-align:center;margin-bottom:24px"><img src="https://raw.githubusercontent.com/maximilianoPizarro/test-drive-pe-oscg/main/docs/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:60px"></div>
         <h2>Workshop Registration</h2>
         <p>Enter your email to get started. You will be automatically assigned a workshop user and redirected to the lab environment.</p>
         <div class="form-group">
@@ -395,8 +393,6 @@ data:
     </head>
     <body>
     <div class="header">
-      <img src="https://maximilianopizarro.github.io/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:40px">
-      <span style="color:#ccc;font-size:0.75rem;line-height:1.3;">OpenShift Commons Gathering<br>Buenos Aires 2026</span>
       <h1>Workshop Admin Dashboard</h1>
     </div>
 
