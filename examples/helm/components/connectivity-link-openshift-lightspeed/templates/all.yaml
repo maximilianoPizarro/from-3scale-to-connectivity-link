@@ -13,6 +13,20 @@ stringData:
   apitoken: {{ .Values.llmApiKey | default "sk-no-key" | quote }}
 ---
 ##
+## RHDH MCP auth token for OLS → Developer Hub MCP integration
+##
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rhdh-mcp-token
+  namespace: openshift-lightspeed
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+type: Opaque
+stringData:
+  header: "Bearer {{ .Values.rhdhBackendSecret | default "a01bb6ee68d5afbd9e82402b1a37a73d900bc653d6dc2375dec06bce6d62f34d" }}"
+---
+##
 ## OLSConfig — LiteLLM + MCP servers for tool calling
 ##
 apiVersion: ols.openshift.io/v1alpha1
@@ -76,3 +90,12 @@ spec:
     - name: mcp-gateway
       url: "http://mcp-gateway-istio.mcp-system.svc.cluster.local:8080/mcp"
       timeout: 120
+    - name: rhdh-catalog
+      url: "http://backstage-developer-hub.developer-hub.svc.cluster.local/api/mcp-actions/v1/sse"
+      timeout: 120
+      headers:
+        - name: Authorization
+          valueFrom:
+            type: secret
+            secretRef:
+              name: rhdh-mcp-token
