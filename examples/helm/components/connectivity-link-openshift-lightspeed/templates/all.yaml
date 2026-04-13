@@ -90,6 +90,23 @@ spec:
         analyze-techdocs-coverage — documentation coverage stats
         retrieve-techdocs-content — get TechDocs content for an entity
 
+      ArgoCD tools (prefix argo, 15 tools):
+        argolist_applications — list all ArgoCD applications
+        argolist_clusters — list registered clusters
+        argoget_application — get details of a specific application
+        argoget_application_resource_tree — get resource tree
+        argoget_application_managed_resources — get managed resources (supports kind/namespace filters)
+        argoget_application_workload_logs — get pod/workload logs
+        argoget_application_events — get application events
+        argoget_resource_events — get events for a managed resource
+        argoget_resources — get manifests for managed resources
+        argoget_resource_actions — list available actions on a resource
+        argocreate_application — create new ArgoCD application
+        argoupdate_application — update an existing application
+        argodelete_application — delete an application
+        argosync_application — trigger sync on an application
+        argorun_resource_action — run an action on a managed resource (e.g. restart)
+
       CRITICAL: Use ONLY the exact tool names listed above. Never invent tool names.
     deployment:
       api:
