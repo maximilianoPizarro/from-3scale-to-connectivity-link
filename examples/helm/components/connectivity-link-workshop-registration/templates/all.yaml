@@ -280,6 +280,7 @@ data:
     </div>
     <div class="main">
       <div class="card" id="register-card">
+        <div style="text-align:center;margin-bottom:24px"><img src="https://maximilianopizarro.github.io/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:60px"></div>
         <h2>Workshop Registration</h2>
         <p>Enter your email to get started. You will be automatically assigned a workshop user and redirected to the lab environment.</p>
         <div class="form-group">
@@ -298,7 +299,7 @@ data:
         <button class="btn" id="go-btn" onclick="goToLab()">Open Lab Environment</button>
       </div>
     </div>
-    <div class="footer" style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap"><img src="https://maximilianopizarro.github.io/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:24px">OpenShift Commons Gathering &mdash; Buenos Aires 2026</div>
+    <div class="footer">OpenShift Commons Gathering &mdash; Buenos Aires 2026</div>
     <script>
     var redirectUrl = '';
     function register() {
@@ -430,7 +431,7 @@ data:
       </div>
     </div>
 
-    <div class="footer" style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap"><img src="https://maximilianopizarro.github.io/test-drive-pe-oscg/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons Gathering" style="height:24px">OpenShift Commons Gathering &mdash; Buenos Aires 2026</div>
+    <div class="footer">OpenShift Commons Gathering &mdash; Buenos Aires 2026</div>
     <script>
     var adminToken = '__ADMIN_TOKEN__';
     var users = [];
