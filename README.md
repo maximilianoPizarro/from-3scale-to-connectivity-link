@@ -478,6 +478,121 @@ metadata:
     demo.redhat.com/userinfo: ""
 ```
 
+## Troubleshooting with OpenShift Lightspeed (MCP)
+
+After installation, OpenShift Lightspeed has access to **55 MCP tools** (k8s, ocp, argo, rhdh) that can diagnose and resolve most issues. Below are prompts organized by problem category, based on real issues encountered during cluster installations.
+
+### ArgoCD Applications Not Syncing / Failed
+
+These were the most frequent issues during installation of clusters `main` and `one`.
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| Apps stuck in `OutOfSync` or `Failed` | _"List all ArgoCD applications and show me which ones are not synced"_ |
+| App stuck in `Progressing` for a long time | _"Get the resource events for the application field-content-mcp-gateway"_ |
+| Need to force sync an app | _"Sync the application field-content-developer-hub"_ |
+| ApplicationSets failing | _"Get the application details for field-content-connectivity-link-applicationsets and show me the error"_ |
+| Sync wave ordering issues | _"Show me the resource tree for field-content-ols"_ |
+| Need to see what resources an app manages | _"Get the managed resources of type Deployment for application field-content-mcp-gateway"_ |
+| ArgoCD overwriting manual patches (selfHeal) | _"Get the application details for field-content-mcp-gateway and check its sync policy"_ |
+
+### Developer Hub (RHDH) Issues
+
+Developer Hub was prone to configuration errors, especially around Keycloak integration and Gitea connectivity.
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| RHDH pods not starting / CrashLoopBackOff | _"Get pods in the developer-hub namespace and show me their status"_ |
+| `Realm does not exist` error on RHDH login | _"Get the logs from the deployment backstage-developer-hub in namespace developer-hub"_ |
+| Scaffolder fails with `No matching integration for host gitea-gitea.apps.cluster.example.com` | _"Get the configmap app-config-rhdh in namespace developer-hub and show the integrations section"_ |
+| Scaffolder creates app but pipeline doesn't run | _"List events in namespace user1-neuralbank"_ |
+| CI/CD tab empty in Developer Hub | _"List pipelineruns in namespace user1-neuralbank"_ |
+| Dynamic plugins not loading | _"Get the logs from the deployment backstage-developer-hub in namespace developer-hub and search for plugin errors"_ |
+
+### OpenShift Lightspeed / LLM Errors
+
+LLM invocation errors and route issues were common when the model endpoint changed or the sandbox expired.
+
+| Situation | Lightspeed Prompt (from another cluster or terminal) |
+|-----------|-------------------|
+| `An error occurred during LLM invocation` | _"Get pods in namespace openshift-lightspeed and check their status"_ |
+| OLS pod showing `Application is not available` | _"Get the route in namespace openshift-lightspeed"_ |
+| LLM endpoint returning errors | _"Get the OLSConfig named cluster and show me the LLM provider configuration"_ |
+| MCP tools not found (`Tool 'ocp_listPods' not found`) | _"Get the OLSConfig named cluster and show me the querySystemPrompt"_ |
+| LLM hallucinating tool names | _"Get the MCPServerRegistrations in namespace mcp-system and show their discovered tools"_ |
+
+### MCP Gateway Issues
+
+The MCP Gateway federates tools from multiple backends — connectivity issues were common.
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| MCPServerRegistration stuck in `READY=False` | _"Get the MCPServerRegistrations in namespace mcp-system"_ |
+| ArgoCD MCP server `CrashLoopBackOff` | _"Get the logs from deployment argocd-mcp-server in namespace mcp-system"_ |
+| Gateway pods not healthy | _"Get pods in namespace mcp-system and show their status"_ |
+| Tool prefix collision / wrong tools | _"List all MCPServerRegistrations in mcp-system and show prefix and tool count"_ |
+| 401 errors from Kuadrant controller to backend | _"Get events in namespace mcp-system"_ |
+
+### Showroom / Workshop Registration
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| Showroom not loading / pods down | _"Get pods in namespace showroom"_ |
+| `{cluster_domain}` not being replaced in showroom | _"Get the configmap showroom-env in namespace showroom"_ |
+| Terminal permission errors (`Forbidden: cannot list pods`) | _"Get the clusterrolebindings that mention serviceaccount showroom"_ |
+| Mermaid diagrams not rendering | _"Get the logs from the pod running in namespace showroom"_ |
+| Workshop registration page not showing logo | _"Get the configmap workshop-registration-html in namespace showroom"_ |
+
+### Pipeline / Tekton Issues
+
+Pipelines not triggering after git push was a recurring issue, usually caused by missing webhooks or EventListeners.
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| Pipeline not triggered after commit | _"List events in namespace user1-neuralbank"_ |
+| Pipeline exists but never ran | _"List pipelineruns in namespace user1-neuralbank"_ |
+| Pipeline stuck or failed | _"Get the pipelinerun logs in namespace user1-neuralbank"_ |
+| Webhook not configured | _"List routes in namespace user1-neuralbank"_ |
+| Build fails (buildah) | _"Get the logs from the latest pipelinerun in namespace user1-neuralbank"_ |
+
+### Keycloak / Authentication
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| Users can't login to Developer Hub | _"Get pods in namespace rhbk-operator and check keycloak status"_ |
+| Realm `neuralbank` not created | _"Get the keycloak realm resources in namespace rhbk-operator"_ |
+| OIDC flow not working on frontend | _"Get the OIDCPolicy resources in namespace user1-neuralbank"_ |
+
+### Operator Installation
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| Operator stuck in `InstallPlan` | _"List subscriptions in namespace openshift-operators"_ |
+| CRD not available (SkipDryRunOnMissingResource) | _"List customresourcedefinitions that match servicemesh"_ |
+| Operator degraded | _"Check the cluster health and show operator conditions"_ |
+
+### Node / Cluster Health
+
+| Situation | Lightspeed Prompt |
+|-----------|-------------------|
+| Pods pending (not enough resources) | _"Show me node resource usage"_ |
+| Node not ready | _"Check node conditions"_ |
+| General cluster health check | _"Check the overall cluster health"_ |
+| OOMKilled pods | _"Detect resource issues across all namespaces"_ |
+
+### Quick Diagnosis Workflow
+
+For a fresh installation, run these prompts in sequence to validate the full stack:
+
+```
+1. "List all ArgoCD applications and show which ones are not synced or unhealthy"
+2. "Get pods in namespace developer-hub and check their status"
+3. "Get pods in namespace openshift-lightspeed and check their status"
+4. "Get MCPServerRegistrations in namespace mcp-system"
+5. "Get pods in namespace showroom"
+6. "Check the overall cluster health"
+```
+
 ## Documentation
 
 - [Workshop (GitHub Pages)](https://maximilianopizarro.github.io/test-drive-pe-oscg/) - Full workshop guide
