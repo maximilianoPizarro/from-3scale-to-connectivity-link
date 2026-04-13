@@ -175,6 +175,7 @@ spec:
       valuesObject:
         clusterDomain: {{ $domain }}
         mcpToken: {{ $.Values.connectivityLink.mcpToken | default "IpIbd50gbMb1p2+iCigrhkm21pZwbn0g" | quote }}
+        argocdApiToken: {{ $.Values.connectivityLink.argocdMcpToken | default "" | quote }}
     {{- else if eq .path "connectivity-link-oauth-users" }}
     helm:
       valuesObject:

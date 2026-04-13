@@ -21,6 +21,7 @@ argocd:
 # ============================================================
 connectivityLink:
   mcpToken: "IpIbd50gbMb1p2+iCigrhkm21pZwbn0g"
+  argocdMcpToken: ""
   operators:
     channel: stable-4.20
     version: 4.20.4

@@ -768,6 +768,158 @@ spec:
 */}}
 ---
 ##
+## 8b. ArgoCD MCP Server — Deployment, Services, HTTPRoute, MCPServerRegistration
+##
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argocd-mcp-token
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+type: Opaque
+stringData:
+  ARGOCD_API_TOKEN: {{ .Values.argocdApiToken | default "" | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-mcp-server
+  namespace: mcp-system
+  labels:
+    app: argocd-mcp-server
+    app.kubernetes.io/part-of: mcp-gateway
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argocd-mcp-server
+  template:
+    metadata:
+      labels:
+        app: argocd-mcp-server
+        app.kubernetes.io/part-of: mcp-gateway
+    spec:
+      containers:
+        - name: argocd-mcp
+          image: node:18-alpine
+          command: ["npx"]
+          args: ["argocd-mcp@latest", "http"]
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: ARGOCD_BASE_URL
+              value: "https://openshift-gitops-server.openshift-gitops.svc.cluster.local"
+            - name: ARGOCD_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: argocd-mcp-token
+                  key: ARGOCD_API_TOKEN
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
+          readinessProbe:
+            httpGet:
+              path: /mcp
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /mcp
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-mcp-server
+  namespace: mcp-system
+  labels:
+    app: argocd-mcp-server
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  selector:
+    app: argocd-mcp-server
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-mcp-server-proxy
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  type: ExternalName
+  externalName: argocd-mcp-server.mcp-system.svc.cluster.local
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd-mcp-server-route
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  hostnames:
+    - mcp-gateway.{{ .Values.clusterDomain }}
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: mcp-gateway
+      namespace: mcp-system
+      sectionName: mcp
+  rules:
+    - backendRefs:
+        - name: argocd-mcp-server-proxy
+          port: 3000
+      matches:
+        - path:
+            type: PathPrefix
+            value: /argocd-mcp-server/mcp
+---
+apiVersion: mcp.kuadrant.io/v1alpha1
+kind: MCPServerRegistration
+metadata:
+  name: argocd-mcp-server
+  namespace: mcp-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  targetRef:
+    name: argocd-mcp-server-route
+  toolPrefix: argo
+  path: /mcp
+---
+##
 ## 9. Route — OpenShift route to expose the gateway
 ##
 apiVersion: route.openshift.io/v1
