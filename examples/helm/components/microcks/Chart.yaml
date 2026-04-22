@@ -1,0 +1,6 @@
+apiVersion: v2
+name: microcks
+description: Microcks API mocking and testing platform for enterprise API simulation
+type: application
+version: 0.1.0
+appVersion: "1.10.0"

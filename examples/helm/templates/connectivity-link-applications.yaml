@@ -273,6 +273,14 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
+    {{- else if eq .path "microcks" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
+    {{- else if eq .path "enterprise-apis-3scale" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
     {{- end }}
   destination:
     server: https://kubernetes.default.svc

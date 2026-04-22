@@ -1,0 +1,6 @@
+apiVersion: v2
+name: enterprise-apis-3scale
+description: Enterprise API portfolio across 5 industry verticals registered in 3scale for large-scale migration demo
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

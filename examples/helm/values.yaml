@@ -262,6 +262,22 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: microcks
+      enabled: true
+      path: microcks
+      destinationNamespace: microcks
+      syncWave: "8"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
+    - id: enterprise-apis-3scale
+      enabled: true
+      path: enterprise-apis-3scale
+      destinationNamespace: user1-neuralbank
+      syncWave: "9"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: workshop-registration
       enabled: true
       path: workshop-registration
@@ -339,12 +355,18 @@ connectivityLink:
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/gateforge/"
       chart: gateforge
-      targetRevision: "0.1.4"
+      targetRevision: "0.1.6"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
         global:
           clusterDomain: apps.cluster-4wrc6.dynamic.redhatworkshops.io
+        backend:
+          image:
+            tag: v0.1.6
+        frontend:
+          image:
+            tag: v0.1.6
         ai:
           enabled: true
           endpoint: https://litellm-prod.apps.maas.redhatworkshops.io/v1

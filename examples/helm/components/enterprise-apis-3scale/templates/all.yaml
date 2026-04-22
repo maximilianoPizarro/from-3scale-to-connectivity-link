@@ -1,0 +1,253 @@
+{{- $domain := .Values.clusterDomain -}}
+{{- range .Values.verticals }}
+{{- $ns := .namespace }}
+{{- $verticalLabel := .label }}
+---
+# ============================================================
+# RBAC — allow ArgoCD to manage resources in {{ $ns }}
+# ============================================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: enterprise-apis-argocd-role
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups: ["", "apps", "route.openshift.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["capabilities.3scale.net"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: enterprise-apis-argocd-binding
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: enterprise-apis-argocd-role
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: anyuid-default-enterprise
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: {{ $ns }}
+---
+# ============================================================
+# Mock service — single pod per namespace backed by shared DB
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enterprise-mock-{{ $verticalLabel }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app: enterprise-mock-{{ $verticalLabel }}
+    vertical: {{ $verticalLabel }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: enterprise-mock-{{ $verticalLabel }}
+  template:
+    metadata:
+      labels:
+        app: enterprise-mock-{{ $verticalLabel }}
+        vertical: {{ $verticalLabel }}
+    spec:
+      containers:
+        - name: api
+          image: {{ $.Values.mockImage }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://mock-shared-db.mock-apis-3scale.svc.cluster.local:5432/mockapis"
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: "mockapis"
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: "mockapis123!"
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: enterprise-mock-{{ $verticalLabel }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    app: enterprise-mock-{{ $verticalLabel }}
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: enterprise-mock-{{ $verticalLabel }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  host: {{ $verticalLabel }}-apis.{{ $domain }}
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: enterprise-mock-{{ $verticalLabel }}
+    weight: 100
+{{- range .apis }}
+---
+# ============================================================
+# {{ .displayName }} — 3scale Backend ({{ $ns }})
+# ============================================================
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: {{ .name }}-backend
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    vertical: {{ $verticalLabel }}
+    source-namespace: {{ $ns }}
+spec:
+  name: {{ .displayName | quote }}
+  systemName: {{ .systemName }}
+  privateBaseURL: "http://enterprise-mock-{{ $verticalLabel }}.{{ $ns }}.svc.cluster.local:8080"
+  description: {{ .description | quote }}
+  mappingRules:
+    {{- range .paths }}
+    - httpMethod: {{ .method }}
+      pattern: {{ .pattern | quote }}
+      metricMethodRef: hits
+      increment: 1
+    {{- end }}
+  metrics:
+    hits:
+      friendlyName: Hits
+      unit: hit
+      description: "Number of API hits"
+---
+# ============================================================
+# {{ .displayName }} — 3scale Product ({{ .authType | upper }})
+# ============================================================
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: {{ .name }}-product
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    vertical: {{ $verticalLabel }}
+    source-namespace: {{ $ns }}
+spec:
+  name: {{ printf "%s (%s)" .displayName (.authType | upper) | quote }}
+  systemName: {{ .systemName }}
+  description: {{ .description | quote }}
+  backendUsages:
+    {{ .systemName }}:
+      path: /
+  deployment:
+    apicastHosted:
+      authentication:
+        {{- if eq .authType "oidc" }}
+        oidc:
+          issuerType: keycloak
+          issuerEndpoint: "https://rhbk.{{ $domain }}/realms/{{ .keycloakRealm }}"
+          jwtClaimWithClientID: azp
+          jwtClaimWithClientIDType: plain
+          authenticationFlow:
+            standardFlowEnabled: true
+            implicitFlowEnabled: false
+            serviceAccountsEnabled: true
+            directAccessGrantsEnabled: true
+        {{- else }}
+        userkey:
+          authUserKey: user_key
+          credentials: query
+        {{- end }}
+  applicationPlans:
+    basic:
+      name: "Basic Plan"
+      limits:
+        - period: minute
+          value: {{ .basePlanLimit }}
+          metricMethodRef:
+            systemName: hits
+    premium:
+      name: "Premium Plan"
+      limits:
+        - period: minute
+          value: {{ .premiumPlanLimit }}
+          metricMethodRef:
+            systemName: hits
+---
+# ============================================================
+# {{ .displayName }} — 3scale ActiveDoc
+# ============================================================
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: {{ .name }}-activedoc
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    vertical: {{ $verticalLabel }}
+    source-namespace: {{ $ns }}
+spec:
+  name: {{ .displayName | quote }}
+  productSystemName: {{ .systemName }}
+  activeDocOpenAPIRef:
+    url: "https://{{ $verticalLabel }}-apis.{{ $domain }}/q/openapi"
+  published: true
+{{- end }}
+{{- end }}
