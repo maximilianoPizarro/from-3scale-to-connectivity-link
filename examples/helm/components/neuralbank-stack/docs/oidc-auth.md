@@ -54,8 +54,8 @@ AuthPolicies generadas automÃ¡ticamente:
 
 | Campo | Valor |
 |-------|-------|
-| **Realm URL** | `https://rhbk.apps.cluster-cq9fp.dynamic.redhatworkshops.io/realms/neuralbank` |
-| **Well-known** | `https://rhbk.apps.cluster-cq9fp.dynamic.redhatworkshops.io/realms/neuralbank/.well-known/openid-configuration` |
+| **Realm URL** | `https://rhbk.apps.cluster-4wrc6.dynamic.redhatworkshops.io/realms/neuralbank` |
+| **Well-known** | `https://rhbk.apps.cluster-4wrc6.dynamic.redhatworkshops.io/realms/neuralbank/.well-known/openid-configuration` |
 
 ### Client: neuralbank-frontend
 
@@ -87,7 +87,7 @@ Neuralbank usa OIDC (interactivo), mientras que NFL Wallet usa API Key (programÃ
 
 ## Acceso desde el navegador
 
-1. Navegar a `https://neuralbank.apps.cluster-cq9fp.dynamic.redhatworkshops.io`
+1. Navegar a `https://neuralbank.apps.cluster-4wrc6.dynamic.redhatworkshops.io`
 2. La OIDCPolicy redirige automÃ¡ticamente a Keycloak
 3. Ingresar credenciales (`user1` / `Welcome123!`)
 4. Tras la autenticaciÃ³n, se redirige de vuelta a la app con un JWT en cookie
@@ -98,7 +98,7 @@ Neuralbank usa OIDC (interactivo), mientras que NFL Wallet usa API Key (programÃ
 
 ```bash
 TOKEN=$(curl -s -X POST \
-  "https://rhbk.apps.cluster-cq9fp.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token" \
+  "https://rhbk.apps.cluster-4wrc6.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token" \
   -d "grant_type=password" \
   -d "client_id=neuralbank-frontend" \
   -d "username=user1" \
@@ -111,13 +111,13 @@ echo $TOKEN
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" \
-  https://neuralbank.apps.cluster-cq9fp.dynamic.redhatworkshops.io/api/v1/customers | python3 -m json.tool
+  https://neuralbank.apps.cluster-4wrc6.dynamic.redhatworkshops.io/api/v1/customers | python3 -m json.tool
 ```
 
 ### Sin token (redirect 302)
 
 ```bash
-curl -v https://neuralbank.apps.cluster-cq9fp.dynamic.redhatworkshops.io/api/v1/customers 2>&1 | grep "< HTTP\|< location"
+curl -v https://neuralbank.apps.cluster-4wrc6.dynamic.redhatworkshops.io/api/v1/customers 2>&1 | grep "< HTTP\|< location"
 ```
 
 Resultado esperado: `302` redirect a la URL de login de Keycloak.
