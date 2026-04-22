@@ -229,25 +229,5 @@ spec:
           value: {{ .premiumPlanLimit }}
           metricMethodRef:
             systemName: hits
----
-# ============================================================
-# {{ .displayName }} — 3scale ActiveDoc
-# ============================================================
-apiVersion: capabilities.3scale.net/v1beta1
-kind: ActiveDoc
-metadata:
-  name: {{ .name }}-activedoc
-  namespace: 3scale-system
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
-  labels:
-    vertical: {{ $verticalLabel }}
-    source-namespace: {{ $ns }}
-spec:
-  name: {{ .displayName | quote }}
-  productSystemName: {{ .systemName }}
-  activeDocOpenAPIRef:
-    url: "https://{{ $verticalLabel }}-apis.{{ $domain }}/q/openapi"
-  published: true
 {{- end }}
 {{- end }}
