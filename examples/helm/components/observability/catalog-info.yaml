@@ -31,20 +31,15 @@ metadata:
     - dashboards
     - monitoring
   links:
-    - url: https://grafana-observability.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: Grafana UI
+    - title: Grafana UI
       icon: dashboard
-    - url: https://grafana-observability.apps.cluster-4wrc6.dynamic.redhatworkshops.io/d/service-mesh-overview?orgId=1
-      title: Service Mesh Dashboard
+    - title: Service Mesh Dashboard
       icon: dashboard
-    - url: https://grafana-observability.apps.cluster-4wrc6.dynamic.redhatworkshops.io/d/api-gateway-metrics?orgId=1
-      title: API Gateway Dashboard
+    - title: API Gateway Dashboard
       icon: dashboard
-    - url: https://thanos-querier.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: Thanos Querier
+    - title: Thanos Querier
       icon: search
-    - url: https://kiali-openshift-cluster-observability-operator.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: Kiali Console
+    - title: Kiali Console
       icon: web
 spec:
   type: service
@@ -70,11 +65,9 @@ metadata:
     - service-mesh
     - istio
   links:
-    - url: https://kiali-openshift-cluster-observability-operator.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: Kiali Console
+    - title: Kiali Console
       icon: web
-    - url: https://grafana-observability.apps.cluster-4wrc6.dynamic.redhatworkshops.io/d/service-mesh-overview?orgId=1
-      title: Service Mesh Dashboard
+    - title: Service Mesh Dashboard
       icon: dashboard
 spec:
   type: service

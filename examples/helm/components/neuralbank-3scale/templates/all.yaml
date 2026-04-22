@@ -54,167 +54,6 @@ subjects:
     name: default
     namespace: neuralbank-3scale
 ---
-# PostgreSQL Database
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: neuralbank-db
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-  labels:
-    app: neuralbank-db
-    backstage.io/kubernetes-id: neuralbank-3scale-db
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: neuralbank-db
-  template:
-    metadata:
-      labels:
-        app: neuralbank-db
-    spec:
-      containers:
-        - name: postgresql
-          image: registry.redhat.io/rhel8/postgresql-15:latest
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRESQL_USER
-              value: {{ .Values.global.postgresql.auth.username | quote }}
-            - name: POSTGRESQL_PASSWORD
-              value: {{ .Values.global.postgresql.auth.password | quote }}
-            - name: POSTGRESQL_DATABASE
-              value: {{ .Values.global.postgresql.auth.database | quote }}
-          volumeMounts:
-            - name: db-data
-              mountPath: /var/lib/pgsql/data
-      volumes:
-        - name: db-data
-          persistentVolumeClaim:
-            claimName: neuralbank-3scale-db-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: neuralbank-3scale-db-pvc
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: neuralbank-db
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  selector:
-    app: neuralbank-db
-  ports:
-    - port: 5432
-      targetPort: 5432
----
-# Backend Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: neuralbank-backend
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-  labels:
-    app: neuralbank-backend
-    backstage.io/kubernetes-id: neuralbank-3scale-backend
-spec:
-  replicas: {{ .Values.backend.replicaCount }}
-  selector:
-    matchLabels:
-      app: neuralbank-backend
-  template:
-    metadata:
-      labels:
-        app: neuralbank-backend
-    spec:
-      containers:
-        - name: backend
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
-          ports:
-            - containerPort: 8080
-          env:
-            - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://neuralbank-db:5432/{{ .Values.global.postgresql.auth.database }}"
-            - name: QUARKUS_DATASOURCE_USERNAME
-              value: {{ .Values.global.postgresql.auth.username | quote }}
-            - name: QUARKUS_DATASOURCE_PASSWORD
-              value: {{ .Values.global.postgresql.auth.password | quote }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: neuralbank-backend-svc
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  selector:
-    app: neuralbank-backend
-  ports:
-    - port: 8080
-      targetPort: 8080
----
-# Frontend Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: neuralbank-frontend
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-  labels:
-    app: neuralbank-frontend
-    backstage.io/kubernetes-id: neuralbank-3scale-frontend
-spec:
-  replicas: {{ .Values.frontend.replicaCount }}
-  selector:
-    matchLabels:
-      app: neuralbank-frontend
-  template:
-    metadata:
-      labels:
-        app: neuralbank-frontend
-    spec:
-      containers:
-        - name: frontend
-          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
-          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
-          ports:
-            - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: neuralbank-frontend-svc
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  selector:
-    app: neuralbank-frontend
-  ports:
-    - port: 8080
-      targetPort: 8080
----
-# 3scale Backend (internal API)
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -225,7 +64,7 @@ metadata:
 spec:
   name: "Neuralbank Backend API"
   systemName: neuralbank-backend-api
-  privateBaseURL: "http://neuralbank-backend-svc.neuralbank-3scale.svc.cluster.local:8080"
+  privateBaseURL: "http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/customers$"
@@ -253,7 +92,6 @@ spec:
       unit: hit
       description: Number of API hits
 ---
-# 3scale Product (OIDC authentication)
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -296,7 +134,6 @@ spec:
           metricMethodRef:
             systemName: hits
 ---
-# 3scale ActiveDoc (OpenAPI spec)
 apiVersion: capabilities.3scale.net/v1beta1
 kind: ActiveDoc
 metadata:
@@ -308,44 +145,5 @@ spec:
   name: "Neuralbank Credit Management API"
   productSystemName: neuralbank-oidc
   activeDocOpenAPIRef:
-    url: "https://neuralbank-3scale.{{ .Values.clusterDomain }}/q/openapi"
+    url: "https://neuralbank.{{ .Values.clusterDomain }}/q/openapi"
   published: true
----
-# OpenShift Route (direct to backend for health/swagger, 3scale handles API traffic)
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: neuralbank-3scale-direct
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  host: neuralbank-3scale.{{ .Values.clusterDomain }}
-  port:
-    targetPort: 8080
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
-  to:
-    kind: Service
-    name: neuralbank-backend-svc
-    weight: 100
----
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: neuralbank-3scale-frontend
-  namespace: neuralbank-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  host: neuralbank-3scale-ui.{{ .Values.clusterDomain }}
-  port:
-    targetPort: 8080
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
-  to:
-    kind: Service
-    name: neuralbank-frontend-svc
-    weight: 100

@@ -6,9 +6,7 @@ metadata:
   annotations:
     argocd/app-name: operators
     argocd/app-namespace: openshift-gitops
-    # ArgoCD URL - Update with your cluster domain
-    # Format: https://openshift-gitops-server-openshift-gitops.apps.<cluster-domain>/applications/operators
-    argocd/app-url: https://openshift-gitops-server-openshift-gitops.apps.cluster-4wrc6.dynamic.redhatworkshops.io/applications/operators
+    # ArgoCD URL resolved automatically by the ArgoCD plugin in Developer Hub
     gitlab.com/project-slug: maximilianoPizarro/connectivity-link
   tags:
     - operators

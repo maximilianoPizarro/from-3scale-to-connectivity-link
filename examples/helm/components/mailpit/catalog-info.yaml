@@ -8,12 +8,10 @@ metadata:
     backstage.io/kubernetes-namespace: openshift-lightspeed
     backstage.io/techdocs-ref: dir:.
   links:
-    - url: https://n8n-mailpit-openshift-lightspeed.apps.cluster-4wrc6.dynamic.redhatworkshops.io/
-      title: Mailpit Web UI
+    - title: Mailpit Web UI
       icon: email
       type: website
-    - url: https://n8n-mailpit-openshift-lightspeed.apps.cluster-4wrc6.dynamic.redhatworkshops.io/api/v1/messages
-      title: Mailpit API
+    - title: Mailpit API
       icon: api
       type: api
   tags:
@@ -63,8 +61,8 @@ spec:
       version: "1.0"
       description: REST API for Mailpit email testing tool. Provides endpoints to send test emails, list messages, search, and manage the inbox.
     servers:
-      - url: https://n8n-mailpit-openshift-lightspeed.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-        description: Mailpit instance on OpenShift
+      - url: /
+        description: Resolved dynamically via Kubernetes Route
     paths:
       /api/v1/messages:
         get:

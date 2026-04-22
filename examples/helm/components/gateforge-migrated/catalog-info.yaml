@@ -30,11 +30,9 @@ metadata:
     - gateforge-migrated
     - gateway-api
   links:
-    - url: https://account-mgmt-api.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: API Gateway Endpoint
+    - title: API Gateway Endpoint
       icon: api
-    - url: https://gateforge-gateforge.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: GateForge Dashboard
+    - title: GateForge Dashboard
       icon: dashboard
 spec:
   type: openapi
@@ -53,8 +51,8 @@ spec:
       contact:
         name: Platform Engineering
     servers:
-      - url: https://account-mgmt-api.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-        description: Connectivity Link Gateway (user1-neuralbank)
+      - url: /
+        description: Resolved dynamically via Kubernetes Route
     paths:
       /:
         get:
@@ -116,11 +114,9 @@ metadata:
     - gateforge-migrated
     - gateway-api
   links:
-    - url: https://card-issuing-api.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: API Gateway Endpoint
+    - title: API Gateway Endpoint
       icon: api
-    - url: https://gateforge-gateforge.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-      title: GateForge Dashboard
+    - title: GateForge Dashboard
       icon: dashboard
 spec:
   type: openapi
@@ -139,8 +135,8 @@ spec:
       contact:
         name: Platform Engineering
     servers:
-      - url: https://card-issuing-api.apps.cluster-4wrc6.dynamic.redhatworkshops.io
-        description: Connectivity Link Gateway (user1-neuralbank)
+      - url: /
+        description: Resolved dynamically via Kubernetes Route
     paths:
       /:
         get:

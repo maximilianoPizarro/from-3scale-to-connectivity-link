@@ -1,381 +1,82 @@
 clusterDomain: "apps.cluster.example.com"
+userCount: 50
+microcksBaseUrl: "http://microcks.microcks.svc.cluster.local:8080"
 
-mockImage: quay.io/maximilianopizarro/neuralbank-backend:latest
+apis:
+  - name: account-mgmt
+    systemName: account-mgmt-api
+    displayName: "Account Management API"
+    description: "Account CRUD, balance queries, statement generation and multi-currency support"
+    microcksService: "Account+Management+API"
+    microcksVersion: "1.0"
+    authType: oidc
+    keycloakRealm: neuralbank
+    basePlanLimit: 100
+    premiumPlanLimit: 500
+    paths:
+      - method: GET
+        pattern: "/api/v1/accounts$"
+      - method: GET
+        pattern: "/api/v1/accounts/{id}$"
+      - method: POST
+        pattern: "/api/v1/accounts$"
+      - method: GET
+        pattern: "/api/v1/accounts/{id}/balance$"
 
-verticals:
-  # ================================================================
-  # user1-neuralbank — FinTech Vertical
-  # ================================================================
-  - namespace: user1-neuralbank
-    label: fintech
-    apis:
-      - name: account-mgmt
-        systemName: account-mgmt-api
-        displayName: "Account Management API"
-        description: "Account CRUD, balance queries, statement generation and multi-currency support"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 100
-        premiumPlanLimit: 500
-        paths:
-          - method: GET
-            pattern: "/api/v1/accounts$"
-          - method: GET
-            pattern: "/api/v1/accounts/{id}$"
-          - method: POST
-            pattern: "/api/v1/accounts$"
-          - method: GET
-            pattern: "/api/v1/accounts/{id}/balance$"
-          - method: GET
-            pattern: "/api/v1/accounts/{id}/statements$"
+  - name: wire-transfer
+    systemName: wire-transfer-api
+    displayName: "Wire Transfer API"
+    description: "Domestic and international wire transfers, SWIFT messaging, and transfer status tracking"
+    microcksService: "Wire+Transfer+API"
+    microcksVersion: "1.0"
+    authType: oidc
+    keycloakRealm: neuralbank
+    basePlanLimit: 50
+    premiumPlanLimit: 300
+    paths:
+      - method: POST
+        pattern: "/api/v1/transfers$"
+      - method: GET
+        pattern: "/api/v1/transfers/{id}$"
+      - method: GET
+        pattern: "/api/v1/transfers/{id}/status$"
+      - method: POST
+        pattern: "/api/v1/transfers/swift$"
 
-      - name: wire-transfer
-        systemName: wire-transfer-api
-        displayName: "Wire Transfer API"
-        description: "Domestic and international wire transfers, SWIFT messaging, and transfer status tracking"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 50
-        premiumPlanLimit: 300
-        paths:
-          - method: POST
-            pattern: "/api/v1/transfers$"
-          - method: GET
-            pattern: "/api/v1/transfers/{id}$"
-          - method: GET
-            pattern: "/api/v1/transfers/{id}/status$"
-          - method: POST
-            pattern: "/api/v1/transfers/swift$"
+  - name: card-issuing
+    systemName: card-issuing-api
+    displayName: "Card Issuing API"
+    description: "Card provisioning, activation, limit management, and virtual card generation"
+    microcksService: "Card+Issuing+API"
+    microcksVersion: "1.0"
+    authType: apikey
+    basePlanLimit: 80
+    premiumPlanLimit: 400
+    paths:
+      - method: POST
+        pattern: "/api/v1/cards$"
+      - method: GET
+        pattern: "/api/v1/cards/{id}$"
+      - method: PUT
+        pattern: "/api/v1/cards/{id}/activate$"
+      - method: PUT
+        pattern: "/api/v1/cards/{id}/limits$"
 
-      - name: card-issuing
-        systemName: card-issuing-api
-        displayName: "Card Issuing API"
-        description: "Card provisioning, activation, limit management, and virtual card generation"
-        authType: apikey
-        basePlanLimit: 80
-        premiumPlanLimit: 400
-        paths:
-          - method: POST
-            pattern: "/api/v1/cards$"
-          - method: GET
-            pattern: "/api/v1/cards/{id}$"
-          - method: PUT
-            pattern: "/api/v1/cards/{id}/activate$"
-          - method: PUT
-            pattern: "/api/v1/cards/{id}/limits$"
-
-      - name: kyc-verification
-        systemName: kyc-verification-api
-        displayName: "KYC Verification API"
-        description: "Identity verification, document upload, AML screening, and compliance checks"
-        authType: apikey
-        basePlanLimit: 60
-        premiumPlanLimit: 250
-        paths:
-          - method: POST
-            pattern: "/api/v1/kyc/verify$"
-          - method: POST
-            pattern: "/api/v1/kyc/documents$"
-          - method: GET
-            pattern: "/api/v1/kyc/{id}/status$"
-          - method: GET
-            pattern: "/api/v1/kyc/{id}/report$"
-
-  # ================================================================
-  # user2-neuralbank — InsurTech Vertical
-  # ================================================================
-  - namespace: user2-neuralbank
-    label: insurtech
-    apis:
-      - name: claims-processing
-        systemName: claims-processing-api
-        displayName: "Claims Processing API"
-        description: "File insurance claims, upload evidence, track adjudication and settlement"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 120
-        premiumPlanLimit: 600
-        paths:
-          - method: POST
-            pattern: "/api/v1/claims$"
-          - method: GET
-            pattern: "/api/v1/claims/{id}$"
-          - method: POST
-            pattern: "/api/v1/claims/{id}/evidence$"
-          - method: GET
-            pattern: "/api/v1/claims/{id}/adjudication$"
-
-      - name: policy-mgmt
-        systemName: policy-mgmt-api
-        displayName: "Policy Management API"
-        description: "Create, renew, cancel insurance policies and manage beneficiaries"
-        authType: apikey
-        basePlanLimit: 150
-        premiumPlanLimit: 800
-        paths:
-          - method: POST
-            pattern: "/api/v1/policies$"
-          - method: GET
-            pattern: "/api/v1/policies/{id}$"
-          - method: PUT
-            pattern: "/api/v1/policies/{id}/renew$"
-          - method: DELETE
-            pattern: "/api/v1/policies/{id}$"
-
-      - name: quote-engine
-        systemName: quote-engine-api
-        displayName: "Quote Engine API"
-        description: "Premium calculation, risk assessment, and multi-product quote comparison"
-        authType: apikey
-        basePlanLimit: 200
-        premiumPlanLimit: 1000
-        paths:
-          - method: POST
-            pattern: "/api/v1/quotes$"
-          - method: GET
-            pattern: "/api/v1/quotes/{id}$"
-          - method: POST
-            pattern: "/api/v1/quotes/compare$"
-          - method: GET
-            pattern: "/api/v1/risk-factors$"
-
-      - name: underwriting
-        systemName: underwriting-api
-        displayName: "Underwriting API"
-        description: "Application review, risk scoring, automated decision engine"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 80
-        premiumPlanLimit: 400
-        paths:
-          - method: POST
-            pattern: "/api/v1/applications$"
-          - method: GET
-            pattern: "/api/v1/applications/{id}$"
-          - method: GET
-            pattern: "/api/v1/applications/{id}/score$"
-          - method: POST
-            pattern: "/api/v1/applications/{id}/decide$"
-
-  # ================================================================
-  # user3-neuralbank — Retail / E-Commerce Vertical
-  # ================================================================
-  - namespace: user3-neuralbank
-    label: retail
-    apis:
-      - name: product-catalog
-        systemName: product-catalog-api
-        displayName: "Product Catalog API"
-        description: "Browse products, categories, search with filters and faceted navigation"
-        authType: apikey
-        basePlanLimit: 500
-        premiumPlanLimit: 2500
-        paths:
-          - method: GET
-            pattern: "/api/v1/products$"
-          - method: GET
-            pattern: "/api/v1/products/{id}$"
-          - method: GET
-            pattern: "/api/v1/categories$"
-          - method: GET
-            pattern: "/api/v1/products/search$"
-
-      - name: shopping-cart
-        systemName: shopping-cart-api
-        displayName: "Shopping Cart API"
-        description: "Cart CRUD operations, promotion application, and cart merging"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 300
-        premiumPlanLimit: 1500
-        paths:
-          - method: POST
-            pattern: "/api/v1/carts$"
-          - method: GET
-            pattern: "/api/v1/carts/{id}$"
-          - method: POST
-            pattern: "/api/v1/carts/{id}/items$"
-          - method: POST
-            pattern: "/api/v1/carts/{id}/promotions$"
-
-      - name: checkout
-        systemName: checkout-api
-        displayName: "Checkout API"
-        description: "Order placement, payment processing, and order confirmation"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 150
-        premiumPlanLimit: 750
-        paths:
-          - method: POST
-            pattern: "/api/v1/checkout$"
-          - method: POST
-            pattern: "/api/v1/checkout/validate$"
-          - method: GET
-            pattern: "/api/v1/checkout/{id}/confirmation$"
-
-      - name: recommendations
-        systemName: recommendations-api
-        displayName: "Recommendations API"
-        description: "Personalized product suggestions, trending items, and collaborative filtering"
-        authType: apikey
-        basePlanLimit: 400
-        premiumPlanLimit: 2000
-        paths:
-          - method: GET
-            pattern: "/api/v1/recommendations/{userId}$"
-          - method: GET
-            pattern: "/api/v1/trending$"
-          - method: GET
-            pattern: "/api/v1/similar/{productId}$"
-
-  # ================================================================
-  # user4-neuralbank — HealthTech Vertical
-  # ================================================================
-  - namespace: user4-neuralbank
-    label: healthtech
-    apis:
-      - name: patient-records
-        systemName: patient-records-api
-        displayName: "Patient Records API"
-        description: "Electronic health records, medical history, allergies, and immunizations"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 80
-        premiumPlanLimit: 400
-        paths:
-          - method: GET
-            pattern: "/api/v1/patients/{id}$"
-          - method: GET
-            pattern: "/api/v1/patients/{id}/history$"
-          - method: GET
-            pattern: "/api/v1/patients/{id}/allergies$"
-          - method: POST
-            pattern: "/api/v1/patients$"
-
-      - name: appointment-scheduler
-        systemName: appointment-scheduler-api
-        displayName: "Appointment Scheduler API"
-        description: "Book, cancel, reschedule appointments and manage provider availability"
-        authType: apikey
-        basePlanLimit: 200
-        premiumPlanLimit: 1000
-        paths:
-          - method: POST
-            pattern: "/api/v1/appointments$"
-          - method: GET
-            pattern: "/api/v1/appointments/{id}$"
-          - method: PUT
-            pattern: "/api/v1/appointments/{id}/reschedule$"
-          - method: GET
-            pattern: "/api/v1/providers/{id}/availability$"
-
-      - name: prescription
-        systemName: prescription-api
-        displayName: "Prescription API"
-        description: "E-prescribing, refill requests, drug interaction checks"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 100
-        premiumPlanLimit: 500
-        paths:
-          - method: POST
-            pattern: "/api/v1/prescriptions$"
-          - method: GET
-            pattern: "/api/v1/prescriptions/{id}$"
-          - method: POST
-            pattern: "/api/v1/prescriptions/{id}/refill$"
-          - method: GET
-            pattern: "/api/v1/drug-interactions$"
-
-      - name: lab-results
-        systemName: lab-results-api
-        displayName: "Lab Results API"
-        description: "Lab test orders, results retrieval, and reference range comparisons"
-        authType: apikey
-        basePlanLimit: 150
-        premiumPlanLimit: 750
-        paths:
-          - method: POST
-            pattern: "/api/v1/lab-orders$"
-          - method: GET
-            pattern: "/api/v1/lab-orders/{id}$"
-          - method: GET
-            pattern: "/api/v1/lab-results/{id}$"
-          - method: GET
-            pattern: "/api/v1/reference-ranges$"
-
-  # ================================================================
-  # user5-neuralbank — Telco Vertical
-  # ================================================================
-  - namespace: user5-neuralbank
-    label: telco
-    apis:
-      - name: telecom-billing
-        systemName: telecom-billing-api
-        displayName: "Telecom Billing API"
-        description: "Invoices, payment history, adjustments, and billing cycle management"
-        authType: apikey
-        basePlanLimit: 250
-        premiumPlanLimit: 1200
-        paths:
-          - method: GET
-            pattern: "/api/v1/invoices$"
-          - method: GET
-            pattern: "/api/v1/invoices/{id}$"
-          - method: POST
-            pattern: "/api/v1/payments$"
-          - method: GET
-            pattern: "/api/v1/billing-cycles$"
-
-      - name: network-status
-        systemName: network-status-api
-        displayName: "Network Status API"
-        description: "Coverage maps, outage reports, speed tests, and cell tower status"
-        authType: apikey
-        basePlanLimit: 300
-        premiumPlanLimit: 1500
-        paths:
-          - method: GET
-            pattern: "/api/v1/coverage$"
-          - method: GET
-            pattern: "/api/v1/outages$"
-          - method: POST
-            pattern: "/api/v1/speedtest$"
-          - method: GET
-            pattern: "/api/v1/towers/{id}$"
-
-      - name: data-usage
-        systemName: data-usage-api
-        displayName: "Data Usage API"
-        description: "Real-time data consumption, usage alerts, and plan threshold notifications"
-        authType: oidc
-        keycloakRealm: neuralbank
-        basePlanLimit: 200
-        premiumPlanLimit: 1000
-        paths:
-          - method: GET
-            pattern: "/api/v1/usage/{subscriberId}$"
-          - method: GET
-            pattern: "/api/v1/usage/{subscriberId}/history$"
-          - method: POST
-            pattern: "/api/v1/alerts$"
-          - method: GET
-            pattern: "/api/v1/thresholds$"
-
-      - name: service-plans
-        systemName: service-plans-api
-        displayName: "Service Plans API"
-        description: "Plan catalog, upgrades, downgrades, and add-on management"
-        authType: apikey
-        basePlanLimit: 350
-        premiumPlanLimit: 1800
-        paths:
-          - method: GET
-            pattern: "/api/v1/plans$"
-          - method: GET
-            pattern: "/api/v1/plans/{id}$"
-          - method: POST
-            pattern: "/api/v1/subscriptions/{id}/upgrade$"
-          - method: GET
-            pattern: "/api/v1/addons$"
+  - name: kyc-verification
+    systemName: kyc-verification-api
+    displayName: "KYC Verification API"
+    description: "Identity verification, document upload, AML screening, and compliance checks"
+    microcksService: "KYC+Verification+API"
+    microcksVersion: "1.0"
+    authType: apikey
+    basePlanLimit: 60
+    premiumPlanLimit: 250
+    paths:
+      - method: POST
+        pattern: "/api/v1/kyc/verify$"
+      - method: POST
+        pattern: "/api/v1/kyc/documents$"
+      - method: GET
+        pattern: "/api/v1/kyc/{id}/status$"
+      - method: GET
+        pattern: "/api/v1/kyc/{id}/report$"

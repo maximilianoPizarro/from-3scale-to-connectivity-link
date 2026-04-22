@@ -38,109 +38,6 @@ subjects:
     name: openshift-gitops-argocd-application-controller
     namespace: openshift-gitops
 ---
-# NFL Wallet API Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nfl-wallet-api
-  namespace: nfl-wallet-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-  labels:
-    app: nfl-wallet-api
-    backstage.io/kubernetes-id: nfl-wallet-3scale-api
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: nfl-wallet-api
-  template:
-    metadata:
-      labels:
-        app: nfl-wallet-api
-    spec:
-      containers:
-        - name: api
-          image: quay.io/maximilianopizarro/neuralbank-backend:latest
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          env:
-            - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://nfl-wallet-db:5432/nflwallet"
-            - name: QUARKUS_DATASOURCE_USERNAME
-              value: "nflwallet"
-            - name: QUARKUS_DATASOURCE_PASSWORD
-              value: "nflwallet123!"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nfl-wallet-api
-  namespace: nfl-wallet-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  selector:
-    app: nfl-wallet-api
-  ports:
-    - port: 8080
-      targetPort: 8080
----
-# NFL Wallet Database
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nfl-wallet-db
-  namespace: nfl-wallet-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-  labels:
-    app: nfl-wallet-db
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: nfl-wallet-db
-  template:
-    metadata:
-      labels:
-        app: nfl-wallet-db
-    spec:
-      containers:
-        - name: postgresql
-          image: registry.redhat.io/rhel8/postgresql-15:latest
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRESQL_USER
-              value: "nflwallet"
-            - name: POSTGRESQL_PASSWORD
-              value: "nflwallet123!"
-            - name: POSTGRESQL_DATABASE
-              value: "nflwallet"
-          volumeMounts:
-            - name: db-data
-              mountPath: /var/lib/pgsql/data
-      volumes:
-        - name: db-data
-          emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nfl-wallet-db
-  namespace: nfl-wallet-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  selector:
-    app: nfl-wallet-db
-  ports:
-    - port: 5432
-      targetPort: 5432
----
-# 3scale Backend (internal API)
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -151,7 +48,7 @@ metadata:
 spec:
   name: "NFL Wallet Backend API"
   systemName: nfl-wallet-backend-api
-  privateBaseURL: "http://nfl-wallet-api.nfl-wallet-3scale.svc.cluster.local:8080"
+  privateBaseURL: "http://nfl-wallet-api.nfl-wallet-prod.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/customers$"
@@ -171,7 +68,6 @@ spec:
       unit: hit
       description: Number of API hits
 ---
-# 3scale Product (API Key / user_key authentication)
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -207,7 +103,6 @@ spec:
           metricMethodRef:
             systemName: hits
 ---
-# 3scale ActiveDoc
 apiVersion: capabilities.3scale.net/v1beta1
 kind: ActiveDoc
 metadata:
@@ -219,25 +114,5 @@ spec:
   name: "NFL Wallet Customer API"
   productSystemName: nfl-wallet-apikey
   activeDocOpenAPIRef:
-    url: "https://nfl-wallet-3scale.{{ .Values.clusterDomain }}/q/openapi"
+    url: "https://nfl-wallet.{{ .Values.clusterDomain }}/q/openapi"
   published: true
----
-# Direct Route for health/swagger
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: nfl-wallet-3scale-direct
-  namespace: nfl-wallet-3scale
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  host: nfl-wallet-3scale.{{ .Values.clusterDomain }}
-  port:
-    targetPort: 8080
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
-  to:
-    kind: Service
-    name: nfl-wallet-api
-    weight: 100

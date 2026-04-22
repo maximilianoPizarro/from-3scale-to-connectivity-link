@@ -281,6 +281,7 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
+        userCount: {{ $.Values.userCount | default 200 }}
     {{- end }}
   destination:
     server: https://kubernetes.default.svc

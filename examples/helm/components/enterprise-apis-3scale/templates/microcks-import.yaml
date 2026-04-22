@@ -1,0 +1,608 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: microcks-openapi-specs
+  namespace: microcks
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  account-mgmt.json: |
+    {
+      "openapi": "3.0.3",
+      "info": {
+        "title": "Account Management API",
+        "version": "1.0",
+        "description": "Account CRUD, balance queries, statement generation and multi-currency support"
+      },
+      "paths": {
+        "/api/v1/accounts": {
+          "get": {
+            "operationId": "listAccounts",
+            "summary": "List all accounts",
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Account" } },
+                    "examples": {
+                      "default": {
+                        "value": [
+                          { "id": "ACC-001", "holder": "Maria Garcia", "type": "checking", "currency": "USD", "balance": 15420.50, "status": "active" },
+                          { "id": "ACC-002", "holder": "Carlos Lopez", "type": "savings", "currency": "EUR", "balance": 8750.00, "status": "active" }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "post": {
+            "operationId": "createAccount",
+            "summary": "Create a new account",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/AccountCreate" }
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/Account" },
+                    "examples": {
+                      "default": {
+                        "value": { "id": "ACC-003", "holder": "Ana Rodriguez", "type": "checking", "currency": "USD", "balance": 0, "status": "pending" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/accounts/{id}": {
+          "get": {
+            "operationId": "getAccount",
+            "summary": "Get account by ID",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/Account" },
+                    "examples": {
+                      "default": {
+                        "value": { "id": "ACC-001", "holder": "Maria Garcia", "type": "checking", "currency": "USD", "balance": 15420.50, "status": "active" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/accounts/{id}/balance": {
+          "get": {
+            "operationId": "getAccountBalance",
+            "summary": "Get account balance",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "accountId": "ACC-001", "available": 15420.50, "pending": 250.00, "currency": "USD", "lastUpdated": "2024-12-01T10:30:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components": {
+        "schemas": {
+          "Account": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "holder": { "type": "string" },
+              "type": { "type": "string", "enum": ["checking", "savings", "investment"] },
+              "currency": { "type": "string" },
+              "balance": { "type": "number" },
+              "status": { "type": "string", "enum": ["active", "pending", "closed"] }
+            }
+          },
+          "AccountCreate": {
+            "type": "object",
+            "properties": {
+              "holder": { "type": "string" },
+              "type": { "type": "string" },
+              "currency": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  wire-transfer.json: |
+    {
+      "openapi": "3.0.3",
+      "info": {
+        "title": "Wire Transfer API",
+        "version": "1.0",
+        "description": "Domestic and international wire transfers, SWIFT messaging, and transfer status tracking"
+      },
+      "paths": {
+        "/api/v1/transfers": {
+          "post": {
+            "operationId": "createTransfer",
+            "summary": "Initiate a wire transfer",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/TransferRequest" }
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/Transfer" },
+                    "examples": {
+                      "default": {
+                        "value": { "id": "TRF-10001", "type": "domestic", "amount": 5000.00, "currency": "USD", "fromAccount": "ACC-001", "toAccount": "ACC-099", "status": "processing", "createdAt": "2024-12-01T14:00:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/transfers/{id}": {
+          "get": {
+            "operationId": "getTransfer",
+            "summary": "Get transfer details",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/Transfer" },
+                    "examples": {
+                      "default": {
+                        "value": { "id": "TRF-10001", "type": "domestic", "amount": 5000.00, "currency": "USD", "fromAccount": "ACC-001", "toAccount": "ACC-099", "status": "completed", "createdAt": "2024-12-01T14:00:00Z", "completedAt": "2024-12-01T14:05:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/transfers/{id}/status": {
+          "get": {
+            "operationId": "getTransferStatus",
+            "summary": "Get transfer status",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "transferId": "TRF-10001", "status": "completed", "steps": [{ "name": "validation", "status": "done" }, { "name": "compliance", "status": "done" }, { "name": "execution", "status": "done" }] }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/transfers/swift": {
+          "post": {
+            "operationId": "createSwiftTransfer",
+            "summary": "Initiate a SWIFT international transfer",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/SwiftRequest" }
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "id": "SWF-5001", "swiftCode": "BSCHESMMXXX", "amount": 25000.00, "currency": "EUR", "beneficiary": "European Corp Ltd", "status": "pending_compliance", "estimatedArrival": "2024-12-04T10:00:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components": {
+        "schemas": {
+          "Transfer": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "amount": { "type": "number" },
+              "currency": { "type": "string" },
+              "fromAccount": { "type": "string" },
+              "toAccount": { "type": "string" },
+              "status": { "type": "string" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            }
+          },
+          "TransferRequest": {
+            "type": "object",
+            "properties": {
+              "fromAccount": { "type": "string" },
+              "toAccount": { "type": "string" },
+              "amount": { "type": "number" },
+              "currency": { "type": "string" }
+            }
+          },
+          "SwiftRequest": {
+            "type": "object",
+            "properties": {
+              "fromAccount": { "type": "string" },
+              "swiftCode": { "type": "string" },
+              "beneficiary": { "type": "string" },
+              "amount": { "type": "number" },
+              "currency": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  card-issuing.json: |
+    {
+      "openapi": "3.0.3",
+      "info": {
+        "title": "Card Issuing API",
+        "version": "1.0",
+        "description": "Card provisioning, activation, limit management, and virtual card generation"
+      },
+      "paths": {
+        "/api/v1/cards": {
+          "post": {
+            "operationId": "createCard",
+            "summary": "Issue a new card",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/CardRequest" }
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/Card" },
+                    "examples": {
+                      "default": {
+                        "value": { "id": "CRD-2001", "accountId": "ACC-001", "type": "debit", "last4": "4532", "network": "Visa", "status": "inactive", "dailyLimit": 2000, "monthlyLimit": 15000 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/cards/{id}": {
+          "get": {
+            "operationId": "getCard",
+            "summary": "Get card details",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/Card" },
+                    "examples": {
+                      "default": {
+                        "value": { "id": "CRD-2001", "accountId": "ACC-001", "type": "debit", "last4": "4532", "network": "Visa", "status": "active", "dailyLimit": 2000, "monthlyLimit": 15000, "activatedAt": "2024-12-01T16:00:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/cards/{id}/activate": {
+          "put": {
+            "operationId": "activateCard",
+            "summary": "Activate a card",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "id": "CRD-2001", "status": "active", "activatedAt": "2024-12-01T16:00:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/cards/{id}/limits": {
+          "put": {
+            "operationId": "updateCardLimits",
+            "summary": "Update card spending limits",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "dailyLimit": { "type": "number" },
+                      "monthlyLimit": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "id": "CRD-2001", "dailyLimit": 5000, "monthlyLimit": 30000, "updatedAt": "2024-12-01T17:00:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components": {
+        "schemas": {
+          "Card": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "accountId": { "type": "string" },
+              "type": { "type": "string", "enum": ["debit", "credit", "virtual"] },
+              "last4": { "type": "string" },
+              "network": { "type": "string" },
+              "status": { "type": "string", "enum": ["inactive", "active", "blocked", "expired"] },
+              "dailyLimit": { "type": "number" },
+              "monthlyLimit": { "type": "number" }
+            }
+          },
+          "CardRequest": {
+            "type": "object",
+            "properties": {
+              "accountId": { "type": "string" },
+              "type": { "type": "string" },
+              "network": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  kyc-verification.json: |
+    {
+      "openapi": "3.0.3",
+      "info": {
+        "title": "KYC Verification API",
+        "version": "1.0",
+        "description": "Identity verification, document upload, AML screening, and compliance checks"
+      },
+      "paths": {
+        "/api/v1/kyc/verify": {
+          "post": {
+            "operationId": "startVerification",
+            "summary": "Start KYC verification process",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/VerificationRequest" }
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/Verification" },
+                    "examples": {
+                      "default": {
+                        "value": { "id": "KYC-3001", "customerId": "CUST-001", "status": "pending_documents", "riskLevel": "medium", "createdAt": "2024-12-01T09:00:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/kyc/documents": {
+          "post": {
+            "operationId": "uploadDocument",
+            "summary": "Upload verification document",
+            "requestBody": {
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/DocumentUpload" }
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Created",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "id": "DOC-4001", "kycId": "KYC-3001", "type": "passport", "status": "uploaded", "uploadedAt": "2024-12-01T09:15:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/kyc/{id}/status": {
+          "get": {
+            "operationId": "getKycStatus",
+            "summary": "Get KYC verification status",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "kycId": "KYC-3001", "status": "verified", "checks": [{ "name": "identity", "result": "pass" }, { "name": "aml_screening", "result": "pass" }, { "name": "sanctions", "result": "clear" }], "completedAt": "2024-12-01T10:00:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/api/v1/kyc/{id}/report": {
+          "get": {
+            "operationId": "getKycReport",
+            "summary": "Get full KYC compliance report",
+            "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "content": {
+                  "application/json": {
+                    "examples": {
+                      "default": {
+                        "value": { "kycId": "KYC-3001", "customerId": "CUST-001", "riskScore": 25, "riskLevel": "low", "verificationResult": "approved", "amlScreening": { "result": "clear", "databases": ["OFAC", "EU-Sanctions", "UN-Sanctions"] }, "documents": [{ "type": "passport", "verified": true }, { "type": "proof_of_address", "verified": true }], "reportGeneratedAt": "2024-12-01T10:30:00Z" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components": {
+        "schemas": {
+          "Verification": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "customerId": { "type": "string" },
+              "status": { "type": "string", "enum": ["pending_documents", "in_review", "verified", "rejected"] },
+              "riskLevel": { "type": "string", "enum": ["low", "medium", "high"] }
+            }
+          },
+          "VerificationRequest": {
+            "type": "object",
+            "properties": {
+              "customerId": { "type": "string" },
+              "firstName": { "type": "string" },
+              "lastName": { "type": "string" },
+              "dateOfBirth": { "type": "string", "format": "date" },
+              "nationality": { "type": "string" }
+            }
+          },
+          "DocumentUpload": {
+            "type": "object",
+            "properties": {
+              "kycId": { "type": "string" },
+              "type": { "type": "string", "enum": ["passport", "drivers_license", "national_id", "proof_of_address"] },
+              "contentBase64": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: microcks-api-import-{{ now | date "20060102150405" }}
+  namespace: microcks
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      containers:
+        - name: import
+          image: registry.redhat.io/ubi9/ubi-minimal:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              MICROCKS_URL="http://microcks:8080"
+              echo "Waiting for Microcks to be ready..."
+              for i in $(seq 1 30); do
+                if curl -sf "$MICROCKS_URL/api/health" >/dev/null 2>&1; then
+                  echo "Microcks is ready"
+                  break
+                fi
+                echo "Attempt $i/30 - waiting..."
+                sleep 5
+              done
+              echo "Importing OpenAPI specs into Microcks..."
+              for spec in /specs/*.json; do
+                name=$(basename "$spec")
+                echo "Importing $name..."
+                curl -sf -X POST "$MICROCKS_URL/api/artifact/upload" \
+                  -F "file=@$spec;type=application/json" \
+                  && echo " -> $name imported successfully" \
+                  || echo " -> $name import failed (non-fatal)"
+              done
+              echo "Import complete."
+          volumeMounts:
+            - name: specs
+              mountPath: /specs
+      volumes:
+        - name: specs
+          configMap:
+            name: microcks-openapi-specs
+      restartPolicy: OnFailure

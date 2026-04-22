@@ -1,11 +1,10 @@
 {{- $domain := .Values.clusterDomain -}}
-{{- range .Values.verticals }}
-{{- $ns := .namespace }}
-{{- $verticalLabel := .label }}
+{{- $microcksBase := .Values.microcksBaseUrl -}}
+{{- range $i := until (.Values.userCount | int) }}
+{{- $userNum := add $i 1 }}
+{{- $ns := printf "user%d-neuralbank" (int $userNum) }}
+{{- $prefix := printf "user%d" (int $userNum) }}
 ---
-# ============================================================
-# RBAC — allow ArgoCD to manage resources in {{ $ns }}
-# ============================================================
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -52,115 +51,22 @@ subjects:
   - kind: ServiceAccount
     name: default
     namespace: {{ $ns }}
+{{- range $.Values.apis }}
 ---
-# ============================================================
-# Mock service — single pod per namespace backed by shared DB
-# ============================================================
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: enterprise-mock-{{ $verticalLabel }}
-  namespace: {{ $ns }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-  labels:
-    app: enterprise-mock-{{ $verticalLabel }}
-    vertical: {{ $verticalLabel }}
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: enterprise-mock-{{ $verticalLabel }}
-  template:
-    metadata:
-      labels:
-        app: enterprise-mock-{{ $verticalLabel }}
-        vertical: {{ $verticalLabel }}
-    spec:
-      containers:
-        - name: api
-          image: {{ $.Values.mockImage }}
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          env:
-            - name: QUARKUS_DATASOURCE_JDBC_URL
-              value: "jdbc:postgresql://mock-shared-db.mock-apis-3scale.svc.cluster.local:5432/mockapis"
-            - name: QUARKUS_DATASOURCE_USERNAME
-              value: "mockapis"
-            - name: QUARKUS_DATASOURCE_PASSWORD
-              value: "mockapis123!"
-          readinessProbe:
-            httpGet:
-              path: /q/health/ready
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /q/health/live
-              port: 8080
-            initialDelaySeconds: 15
-            periodSeconds: 20
-          resources:
-            requests:
-              cpu: 50m
-              memory: 192Mi
-            limits:
-              cpu: 300m
-              memory: 384Mi
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: enterprise-mock-{{ $verticalLabel }}
-  namespace: {{ $ns }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  selector:
-    app: enterprise-mock-{{ $verticalLabel }}
-  ports:
-    - port: 8080
-      targetPort: 8080
----
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: enterprise-mock-{{ $verticalLabel }}
-  namespace: {{ $ns }}
-  annotations:
-    argocd.argoproj.io/sync-wave: "3"
-spec:
-  host: {{ $verticalLabel }}-apis.{{ $domain }}
-  port:
-    targetPort: 8080
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
-  to:
-    kind: Service
-    name: enterprise-mock-{{ $verticalLabel }}
-    weight: 100
-{{- range .apis }}
----
-# ============================================================
-# {{ .displayName }} — 3scale Backend ({{ $ns }})
-# ============================================================
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
-  name: {{ .name }}-backend
+  name: {{ $prefix }}-{{ .name }}-backend
   namespace: 3scale-system
   annotations:
     argocd.argoproj.io/sync-wave: "4"
   labels:
-    vertical: {{ $verticalLabel }}
     source-namespace: {{ $ns }}
+    gateforge.io/user: {{ $prefix }}
 spec:
-  name: {{ .displayName | quote }}
-  systemName: {{ .systemName }}
-  privateBaseURL: "http://enterprise-mock-{{ $verticalLabel }}.{{ $ns }}.svc.cluster.local:8080"
+  name: {{ printf "[%s] %s" $prefix .displayName | quote }}
+  systemName: {{ printf "%s-%s" $prefix .systemName }}
+  privateBaseURL: {{ printf "%s/rest/%s/%s" $microcksBase .microcksService .microcksVersion | quote }}
   description: {{ .description | quote }}
   mappingRules:
     {{- range .paths }}
@@ -175,25 +81,22 @@ spec:
       unit: hit
       description: "Number of API hits"
 ---
-# ============================================================
-# {{ .displayName }} — 3scale Product ({{ .authType | upper }})
-# ============================================================
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
-  name: {{ .name }}-product
+  name: {{ $prefix }}-{{ .name }}-product
   namespace: 3scale-system
   annotations:
     argocd.argoproj.io/sync-wave: "5"
   labels:
-    vertical: {{ $verticalLabel }}
     source-namespace: {{ $ns }}
+    gateforge.io/user: {{ $prefix }}
 spec:
-  name: {{ printf "%s (%s)" .displayName (.authType | upper) | quote }}
-  systemName: {{ .systemName }}
+  name: {{ printf "[%s] %s (%s)" $prefix .displayName (.authType | upper) | quote }}
+  systemName: {{ printf "%s-%s" $prefix .systemName }}
   description: {{ .description | quote }}
   backendUsages:
-    {{ .systemName }}:
+    {{ printf "%s-%s" $prefix .systemName }}:
       path: /
   deployment:
     apicastHosted:
