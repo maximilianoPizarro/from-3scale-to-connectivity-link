@@ -1,180 +1,96 @@
 ---
 layout: default
-title: "Lightspeed, MCP Gateway y Notificaciones"
-nav_order: 9
+title: "Lightspeed y Notificaciones"
+nav_order: 14
 ---
 
-Este módulo cubre tres capacidades integradas que potencian la experiencia del desarrollador: **Developer Hub Lightspeed** como asistente IA, **MCP Gateway** como extensión comunitaria de Kuadrant para exponer servidores MCP, y el sistema de **Notificaciones**.
+Este módulo presenta dos capacidades integradas en Developer Hub que mejoran la experiencia del desarrollador: **Red Hat Developer Lightspeed** como asistente de IA y el sistema de **Notificaciones** para visibilidad sobre el ciclo de vida de componentes.
 
-## Developer Hub Lightspeed
+## Red Hat Developer Lightspeed
 
-Lightspeed es un asistente de IA integrado en Developer Hub. Permite realizar consultas en lenguaje natural sobre la plataforma, las plantillas y las mejores prácticas.
+Lightspeed es un asistente de IA integrado directamente en Developer Hub. Permite realizar consultas en lenguaje natural sobre la plataforma, las plantillas, las mejores prácticas y la documentación del producto.
 
-### Arquitectura Lightspeed
+### Acceder a Lightspeed
 
-```mermaid
-graph TB
-    subgraph RHDH ["🔴 Developer Hub Pod"]
-        direction LR
-        UI["Lightspeed<br/>Plugin UI"]
-        CORE["Lightspeed<br/>Core Service<br/>(port 8080)"]
-        LLAMA["Llama Stack<br/>RAG + inference"]
-        PG["PostgreSQL<br/>Conversation cache"]
-    end
+1. Inicia sesión en **Developer Hub**.
+2. En el menú lateral izquierdo, localiza el icono de **Lightspeed** (chat de IA).
+3. Se abre una interfaz de conversación donde puedes escribir preguntas.
 
-    subgraph LLM_INFRA ["🧠 LLM Infrastructure"]
-        LITELLM["LiteLLM<br/>Proxy (port 4000)"]
-        VLLM["vLLM<br/>Model Server"]
-        MODEL["Qwen 2.5 7B<br/>Instruct"]
-    end
-
-    UI --> CORE
-    CORE --> LLAMA
-    CORE --> PG
-    LLAMA --> LITELLM
-    LITELLM --> VLLM
-    VLLM --> MODEL
-
-    style RHDH fill:#1a1a1a,color:#fff,stroke:#EE0000,stroke-width:2px
-    style LLM_INFRA fill:#1a1a1a,color:#fff,stroke:#6a1b9a,stroke-width:2px
-    style UI fill:#EE0000,color:#fff
-    style CORE fill:#0066CC,color:#fff
-    style LLAMA fill:#6a1b9a,color:#fff
-    style PG fill:#4078c0,color:#fff
-    style LITELLM fill:#ef7b4d,color:#fff
-    style VLLM fill:#609926,color:#fff
-    style MODEL fill:#609926,color:#fff
+```bash
+Developer Hub -> Menú lateral -> Lightspeed
 ```
-
-Los componentes se ejecutan como sidecars junto al backend de Developer Hub:
-
-- **Lightspeed Core Service**: orquesta las solicitudes y mantiene historial de conversaciones en PostgreSQL.
-- **Llama Stack**: gestiona el acceso a modelos y la base de datos vectorial con documentación del producto (RAG).
-- **LiteLLM**: proxy unificado que gestiona las conexiones a los modelos de lenguaje (compartido con OpenShift Lightspeed).
 
 ### Probar consultas
 
+Lightspeed incluye prompts sugeridos para empezar. Prueba alguno de estos:
+
 | Pregunta sugerida | Qué obtendrás |
 | --- | --- |
-| "How do I create and use Software Templates?" | Flujo de scaffolding y golden paths |
-| "What components make up the Neuralbank platform?" | Arquitectura backend, frontend y MCP |
-| "How are Tekton pipelines configured for CI/CD?" | Configuración de pipelines y triggers |
-| "What is the OIDCPolicy pattern in Connectivity Link?" | Patrón de autenticación con Keycloak |
+| "Can you guide me through the first steps to start using Red Hat Developer Hub as a developer?" | Guía introductoria sobre el portal, catálogo y plantillas |
+| "How do I create and use Software Templates in Red Hat Developer Hub?" | Explicación del flujo de scaffolding y golden paths |
+| "What components make up the Neuralbank financial platform and how do they interact?" | Descripción de la arquitectura backend, frontend y MCP |
+| "How are Tekton pipelines configured for CI/CD in this Developer Hub instance?" | Detalles de la configuración de pipelines y triggers |
 
-## MCP Gateway (Extensión Comunitaria de Kuadrant)
+También puedes hacer preguntas específicas sobre tu entorno:
 
-**MCP Gateway** es una extensión comunitaria del operador **Kuadrant** que permite registrar, exponer y gestionar servidores MCP (Model Context Protocol) a través del API Gateway de forma declarativa.
-
-### Flujo interactivo 3D — MCP Gateway
-
-<div id="mcp-gateway-3d"></div>
-<script>document.addEventListener('DOMContentLoaded', function() { initMCPGateway3D('mcp-gateway-3d'); });</script>
-
-> Arrastrá para rotar. Click en **⛶ Fullscreen** para ver a pantalla completa. Las partículas muestran cómo OpenShift Lightspeed llama herramientas a través del MCP Gateway hacia los servidores MCP y el clúster.
-
-### Flujo de registro MCP
-
-```mermaid
-sequenceDiagram
-    actor Admin as Platform Admin
-    participant K8s as Kubernetes API
-    participant CTRL as MCP Gateway<br/>Controller
-    participant GW as Gateway<br/>(mcp-gateway)
-    participant OLS as OpenShift<br/>Lightspeed
-
-    Admin->>K8s: 1. Apply MCPGatewayExtension CR
-    K8s-->>CTRL: 2. Controller activado
-    Admin->>K8s: 3. Apply MCPServerRegistration CRs
-    CTRL->>K8s: 4. Crea HTTPRoute por cada MCP server
-    CTRL->>GW: 5. Registra rutas en Gateway
-    OLS->>GW: 6. Consume MCP servers via Gateway
-    GW-->>OLS: 7. Proxy a k8s-mcp / ocp-mcp servers
+```
+¿Cómo puedo ver los pipelines de mi componente en Developer Hub?
+¿Qué hace la OIDCPolicy en el patrón de connectivity link?
+¿Cómo funciona el flujo GitOps con ArgoCD en este workshop?
 ```
 
-### Componentes del MCP Gateway
+### Arquitectura de Lightspeed
 
 ```mermaid
 graph LR
-    subgraph NS ["openshift-lightspeed namespace"]
-        direction TB
-        LITELLM2["LiteLLM Proxy<br/>(port 4000)"]
-        K8S_MCP["k8s-mcp-server<br/>Kubernetes ops"]
-        OCP_MCP["ocp-mcp-server<br/>OpenShift ops"]
-        
-        subgraph MCP_GW ["MCP Gateway"]
-            GW3["Gateway<br/>(mcp-gateway)"]
-            HR_K8S["HTTPRoute<br/>→ k8s-mcp"]
-            HR_OCP["HTTPRoute<br/>→ ocp-mcp"]
-        end
-    end
+    DEV["👤 Desarrollador"] --> LS["💬 Lightspeed<br/>Plugin UI"]
+    LS --> LCS["🧠 Lightspeed<br/>Core Service"]
+    LCS --> LLAMA["🦙 Llama Stack<br/>+ RAG"]
+    LLAMA --> LITELLM["🔗 LiteLLM<br/>LLM Proxy"]
+    LITELLM --> MODEL["🤖 Modelo LLM"]
 
-    subgraph CONSUMERS ["Consumers"]
-        OLS3["OpenShift<br/>Lightspeed"]
-        DEVLS2["Developer Hub<br/>Lightspeed"]
-    end
-
-    OLS3 --> LITELLM2
-    DEVLS2 --> LITELLM2
-    OLS3 --> GW3
-    GW3 --> HR_K8S
-    GW3 --> HR_OCP
-    HR_K8S --> K8S_MCP
-    HR_OCP --> OCP_MCP
-
-    style NS fill:#1a1a1a,color:#fff,stroke:#EE0000,stroke-width:2px
-    style MCP_GW fill:#2a2a2a,color:#fff,stroke:#609926
-    style CONSUMERS fill:#1a1a1a,color:#fff,stroke:#0066CC
-    style LITELLM2 fill:#ef7b4d,color:#fff
-    style K8S_MCP fill:#0066CC,color:#fff
-    style OCP_MCP fill:#0066CC,color:#fff
-    style GW3 fill:#609926,color:#fff
-    style HR_K8S fill:#4078c0,color:#fff
-    style HR_OCP fill:#4078c0,color:#fff
-    style OLS3 fill:#EE0000,color:#fff
-    style DEVLS2 fill:#EE0000,color:#fff
+    style DEV fill:#151515,color:#fff,stroke:#EE0000
+    style LS fill:#EE0000,color:#fff
+    style LCS fill:#0066CC,color:#fff
+    style LLAMA fill:#6a1b9a,color:#fff
+    style LITELLM fill:#ef7b4d,color:#fff
+    style MODEL fill:#609926,color:#fff
 ```
 
-### Recursos involucrados
+Lightspeed funciona con tres componentes que se ejecutan como sidecars junto al backend de Developer Hub:
 
-| Custom Resource | Función |
-| --- | --- |
-| `MCPGatewayExtension` | Activa el controlador MCP en Kuadrant |
-| `MCPServerRegistration` | Registra un MCP server y crea su HTTPRoute automáticamente |
-| `Gateway` (mcp-gateway) | Punto de entrada para todos los MCP servers registrados |
-| `HTTPRoute` | Enruta tráfico del Gateway al MCP server correspondiente |
+- **Lightspeed Core Service**: orquesta las solicitudes entre el frontend y los modelos de IA.
+- **Llama Stack**: gestiona el acceso a modelos y la base de datos vectorial con documentación del producto (RAG), proporcionando respuestas contextualizadas.
+- **LiteLLM**: proxy que gestiona las conexiones a los modelos de lenguaje disponibles.
 
-### OpenShift Lightspeed + MCP
-
-**OpenShift Lightspeed** se beneficia del MCP Gateway al poder ejecutar operaciones sobre el clúster a través de los MCP servers:
-
-```mermaid
-graph TB
-    USER["👤 Admin / Dev"] --> OLS_UI["OpenShift Lightspeed<br/>(Console UI)"]
-    OLS_UI --> OLS_SVC["OLS Service<br/>(OLSConfig CR)"]
-    OLS_SVC --> LITELLM3["LiteLLM → LLM"]
-    OLS_SVC --> MCPGW2["MCP Gateway"]
-    MCPGW2 --> K8S2["k8s-mcp:<br/>pods, services,<br/>deployments..."]
-    MCPGW2 --> OCP2["ocp-mcp:<br/>routes, builds,<br/>imagestreams..."]
-
-    style USER fill:#151515,color:#fff,stroke:#EE0000
-    style OLS_UI fill:#EE0000,color:#fff
-    style OLS_SVC fill:#0066CC,color:#fff
-    style LITELLM3 fill:#ef7b4d,color:#fff
-    style MCPGW2 fill:#609926,color:#fff
-    style K8S2 fill:#0066CC,color:#fff
-    style OCP2 fill:#0066CC,color:#fff
-```
-
-Ejemplos de lo que Lightspeed puede hacer con MCP:
-
-- "List all pods in namespace `user1-neuralbank`"
-- "Show me the routes in `neuralbank-stack`"
-- "Describe the deployment `neuralbank-backend`"
-- "What services are running in my namespace?"
+> **Note:** Las respuestas de Lightspeed están enriquecidas con documentación oficial de Red Hat Developer Hub gracias al sistema RAG (Retrieval-Augmented Generation).
 
 ## Sistema de notificaciones
 
-Developer Hub notifica a los desarrolladores sobre eventos de la plataforma a través de dos canales:
+Developer Hub incluye un sistema de notificaciones que mantiene informados a los desarrolladores sobre eventos de la plataforma.
+
+### Notificaciones in-app
+
+1. En la barra superior de Developer Hub, localiza el icono de **campana** (notificaciones).
+2. Haz clic para ver las notificaciones recibidas.
+3. Cada notificación incluye título, descripción, enlace al componente y nivel de severidad.
+
+Las plantillas del workshop envían notificaciones automáticas en dos escenarios:
+
+| Evento | Severidad | Ejemplo de mensaje |
+| --- | --- | --- |
+| Componente creado exitosamente | Normal | "Neuralbank Backend deployed successfully — YOUR_USER-neuralbank-backend creado en namespace YOUR_USER-neuralbank" |
+| Componente eliminado (cleanup) | High | "Component removed from platform — YOUR_USER-neuralbank-backend eliminado junto con ArgoCD Application, repositorio y namespace" |
+
+### Notificaciones por email
+
+Además de las notificaciones in-app, el sistema envía emails a la dirección registrada en Keycloak para tu usuario. En el entorno del workshop, los emails se capturan con **Mailpit**, un servidor SMTP de pruebas.
+
+Para verificar los emails recibidos:
+
+1. Identifica la dirección email asociada a tu usuario en Keycloak (generalmente `YOUR_USER@example.com` o similar).
+2. Accede a la interfaz web de **Mailpit** (consulta la URL con el instructor).
+3. Verás los correos enviados por `devhub@neuralbank.io` con detalles del componente creado o eliminado.
 
 ### Flujo de notificaciones
 
@@ -188,14 +104,21 @@ sequenceDiagram
     Dev->>Hub: Ejecuta Software Template
     Hub->>Hub: Scaffolding completo
     Hub->>Notif: POST /api/notifications
-    Notif->>Dev: 🔔 Notificación in-app
-    Notif->>Mail: 📧 Envío email SMTP
+    Notif->>Dev: Notificación in-app (campana)
+    Notif->>Mail: Envío email SMTP
     Mail-->>Dev: Email con detalles del despliegue
 ```
 
-| Canal | Cómo acceder | Ejemplo |
-| --- | --- | --- |
-| **In-app** | Icono campana en Developer Hub | "Neuralbank Backend deployed successfully" |
-| **Email** | Interfaz web de Mailpit | Email a `userN@developer-hub.local` con detalles |
+## Probar el flujo completo
 
-Las plantillas envían notificaciones automáticas al crear o eliminar componentes, proporcionando visibilidad completa sobre el ciclo de vida.
+Para verificar ambas funcionalidades en una sola actividad:
+
+1. **Pregunta a Lightspeed**: "How do I remove a component from the platform?" para entender el proceso de cleanup.
+2. Si ya desplegaste los tres componentes, usa la plantilla **Remove Component (Cleanup)** para eliminar uno de ellos.
+3. Verifica que recibes una **notificación in-app** con severidad alta indicando la eliminación.
+4. Revisa en **Mailpit** el email correspondiente.
+5. Vuelve a **Lightspeed** y pregunta sobre el estado actual de tus componentes.
+
+## Resumen
+
+Has explorado **Lightspeed** como asistente de IA integrado en Developer Hub, capaz de responder preguntas sobre la plataforma con contexto RAG, y el sistema de **Notificaciones** que proporciona visibilidad en tiempo real (in-app y por email) sobre el ciclo de vida de los componentes. Estas capacidades refuerzan la propuesta de Developer Hub como **portal integral** que no solo automatiza, sino que informa y asiste al desarrollador durante todo el flujo de trabajo.

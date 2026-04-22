@@ -6,13 +6,6 @@ nav_order: 9
 
 Este módulo muestra el ciclo **editar en IDE web → commit en Gitea → pipeline Tekton → nuevo despliegue**, usando **Red Hat OpenShift Dev Spaces** y el componente **neuralbank-backend** que creaste con plantillas.
 
-### Flujo 3D — CI/CD GitOps
-
-<div id="gitops-flow-3d"></div>
-<script>document.addEventListener('DOMContentLoaded', function() { initGitOpsFlow3D('gitops-flow-3d'); });</script>
-
-> Arrastrá para rotar. Click en **⛶ Fullscreen** para pantalla completa. Las partículas muestran el flujo desde el Developer pasando por Dev Spaces, Gitea, Webhook, Tekton Pipeline, hasta los Pods en OpenShift.
-
 ```mermaid
 graph LR
     DS["💻 Dev Spaces<br/>Editar código"] -->|"git push"| GIT["📦 Gitea"]

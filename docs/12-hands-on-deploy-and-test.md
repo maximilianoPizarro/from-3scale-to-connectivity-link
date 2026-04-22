@@ -1,137 +1,190 @@
 ---
 layout: default
-title: "Hands-On: Deploy & Test"
+title: "Hands-On: Deploy and Test the Neuralbank Stack"
 nav_order: 12
 ---
 
-Actividad práctica consolidada: despliega el stack Neuralbank completo y verifica que todo funcione.
+In this activity you will deploy the **complete Neuralbank stack** using the three Software Templates available in Developer Hub, then verify each component is working using `curl` from the terminal.
 
-## Flujo completo
+## Overview
 
-```mermaid
-graph LR
-    subgraph DEPLOY ["1️⃣ Deploy"]
-        T1["Backend<br/>Template"] --> T2["Frontend<br/>Template"] --> T3["MCP<br/>Template"]
-    end
-    subgraph VERIFY ["2️⃣ Verify"]
-        V1["ArgoCD<br/>Sync"] --> V2["Pipeline<br/>Run"] --> V3["Pods<br/>Running"]
-    end
-    subgraph TEST ["3️⃣ Test"]
-        A1["OIDC<br/>curl"] --> A2["API Key<br/>curl"] --> A3["Frontend<br/>Browser"]
-    end
+You will create three components in sequence:
 
-    DEPLOY --> VERIFY --> TEST
+| Template | Description | What it deploys |
+|----------|-------------|-----------------|
+| **Neuralbank: Backend API** | Quarkus REST API with customer management | Deployment, Service, Pipeline, Gateway, HTTPRoute |
+| **Neuralbank: Frontend** | Web application for credit visualization | Deployment, Service, Route |
+| **Customer Service MCP** | MCP server exposing backend as AI-callable tools | Deployment, Service, Pipeline, EventListener |
 
-    style DEPLOY fill:#1a1a1a,color:#fff,stroke:#EE0000
-    style VERIFY fill:#1a1a1a,color:#fff,stroke:#ef7b4d
-    style TEST fill:#1a1a1a,color:#fff,stroke:#0066CC
-    style T1 fill:#EE0000,color:#fff
-    style T2 fill:#0066CC,color:#fff
-    style T3 fill:#6a1b9a,color:#fff
-    style V1 fill:#ef7b4d,color:#fff
-    style V2 fill:#fd495c,color:#fff
-    style V3 fill:#609926,color:#fff
-    style A1 fill:#4078c0,color:#fff
-    style A2 fill:#ef7b4d,color:#fff
-    style A3 fill:#0066CC,color:#fff
+All three deploy to namespace `YOUR_USER-neuralbank` and are connected.
+
+## Step 1: Deploy the Backend
+
+1. Log in to **Developer Hub**: `https://backstage-developer-hub-developer-hub.apps.cluster-94mvp.dynamic.redhatworkshops.io`
+2. Click **Create** in the left sidebar.
+3. Select **"Neuralbank: Backend API"**.
+4. Fill: **Name** = `neuralbank-backend`, **Owner** = `YOUR_USER`
+5. Click **Create** and wait for all steps to complete.
+
+## Step 2: Deploy the Frontend
+
+1. Go to **Create** > Select **"Neuralbank: Frontend"**.
+2. Fill: **Name** = `neuralbank-frontend`, **Owner** = `YOUR_USER`
+3. Click **Create**.
+
+## Step 3: Deploy the MCP Server
+
+1. Go to **Create** > Select **"Customer Service MCP"**.
+2. Fill: **Name** = `customer-service-mcp`, **Owner** = `YOUR_USER`
+3. Click **Create**.
+
+## Step 4: Verify in ArgoCD
+
+Open ArgoCD and confirm three apps are **Synced** and **Healthy**:
+
+```
+https://openshift-gitops-server-openshift-gitops.apps.cluster-94mvp.dynamic.redhatworkshops.io
 ```
 
-## Step 1: Deploy Backend
-
-1. Abre **Developer Hub** → **Create** → selecciona **"Neuralbank: Backend API"**.
-2. Completa: **Name** = `neuralbank-backend`, **Owner** = `YOUR_USER`.
-3. Click **Create** y espera que completen todos los pasos.
-
-## Step 2: Deploy Frontend
-
-1. **Create** → **"Neuralbank: Frontend"**.
-2. **Name** = `neuralbank-frontend`, **Owner** = `YOUR_USER`.
-
-## Step 3: Deploy Customer Service MCP
-
-1. **Create** → **"Customer Service MCP"**.
-2. **Name** = `customer-service-mcp`, **Owner** = `YOUR_USER`.
-
-## Step 4: Verificar en ArgoCD
-
-```bash
-oc get applications -n openshift-gitops | grep YOUR_USER
-```
-
-Las tres aplicaciones deben mostrar `Synced` y `Healthy`.
-
-## Step 5: Verificar pipelines
+## Step 5: Wait for Pipelines
 
 ```bash
 oc get pipelinerun -n YOUR_USER-neuralbank
 ```
 
-## Step 6: Test APIs scaffoldeadas (API Key)
+Wait until status shows `Succeeded` (3-5 minutes).
 
-Las aplicaciones scaffoldeadas usan **API Key** como método principal de autenticación:
+## Step 6: Test the Backend API with curl (OIDC)
 
-```bash
-# Obtener la API Key del backend
-API_KEY=$(oc get secret -n YOUR_USER-neuralbank \
-  -l "app=neuralbank-backend,kuadrant.io/apikey=true" \
-  -o jsonpath='{.items[0].data.api_key}' | base64 -d)
-
-# Test backend
-curl -s -H "X-API-Key: $API_KEY" \
-  "https://YOUR_USER-neuralbank-backend.YOUR_CLUSTER_DOMAIN/api/customers" \
-  | python3 -m json.tool | head -10
-```
-
-## Step 7: Test OIDC (neuralbank-stack pre-desplegado)
-
-El stack pre-desplegado usa `OIDCPolicy` con **flujo interactivo de Keycloak**. Referencia completa: [Connectivity Link: OIDC](10-explore-connectivity-link-oidc.html).
-
-**Frontend con OIDC**: Abre `https://neuralbank.YOUR_CLUSTER_DOMAIN` — serás redirigido al login de Keycloak (`YOUR_USER` / `Welcome123!`).
+### 6.1 — Get a Bearer Token from Keycloak
 
 ```bash
-# Test programático con Bearer token
 TOKEN=$(curl -s -X POST \
-  "https://rhbk.YOUR_CLUSTER_DOMAIN/realms/neuralbank/protocol/openid-connect/token" \
-  -d "client_id=neuralbank-frontend" -d "username=YOUR_USER" \
-  -d "password=Welcome123!" -d "grant_type=password" \
+  "https://rhbk.apps.cluster-94mvp.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" \
+  -d "client_id=neuralbank-frontend" \
+  -d "username=user1" \
+  -d "password=Welcome123!" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
 
-curl -s "https://neuralbank.YOUR_CLUSTER_DOMAIN/api/v1/customers" \
-  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool | head -10
+echo "Token: ${TOKEN:0:50}..."
 ```
 
-## Step 8: Test API Key (NFL Wallet)
-
-Referencia completa: [Connectivity Link: API Key](11-explore-connectivity-link-apikey.html).
+### 6.2 — List all customers
 
 ```bash
-NFL_KEY=$(oc get secret nfl-wallet-apikey-admin -n nfl-wallet-prod \
-  -o jsonpath='{.data.api_key}' | base64 -d)
-
-curl -s -H "X-API-Key: $NFL_KEY" \
-  "https://nfl-wallet.YOUR_CLUSTER_DOMAIN/api/v1/customers" \
-  | python3 -m json.tool | head -10
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers" \
+  | python3 -m json.tool | head -30
 ```
 
-## Step 9: Verificar frontend scaffoldeado
+### 6.3 — Get a customer by ID
 
-El frontend scaffoldeado usa **API Key** (sin login OIDC):
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers/1" \
+  | python3 -m json.tool
+```
 
-- **URL**: `https://YOUR_USER-neuralbank-frontend.YOUR_CLUSTER_DOMAIN`
-- Ingresar la API Key en el campo de input del SPA
+### 6.4 — Get credit score
 
-## Step 10: Explorar en Developer Hub
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers/1/credit-score" \
+  | python3 -m json.tool
+```
 
-1. **Catalog** → busca tus componentes `YOUR_USER-*`.
-2. Verifica las pestañas: **CI** (pipelines), **CD** (ArgoCD), **Topology**, **Kubernetes**, **API**, **Docs**.
-3. Revisa las **Notificaciones** (campana) y los emails en **Mailpit**.
-4. Prueba **Lightspeed**: pregunta sobre tus componentes.
+### 6.5 — Create a new customer
 
-## Modelos de autenticación
+```bash
+curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Workshop",
+    "apellido": "Demo",
+    "email": "workshop@neuralbank.io",
+    "tipoCliente": "PERSONAL",
+    "ciudad": "Buenos Aires",
+    "pais": "Argentina"
+  }' \
+  "https://neuralbank.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers" \
+  | python3 -m json.tool
+```
 
-| | `neuralbank-stack` (pre-desplegado) | Apps scaffoldeadas | NFL Wallet |
-|---|---|---|---|
-| **Tipo de AuthPolicy** | `OIDCPolicy` CR | `AuthPolicy` (API Key + JWT) | `AuthPolicy` (API Key) |
-| **Login interactivo** | ✅ Redirect a Keycloak | ❌ API Key manual | ❌ API Key manual |
-| **URL Frontend** | `neuralbank.YOUR_CLUSTER_DOMAIN` | `YOUR_USER-neuralbank-frontend.YOUR_CLUSTER_DOMAIN` | N/A |
-| **Credenciales** | `YOUR_USER` / `Welcome123!` | API Key de Secret | API Key de Secret |
+## Step 7: Test the NFL Wallet API (API Key)
+
+API Key is simpler — no token exchange needed:
+
+### 7.1 — Without API Key (expect 401)
+
+```bash
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+  https://nfl-wallet.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers
+```
+
+### 7.2 — With valid API Key (expect 200)
+
+```bash
+curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  "https://nfl-wallet.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers" \
+  | python3 -m json.tool | head -20
+```
+
+### 7.3 — Create a customer
+
+```bash
+curl -s -X POST \
+  -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "API Key",
+    "apellido": "Test",
+    "email": "apikey@wallet.io",
+    "tipoCliente": "EMPRESA",
+    "ciudad": "Miami",
+    "pais": "USA"
+  }' \
+  "https://nfl-wallet.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers" \
+  | python3 -m json.tool
+```
+
+### 7.4 — With invalid API Key (expect 401)
+
+```bash
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+  -H "X-API-Key: invalid-key-12345" \
+  https://nfl-wallet.apps.cluster-94mvp.dynamic.redhatworkshops.io/api/v1/customers
+```
+
+## Step 8: Access the Frontend
+
+Open in your browser:
+
+```
+https://neuralbank.apps.cluster-94mvp.dynamic.redhatworkshops.io
+```
+
+Log in with `YOUR_USER` / `Welcome123!` to see the credit visualization dashboard.
+
+## Step 9: Explore in Developer Hub
+
+Go back to Developer Hub and explore:
+
+- **Catalog** — Search for your components
+- **Topology** — Kubernetes resources as a visual map
+- **CI** — Tekton pipeline execution status
+- **API** — OpenAPI spec for the backend
+- **TechDocs** — Auto-generated documentation
+
+## Authentication Models Comparison
+
+| | OIDC (Neuralbank) | API Key (NFL Wallet) |
+|---|---|---|
+| **How to authenticate** | Get JWT from Keycloak, pass as `Authorization: Bearer <token>` | Include key as `X-API-Key: <key>` |
+| **Steps to test** | 2 steps: get token + call API | 1 step: call API with key |
+| **Best for** | Web apps with user login | Scripts, CI/CD, M2M |
+| **Token expiry** | Short-lived (minutes) | No expiry (revoke by deleting Secret) |
+
+> **Tip:** For quick terminal testing, **API Key** is faster. For production web apps, **OIDC** provides better security.

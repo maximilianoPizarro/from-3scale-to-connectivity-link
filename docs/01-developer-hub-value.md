@@ -64,9 +64,26 @@ Esta integración hace que el portal sea la capa de **abstracción con contexto*
 
 En entornos empresariales, el acceso al portal y a acciones sensibles (crear plantillas, ver secretos, aprobar despliegues) se gobierna con **RBAC** y proveedores de identidad como **Keycloak**. Los grupos y roles del IdP se mapean a permisos en Backstage/Developer Hub, de forma que las golden paths estén disponibles solo para quien corresponda y la información sensible quede acotada.
 
-## Red Hat Developer Lightspeed, MCP Gateway y Notificaciones
+## Red Hat Developer Lightspeed: IA integrada en el portal
 
-Developer Hub incorpora **Red Hat Developer Lightspeed** como asistente de IA, **MCP Gateway** (extensión comunitaria de Kuadrant) para exponer servidores MCP, y **Notificaciones** en tiempo real. Estos temas se cubren en detalle en el módulo [Lightspeed, MCP Gateway y Notificaciones](09-lightspeed-notifications.html).
+Developer Hub incorpora **Red Hat Developer Lightspeed**, un asistente de IA accesible desde el menú lateral del portal. Lightspeed permite a los desarrolladores realizar consultas en lenguaje natural sobre la plataforma, las plantillas y las mejores prácticas sin salir del portal.
+
+La arquitectura incluye contenedores sidecar (**Llama Stack** y **Lightspeed Core Service**) que se ejecutan junto al backend de Developer Hub, conectados a un proxy LLM (**LiteLLM**) que gestiona el acceso a modelos de lenguaje. El sistema incluye una base de datos vectorial con documentación del producto (**RAG**) para respuestas contextualizadas.
+
+Casos de uso típicos en el workshop:
+
+- Preguntar cómo crear una Software Template o cómo funcionan los pipelines Tekton.
+- Consultar la arquitectura de la plataforma Neuralbank.
+- Obtener guía sobre las mejores prácticas de CI/CD con Developer Hub.
+
+## Notificaciones en tiempo real
+
+El sistema de **notificaciones** de Developer Hub informa a los desarrolladores sobre eventos relevantes de la plataforma:
+
+- **Notificaciones in-app**: aparecen en la campana de notificaciones del portal cuando se crea o elimina un componente.
+- **Notificaciones por email**: se envían a la dirección registrada en Keycloak, procesadas por un servidor SMTP (Mailpit en el entorno del workshop).
+
+Las plantillas del workshop envían notificaciones automáticas al completar el scaffolding de un componente o al ejecutar una limpieza, proporcionando visibilidad sobre el ciclo de vida de los servicios.
 
 ## Reducción de carga cognitiva y tiempo hasta producción
 

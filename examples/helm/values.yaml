@@ -7,7 +7,7 @@
 gitops:
   # Repository containing the component charts (your fork or this template)
   repoUrl: "https://github.com/maximilianoPizarro/test-drive-pe-oscg.git"
-  revision: "main"
+  revision: "one"
   basePath: "examples/helm"
 
 # ArgoCD settings
@@ -383,7 +383,7 @@ components:
 # Values injected by field content workload (do not modify)
 # ============================================================
 deployer:
-  domain: "apps.cluster-j8hhq.dynamic.redhatworkshops.io"
+  domain: "apps.cluster-8dvx7.dynamic.redhatworkshops.io"
   apiUrl: ""
 
 fieldContent:

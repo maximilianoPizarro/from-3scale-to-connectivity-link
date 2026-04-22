@@ -118,13 +118,6 @@ blockquote {
   }
 }
 
-// ── 3D scene container ──────────────────────────────────
-#mcp-flow-3d {
-  background: #0d0d0d;
-  cursor: grab;
-  &:active { cursor: grabbing; }
-}
-
 // ── Language selector bar offset ───────────────────────
 #lang-bar {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;

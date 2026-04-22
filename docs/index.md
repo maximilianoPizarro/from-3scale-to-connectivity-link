@@ -18,18 +18,17 @@ En este workshop aprenderás a utilizar **Red Hat Developer Hub** como portal de
 
 ### Qué vas a aprender
 
-- Comprender la propuesta de valor de **Red Hat Developer Hub** como portal de desarrollo self-service
-- Explorar la arquitectura completa: Developer Hub, ArgoCD, Tekton, DevSpaces, Gitea, Keycloak
-- Navegar entre herramientas con **Console Links** integrados en la consola OpenShift
+- Comprender la propuesta de valor de Red Hat Developer Hub
+- Explorar la arquitectura: Developer Hub, ArgoCD, Tekton, DevSpaces, Gitea, Keycloak, Lightspeed
 - Crear servicios backend y frontend usando **Software Templates** con naming convention multi-usuario
-- Explorar pipelines automatizados (pestaña **CI** en Developer Hub) y topology view
-- Configurar API Gateways con seguridad usando **Red Hat Connectivity Link**:
+- Explorar pipelines automatizados (pestaña **CI** en Developer Hub), topology view y detalles de la aplicación
+- Desplegar y configurar API Gateways con seguridad (OIDCPolicy, RateLimitPolicy)
+- **Explorar Connectivity Link** con dos modelos de autenticación:
   - **OIDCPolicy** (Neuralbank) — autenticación interactiva con Keycloak
   - **AuthPolicy con API Key** (NFL Wallet) — autenticación M2M programática
-- Utilizar **Red Hat Developer Lightspeed** como asistente de IA con RAG
-- Explorar **MCP Gateway** (extensión comunitaria de Kuadrant) para exponer MCP servers al LLM
-- Interactuar con **OpenShift Lightspeed** + MCP servers para operaciones sobre el clúster
+- **Hands-on:** explorar las aplicaciones pre-desplegadas (Neuralbank overview + NFL Wallet API Key test desde la terminal)
 - Actualizar código fuente usando **Red Hat OpenShift Dev Spaces** con CI/CD automatizado
+- Utilizar **Red Hat Developer Lightspeed** como asistente de IA integrado en el portal
 - Recibir **notificaciones** en tiempo real y por email sobre el estado de tus componentes
 
 ### El caso de negocio: Neuralbank
@@ -81,8 +80,3 @@ Tu namespace de trabajo es **`YOUR_USER-neuralbank`**. Todos los servicios que c
 </div>
 
 > Hacé click en cualquier imagen para agrandarla.
-
-### Flujo del Workshop
-
-<div id="onboarding-3d-index"></div>
-<script>document.addEventListener('DOMContentLoaded', function() { initOnboarding3D('onboarding-3d-index'); });</script>
