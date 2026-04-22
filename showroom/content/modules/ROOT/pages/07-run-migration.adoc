@@ -1,0 +1,170 @@
+= Run the Migration Template
+
+In this module you will use the *"Migrate from 3scale to Connectivity Link"* Software Template in Developer Hub to migrate one of the pre-deployed 3scale applications to Connectivity Link.
+
+== Migration flow overview
+
+[cols="1,2,3",options="header"]
+|===
+| Step | Action | Details
+
+| 1
+| *Identify the 3scale Product*
+| Note the auth type (OIDC or API Key), backend URL, mapping rules, and application plans.
+
+| 2
+| *Open Developer Hub*
+| Navigate to *Create* -> select *"Migrate from 3scale to Connectivity Link"*.
+
+| 3
+| *Fill parameters*
+| App name, source namespace (3scale), target namespace (CL), auth model, backend service.
+
+| 4
+| *Template generates manifests*
+| Gateway, HTTPRoute, AuthPolicy, RateLimitPolicy, PlanPolicy, APIProduct, Route.
+
+| 5
+| *Publish to Gitea*
+| The scaffolder pushes the generated manifests to a Gitea repository.
+
+| 6
+| *ArgoCD syncs*
+| An ArgoCD Application is created; it syncs manifests to the target namespace.
+
+| 7
+| *Verify*
+| Check Gateway is `PROGRAMMED`, AuthPolicy is `ENFORCED`, API responds correctly.
+
+| 8
+| *Compare side-by-side*
+| Both 3scale and CL namespaces coexist. Test the same API through both gateways.
+
+| 9
+| *Decommission 3scale*
+| Once validated, disable the 3scale Product and delete the source namespace.
+|===
+
+== Step 1: Open the template in Developer Hub
+
+. Open *Developer Hub*: `\https://backstage-developer-hub-developer-hub.{cluster_domain}`
+. Click *Create* in the left sidebar.
+. Find and select *"Migrate from 3scale to Connectivity Link"*.
+
+== Step 2: Fill in the parameters
+
+For this exercise, migrate the *Neuralbank backend* from 3scale OIDC:
+
+[cols="1,2",options="header"]
+|===
+| Parameter | Value
+
+| *Application Name*
+| `neuralbank-backend`
+
+| *Source Namespace (3scale)*
+| `neuralbank-3scale`
+
+| *Target Namespace (CL)*
+| `{user_name}-neuralbank-cl`
+
+| *Authentication Model*
+| `oidc`
+
+| *Backend Service Name*
+| `neuralbank-backend-svc`
+
+| *Backend Service Port*
+| `8080`
+
+| *Keycloak Realm*
+| `neuralbank`
+
+| *Keycloak Client ID*
+| `neuralbank-frontend`
+
+| *Rate Limit (per minute)*
+| `60`
+
+| *Owner*
+| `{user_name}`
+
+| *Cluster Domain*
+| `{cluster_domain}`
+|===
+
+TIP: To migrate the NFL Wallet instead, change the auth model to `apikey` and adjust the namespace and service name accordingly.
+
+== Step 3: Review and create
+
+. Review the parameter summary.
+. Click *Create*.
+. The scaffolder will execute the following steps:
+.. *Fetch skeleton* — generates the Kubernetes manifests from the template
+.. *Publish to Gitea* — creates a new repository with the manifests
+.. *Register in Catalog* — adds the migrated component to the Developer Hub catalog
+.. *Create ArgoCD Application* — sets up GitOps sync to the target namespace
+.. *Send notification* — notifies you of the successful migration
+
+== Step 4: Monitor progress
+
+Watch the scaffolder progress in Developer Hub. Each step shows a green checkmark when complete.
+
+Once all steps finish, click *Open in Catalog* to see the new component.
+
+== Step 5: Verify in ArgoCD
+
+Open ArgoCD and confirm the new application is *Synced* and *Healthy*:
+
+----
+https://openshift-gitops-server-openshift-gitops.{cluster_domain}
+----
+
+== Step 6: Inspect the generated manifests
+
+The template generated these resources in the target namespace:
+
+[cols="1,1,2",options="header"]
+|===
+| Manifest | Resource | Purpose
+
+| `gateway.yaml`
+| Gateway
+| Istio Gateway with Kuadrant annotations
+
+| `httproute.yaml`
+| HTTPRoute
+| Routes HTTP traffic to the backend Service
+
+| `authpolicy.yaml`
+| AuthPolicy
+| OIDC JWT validation (or API Key, depending on auth model)
+
+| `ratelimitpolicy.yaml`
+| RateLimitPolicy
+| Rate limiting (e.g. 60 req/min)
+
+| `planpolicy.yaml`
+| PlanPolicy
+| Tiered usage plans (free/basic/pro)
+
+| `apiproduct.yaml`
+| APIProduct
+| Publishes the API in the Developer Hub portal
+
+| `route.yaml`
+| Route
+| OpenShift Route to the Gateway
+|===
+
+Verify in the terminal:
+
+[source,bash]
+----
+oc get gateway,httproute,authpolicy,ratelimitpolicy,planpolicy,apiproduct \
+  -n {user_name}-neuralbank-cl
+----
+
+== What happens next
+
+In the next module you will test the migrated application and compare it with the 3scale original running side by side.

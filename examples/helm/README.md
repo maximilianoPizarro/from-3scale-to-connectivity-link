@@ -22,7 +22,7 @@ examples/helm/
 └── components/
     ├── operator/                      # Optional single OLM subscription (template)
     ├── hello-world/
-    ├── showroom/                      # Lab guide (showroom-from-zero-to-hero by default)
+    ├── showroom/                      # Lab guide (from-3scale-to-connectivity-link)
     ├── connectivity-link-operators/   # OLM operators (RHCL, mesh, Dev Spaces, RHBK, …)
     ├── connectivity-link-namespaces/
     ├── connectivity-link-rhcl-operator/
@@ -43,7 +43,7 @@ Connectivity-link manifests are **vendored** from [connectivity-link](https://gi
 | `connectivityLink.operators` | `channel`, `version`, `subscriptions` passed to `connectivity-link-operators` |
 | `connectivityLink.neuralbank` | Values merged into `connectivity-link-neuralbank-stack`; Keycloak URLs are overridden from `deployer.domain` |
 | `litemaas.*` | Optional RHDP injection; when `litemaas.apiUrl` is set, neuralbank `api.baseUrl` can follow it |
-| `components.showroom` | Showroom content repo, nookbag, terminal (default: showroom-from-zero-to-hero) |
+| `components.showroom` | Showroom content repo, nookbag, terminal (default: from-3scale-to-connectivity-link) |
 
 **Note:** LiteMaaS-related YAML in `connectivity-link-litemaas` still contains cluster-specific URLs from the upstream snapshot. For a new cluster, adjust `cluster-config` / domain handling in that chart or maintain a fork.
 

@@ -1,0 +1,17 @@
+site:
+  title: "From 3scale to Connectivity Link"
+  url: https://maximilianopizarro.github.io/from-3scale-to-connectivity-link
+  start_page: modules::index.adoc
+content:
+  sources:
+    - url: .
+      start_path: content
+ui:
+  bundle:
+    url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/patternfly-6/ui-bundle.zip
+    snapshot: true
+  supplemental_files: ./content/supplemental-ui
+asciidoc:
+  attributes: {}
+output:
+  dir: ./www

@@ -21,9 +21,6 @@ jobs:
       - name: Checkout main repo
         uses: actions/checkout@v4
 
-      - name: Clone showroom content
-        run: git clone --depth 1 https://github.com/maximilianoPizarro/showroom-from-zero-to-hero.git /tmp/showroom
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -32,50 +29,13 @@ jobs:
       - name: Install Antora
         run: npm i -g @antora/cli@3.1 @antora/site-generator@3.1
 
-      - name: Configure Antora for GitHub Pages
-        run: |
-          cat > /tmp/showroom/content/antora.yml << 'ANTORA'
-          name: modules
-          title: From Zero To Hero with Red Hat Developer Hub
-          version: ~
-          asciidoc:
-            attributes:
-              cluster_domain: apps.cluster.example.com
-              user_name: user1
-              user_password: Welcome123!
-              demo_namespace: terminal-demo
-              demo_app: hello-world
-          nav:
-            - modules/ROOT/nav.adoc
-          ANTORA
-
-          cat > /tmp/showroom/site.yml << 'SITE'
-          site:
-            title: "From Zero To Hero with Red Hat Developer Hub"
-            url: https://maximilianopizarro.github.io/from-3scale-to-connectivity-link
-            start_page: modules::index.adoc
-          content:
-            sources:
-              - url: .
-                start_path: content
-          ui:
-            bundle:
-              url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/patternfly-6/ui-bundle.zip
-              snapshot: true
-            supplemental_files: ./content/supplemental-ui
-          asciidoc:
-            attributes: {}
-          output:
-            dir: ./www
-          SITE
-
       - name: Build Antora site
         run: antora --stacktrace site.yml
-        working-directory: /tmp/showroom
+        working-directory: showroom
 
       - name: Replace Demo Platform branding with Kuadrant
         run: |
-          cp docs/assets/images/kuadrant-logo.svg /tmp/showroom/www/_/img/footer_logo.svg
+          cp docs/assets/images/kuadrant-logo.svg showroom/www/_/img/footer_logo.svg
 
           python3 << 'PYEOF'
           import glob, re
@@ -87,11 +47,11 @@ jobs:
             </a>
           </footer>'''
 
-          for fpath in glob.glob('/tmp/showroom/www/**/*.html', recursive=True):
+          for fpath in glob.glob('showroom/www/**/*.html', recursive=True):
               with open(fpath) as f:
                   html = f.read()
 
-              depth = fpath.replace('/tmp/showroom/www/', '').count('/')
+              depth = fpath.replace('showroom/www/', '').count('/')
               root = '../' * depth if depth > 0 else ''
               footer = NEW_FOOTER.replace('{root}', root)
 
@@ -113,7 +73,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: /tmp/showroom/www
+          path: showroom/www
 
   deploy:
     environment:

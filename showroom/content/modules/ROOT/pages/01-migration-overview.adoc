@@ -1,0 +1,139 @@
+= Migration Overview: Why Move from 3scale to Connectivity Link?
+
+== Introduction
+
+*Red Hat 3scale API Management* has been the standard platform for managing APIs on OpenShift. *Red Hat Connectivity Link* (powered by Kuadrant) represents the next generation — a Kubernetes-native approach that uses the Gateway API standard, GitOps, and declarative CRDs instead of a separate management plane.
+
+This module introduces the key concepts of both products and explains why organizations are migrating.
+
+== 3scale concepts
+
+[cols="1,3",options="header"]
+|===
+| Concept | Definition
+
+| *Product*
+| A logical API definition that groups backend APIs, authentication settings, and application plans.
+
+| *Backend*
+| An internal API endpoint (private base URL) that 3scale routes traffic to.
+
+| *MappingRule*
+| A pattern-based routing rule that maps HTTP method + URL path to a metric.
+
+| *APIcast*
+| The 3scale API gateway based on NGINX/OpenResty. Handles authentication, rate limiting, and proxying.
+
+| *Application Plan*
+| Defines rate limits, quotas, and pricing tiers for API consumers.
+
+| *Application*
+| An API consumer identity bound to a plan. Holds `user_key` (API Key) or `client_id`/`client_secret` (OIDC).
+
+| *ActiveDoc*
+| An OpenAPI specification attached to a Product, published in the Developer Portal.
+
+| *Developer Portal*
+| A self-service portal where API consumers discover APIs and manage credentials.
+|===
+
+== Connectivity Link concepts (Kuadrant)
+
+[cols="1,3",options="header"]
+|===
+| Concept | Definition
+
+| *Gateway*
+| A Kubernetes Gateway API resource (`gateway.networking.k8s.io/v1`). Defines the ingress point backed by Istio.
+
+| *HTTPRoute*
+| Routes HTTP traffic to backend Services based on path, header, or host matching.
+
+| *AuthPolicy*
+| A Kuadrant CRD that attaches authentication rules to a Gateway or HTTPRoute. Supports API Key, JWT/OIDC, mTLS.
+
+| *OIDCPolicy*
+| A higher-level Kuadrant CRD that provides full OIDC flow (redirect, callback, token validation) on an HTTPRoute.
+
+| *RateLimitPolicy*
+| Enforces rate limits on a Gateway or HTTPRoute. Counters can be global or per-identity.
+
+| *PlanPolicy*
+| Defines tiered usage plans (free/basic/pro) with different rate limits via CEL predicates.
+
+| *APIProduct*
+| Publishes an API to the Kuadrant developer portal (Backstage plugin).
+
+| *Authorino*
+| The policy engine that evaluates AuthPolicy rules (JWT, API Key, OPA, pattern matching).
+
+| *Limitador*
+| The rate-limiting engine that enforces RateLimitPolicy counters via Envoy integration.
+|===
+
+== Feature comparison
+
+[cols="2,3,3",options="header"]
+|===
+| Feature | Red Hat 3scale | Red Hat Connectivity Link
+
+| *API Gateway*
+| APIcast (NGINX-based, proprietary config)
+| Istio Gateway (Envoy-based, Gateway API standard)
+
+| *Routing*
+| MappingRules (method + pattern -> metric)
+| HTTPRoute (Gateway API standard)
+
+| *OIDC Auth*
+| Product -> OIDC issuer config
+| OIDCPolicy or AuthPolicy with JWT issuer
+
+| *API Key Auth*
+| Product -> user_key / app_id+app_key
+| AuthPolicy with apiKey selector on labeled Secrets
+
+| *Rate Limiting*
+| Application Plans (per metric per plan)
+| RateLimitPolicy (per route, per identity, per window)
+
+| *Usage Tiers*
+| Application Plans (free/basic/pro)
+| PlanPolicy (CEL predicates on identity metadata)
+
+| *Dev Portal*
+| 3scale Developer Portal (CMS-based)
+| Kuadrant APIProduct + Backstage plugin
+
+| *API Docs*
+| ActiveDoc (OpenAPI in 3scale portal)
+| APIProduct with OpenAPI URL + Backstage TechDocs
+
+| *Configuration*
+| 3scale Admin UI / API / CRDs
+| Kubernetes CRDs + GitOps (ArgoCD)
+
+| *GitOps*
+| Partial (3scale Operator CRDs)
+| Native — all config is YAML in Git
+
+| *Observability*
+| 3scale Analytics dashboard
+| Prometheus/Grafana + OpenTelemetry + Kiali
+
+| *TLS Management*
+| 3scale admin config
+| TLSPolicy (automatic ACME/Let's Encrypt)
+
+| *DNS Management*
+| External
+| DNSPolicy (Route 53, Cloud DNS)
+|===
+
+== Why migrate?
+
+. *Standards-based*: Gateway API is a Kubernetes standard supported by the CNCF. HTTPRoute, Gateway, and related resources are portable across implementations.
+. *GitOps-native*: Every policy and route is a YAML CRD in Git. ArgoCD syncs the desired state to the cluster — no separate admin UI required.
+. *Granular policies*: Attach auth and rate limiting at the Gateway or individual HTTPRoute level, rather than configuring a centralized gateway.
+. *Integrated developer experience*: Kuadrant's Backstage plugin surfaces APIProducts, plans, and key management directly inside Developer Hub.
+. *Cloud-native observability*: Envoy/Istio metrics feed Prometheus and Grafana natively; OpenTelemetry and Kiali provide end-to-end tracing.

@@ -1,0 +1,114 @@
+= Architecture Overview
+
+This module presents the side-by-side architecture of the migration environment. Both 3scale and Connectivity Link run on the same OpenShift cluster, enabling direct comparison.
+
+== Cluster layout
+
+....
+┌──────────────────────────────────────────────────────────────────────┐
+│                         OpenShift Cluster                            │
+│                                                                      │
+│  ┌─────────────────────────┐    ┌─────────────────────────┐         │
+│  │   3scale (Source)        │    │  Connectivity Link       │         │
+│  │                         │    │  (Target)                │         │
+│  │  ┌───────────────────┐  │    │  ┌───────────────────┐   │         │
+│  │  │ neuralbank-3scale │  │    │  │ neuralbank-stack  │   │         │
+│  │  │ OIDC via Product  │  │    │  │ OIDC via OIDCPolicy│  │         │
+│  │  │ APIcast → Backend │  │    │  │ Gateway → Backend │   │         │
+│  │  └───────────────────┘  │    │  └───────────────────┘   │         │
+│  │                         │    │                          │         │
+│  │  ┌───────────────────┐  │    │  ┌───────────────────┐   │         │
+│  │  │ nfl-wallet-3scale │  │    │  │ nfl-wallet-prod   │   │         │
+│  │  │ API Key via Prod  │  │    │  │ API Key via AuthPol│  │         │
+│  │  │ APIcast → Backend │  │    │  │ Gateway → Backend │   │         │
+│  │  └───────────────────┘  │    │  └───────────────────┘   │         │
+│  │                         │    │                          │         │
+│  │  3scale Operator        │    │  Kuadrant Operator       │         │
+│  │  APIManager             │    │  Istio / Service Mesh    │         │
+│  └─────────────────────────┘    └─────────────────────────┘         │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────────────┐       │
+│  │  Developer Hub (Backstage)                                │       │
+│  │  ┌─────────────────────────────────────────────────────┐ │       │
+│  │  │ Migration Software Template                          │ │       │
+│  │  │ (generates Gateway + HTTPRoute + AuthPolicy + ...)   │ │       │
+│  │  └─────────────────────────────────────────────────────┘ │       │
+│  │                                                          │       │
+│  │  Keycloak · Gitea · ArgoCD · Tekton · Grafana · Kiali   │       │
+│  └──────────────────────────────────────────────────────────┘       │
+└──────────────────────────────────────────────────────────────────────┘
+....
+
+== Platform components
+
+[cols="1,3",options="header"]
+|===
+| Component | Role
+
+| *Developer Hub*
+| Self-service portal: software catalog, templates, documentation, Kuadrant plugin, notifications.
+
+| *Keycloak*
+| Identity provider and SSO. Manages OIDC realms for both 3scale and Connectivity Link.
+
+| *Gitea*
+| Internal Git server. Stores application code and Kubernetes manifests.
+
+| *ArgoCD*
+| GitOps engine. Syncs manifests from Git to the cluster continuously.
+
+| *3scale Operator*
+| Manages the 3scale APIManager, Products, Backends, and Application Plans via CRDs.
+
+| *Kuadrant Operator*
+| Manages Connectivity Link policies: AuthPolicy, OIDCPolicy, RateLimitPolicy, PlanPolicy, APIProduct.
+
+| *Istio / Service Mesh*
+| Data plane for Gateway API. Provides Envoy-based traffic management integrated with Kuadrant.
+
+| *Grafana / Kiali*
+| Observability stack: dashboards (Grafana), service mesh topology (Kiali).
+|===
+
+== Request flow comparison
+
+=== 3scale flow (APIcast)
+
+....
+Client → OpenShift Route → APIcast → [auth check + rate limit] → Backend Service
+....
+
+APIcast validates credentials against the 3scale backend (Redis). MappingRules determine which metric to increment. Application Plans enforce rate limits.
+
+=== Connectivity Link flow (Kuadrant)
+
+....
+Client → OpenShift Route → Istio Gateway → [Authorino auth + Limitador rate limit] → Backend Service
+                                 ↑
+                          HTTPRoute + AuthPolicy + RateLimitPolicy
+....
+
+The Istio Gateway delegates authentication to Authorino and rate limiting to Limitador. Policies are attached directly to the Gateway or HTTPRoute as Kubernetes CRDs.
+
+== Namespace mapping
+
+[cols="2,2,2",options="header"]
+|===
+| Application | 3scale Namespace | Connectivity Link Namespace
+
+| Neuralbank (OIDC)
+| `neuralbank-3scale`
+| `neuralbank-stack`
+
+| NFL Wallet (API Key)
+| `nfl-wallet-3scale`
+| `nfl-wallet-prod`
+
+| 3scale Operator
+| `3scale-system`
+| —
+
+| Kuadrant Operator
+| —
+| `kuadrant-system`
+|===

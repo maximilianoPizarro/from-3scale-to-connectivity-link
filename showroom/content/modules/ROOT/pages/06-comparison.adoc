@@ -1,0 +1,239 @@
+= Side-by-Side Comparison: 3scale vs Connectivity Link
+
+Now that you have explored both environments, this module consolidates the comparison across all dimensions: authentication, rate limiting, GitOps, developer experience, and observability.
+
+== Full comparison table
+
+[cols="1,2,2,2,2",options="header"]
+|===
+| | 3scale (neuralbank) | CL (neuralbank) | 3scale (nfl-wallet) | CL (nfl-wallet)
+
+| *Auth type*
+| OIDC (Product)
+| OIDC (OIDCPolicy)
+| API Key (user_key)
+| API Key (AuthPolicy)
+
+| *Gateway*
+| APIcast
+| Istio Gateway
+| APIcast
+| Istio Gateway
+
+| *Routing*
+| MappingRules
+| HTTPRoute
+| MappingRules
+| HTTPRoute
+
+| *Rate Limit*
+| Application Plan
+| RateLimitPolicy
+| Application Plan
+| RateLimitPolicy
+
+| *Dev Portal*
+| 3scale Portal
+| APIProduct + Backstage
+| 3scale Portal
+| APIProduct + Backstage
+
+| *GitOps*
+| Partial (CRDs)
+| Full (ArgoCD)
+| Partial (CRDs)
+| Full (ArgoCD)
+
+| *Namespace*
+| `neuralbank-3scale`
+| `neuralbank-stack`
+| `nfl-wallet-3scale`
+| `nfl-wallet-prod`
+|===
+
+== OIDC authentication comparison (Neuralbank)
+
+[cols="2,3,3",options="header"]
+|===
+| Aspect | 3scale (neuralbank-3scale) | Connectivity Link (neuralbank-stack)
+
+| *Resource*
+| `Product` with `oidc` auth
+| `OIDCPolicy` on HTTPRoute
+
+| *Issuer*
+| `issuerEndpoint` in Product spec
+| `provider.issuerURL` in OIDCPolicy
+
+| *Client ID*
+| 3scale Application -> OIDC client
+| `provider.clientID` in OIDCPolicy
+
+| *Token validation*
+| APIcast validates JWT
+| Authorino validates JWT
+
+| *Redirect flow*
+| APIcast -> Keycloak -> APIcast callback
+| OIDCPolicy -> Keycloak -> callback HTTPRoute
+
+| *Unauthenticated*
+| 403 from APIcast
+| 302 redirect to Keycloak login
+
+| *Config location*
+| 3scale Admin UI or Product CRD
+| Kubernetes CRD in Git (GitOps)
+|===
+
+== API Key authentication comparison (NFL Wallet)
+
+[cols="2,3,3",options="header"]
+|===
+| Aspect | 3scale (nfl-wallet-3scale) | Connectivity Link (nfl-wallet-prod)
+
+| *Resource*
+| `Product` with `userkey` auth
+| `AuthPolicy` with `apiKey` selector
+
+| *Credential*
+| `user_key` query parameter
+| `X-API-Key` HTTP header
+
+| *Storage*
+| 3scale database (Application)
+| Kubernetes Secrets with labels
+
+| *Validation*
+| APIcast looks up user_key in Redis
+| Authorino matches labeled Secrets
+
+| *Unauthenticated*
+| 403 from APIcast
+| 401 JSON error from Authorino
+
+| *Key creation*
+| 3scale Admin Portal
+| `oc create secret` + labels
+|===
+
+== Rate limiting comparison
+
+[cols="2,3,3",options="header"]
+|===
+| Aspect | 3scale Application Plans | Kuadrant RateLimitPolicy + PlanPolicy
+
+| *Definition*
+| Per-metric limits in Plan YAML
+| Per-route limits in RateLimitPolicy
+
+| *Tiers*
+| Plans: basic (60/min), premium (300/min)
+| PlanPolicy: free (10/min), basic (60/min), pro (300/min)
+
+| *Counter scope*
+| Per-application (user_key or client_id)
+| Per-identity (CEL expression on `auth.identity`)
+
+| *Enforcement*
+| APIcast -> 3scale backend (Redis)
+| Envoy -> Limitador (Rust-based, in-cluster)
+
+| *Exceeded response*
+| 429 with rate limit headers
+| 429 with rate limit headers
+
+| *Daily quotas*
+| Separate daily/monthly limits in Plan
+| `limits.daily` in PlanPolicy
+|===
+
+== GitOps comparison
+
+[cols="2,3,3",options="header"]
+|===
+| Aspect | 3scale | Connectivity Link
+
+| *Config source*
+| 3scale Admin UI, API, or CRDs
+| Kubernetes CRDs in Git
+
+| *Sync mechanism*
+| 3scale Operator reconciles CRDs
+| ArgoCD syncs from Git to cluster
+
+| *Drift detection*
+| Manual or operator-based
+| ArgoCD auto-detects drift, self-heals
+
+| *Rollback*
+| Redeploy CRD version
+| `git revert` + ArgoCD sync
+
+| *Multi-environment*
+| Separate 3scale tenants
+| Separate Git branches/folders + namespaces
+
+| *Audit trail*
+| 3scale admin logs
+| Git commit history
+|===
+
+== Developer experience comparison
+
+[cols="2,3,3",options="header"]
+|===
+| Aspect | 3scale | Connectivity Link
+
+| *API discovery*
+| 3scale Developer Portal
+| Kuadrant APIProduct in Developer Hub
+
+| *API docs*
+| ActiveDoc (OpenAPI in 3scale portal)
+| Backstage TechDocs + Swagger UI
+
+| *Key management*
+| 3scale Developer Portal sign-up
+| Developer Hub Kuadrant plugin
+
+| *Self-service templates*
+| Not available
+| Developer Hub Software Templates generate all manifests
+
+| *Catalog integration*
+| External
+| Native Backstage catalog entities with `kuadrant.io/*` annotations
+|===
+
+== Observability comparison
+
+[cols="2,3,3",options="header"]
+|===
+| Aspect | 3scale | Connectivity Link
+
+| *Metrics*
+| 3scale Analytics dashboard
+| Prometheus + Grafana (Envoy/Istio metrics)
+
+| *Tracing*
+| Limited
+| OpenTelemetry + Jaeger
+
+| *Service topology*
+| Not available
+| Kiali (Service Mesh visualization)
+
+| *Alerting*
+| 3scale custom alerts
+| Prometheus AlertManager
+|===
+
+== Key advantages of Connectivity Link
+
+. *Standards-based*: Gateway API (HTTPRoute) is a portable CNCF standard
+. *GitOps-native*: All configuration lives in Git — ArgoCD syncs and self-heals
+. *Granular policies*: Attach auth and rate limiting at Gateway or individual HTTPRoute level
+. *Integrated DevEx*: Kuadrant Backstage plugin surfaces APIs, plans, and key management in Developer Hub
+. *Cloud-native observability*: Native Envoy/Istio metrics + OpenTelemetry + Kiali
+. *Kubernetes-native keys*: API Keys are standard Kubernetes Secrets, manageable with any K8s tooling

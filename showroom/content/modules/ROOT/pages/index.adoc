@@ -1,0 +1,93 @@
+= From 3scale to Connectivity Link
+
+image::https://raw.githubusercontent.com/maximilianoPizarro/from-3scale-to-connectivity-link/main/docs/assets/images/kuadrant-logo.svg[Kuadrant,200]
+
+*Migration Workshop — Red Hat Developer Hub*
+
+== Welcome
+
+In this workshop you will learn how to migrate API management from *Red Hat 3scale API Management* to *Red Hat Connectivity Link* (Kuadrant), using *Red Hat Developer Hub* as your self-service developer portal.
+
+The cluster has two sets of pre-deployed applications — one secured by 3scale and one secured by Connectivity Link — running side by side so you can compare them directly.
+
+== What you will learn
+
+* Understand *why* organizations migrate from 3scale to Connectivity Link
+* Explore the architecture: Developer Hub, ArgoCD, Keycloak, Kuadrant, 3scale, Istio
+* Inspect two 3scale-secured applications (OIDC and API Key)
+* Inspect the equivalent Connectivity Link applications
+* Compare authentication, rate limiting, GitOps, and developer experience side by side
+* *Run the migration* using a generic Developer Hub Software Template
+* Verify the migrated application and test both environments
+
+== Pre-deployed scenarios
+
+[cols="3,2,2,2",options="header"]
+|===
+| Application | Auth Model | 3scale Namespace | Connectivity Link Namespace
+
+| *Neuralbank* (banking API)
+| OIDC (Keycloak)
+| `neuralbank-3scale`
+| `neuralbank-stack`
+
+| *NFL Wallet* (wallet API)
+| API Key
+| `nfl-wallet-3scale`
+| `nfl-wallet-prod`
+|===
+
+== Environment access
+
+Your credentials:
+
+* *Username*: `{user_name}`
+* *Password*: `{user_password}`
+
+== Workshop platform links
+
+[cols="1,3",options="header"]
+|===
+| Tool | URL
+
+| *Developer Hub*
+| https://backstage-developer-hub-developer-hub.{cluster_domain}
+
+| *Gitea*
+| https://gitea-gitea.{cluster_domain}
+
+| *ArgoCD*
+| https://openshift-gitops-server-openshift-gitops.{cluster_domain}
+
+| *Keycloak*
+| https://rhbk.{cluster_domain}/admin/master/console
+
+| *Grafana*
+| https://grafana-observability.{cluster_domain}
+
+| *Kiali*
+| https://kiali-openshift-cluster-observability-operator.{cluster_domain}
+
+| *Mailpit*
+| https://n8n-mailpit-openshift-lightspeed.{cluster_domain}
+
+| *OpenShift Console*
+| https://console-openshift-console.{cluster_domain}
+|===
+
+TIP: The *Terminal* tab on the right panel of this showroom lets you run `oc`, `curl`, and other commands directly.
+
+== Workshop flow
+
+....
+Developer Hub ──(migration template)──▶ Gitea ──(GitOps)──▶ ArgoCD ──(sync)──▶ OpenShift
+                                                                                    │
+                                                                              Gateway API
+                                                                                    │
+                                                                          Kuadrant Policies
+                                                                         (AuthPolicy / OIDC
+                                                                          RateLimitPolicy
+                                                                          PlanPolicy)
+....
+
+Click *Next* to begin with the migration overview.

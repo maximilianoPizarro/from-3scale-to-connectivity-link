@@ -788,7 +788,7 @@ data:
                       props:
                         title: "Documentation & AI"
                         content: |
-                          * [Workshop Guide](https://showroom-from-zero-to-hero.{{ .Values.clusterDomain }}) — Showroom
+                          * [Workshop Guide](https://showroom-showroom.{{ .Values.clusterDomain }}) — Showroom
                           * [GitHub Pages](https://maximilianopizarro.github.io/from-3scale-to-connectivity-link/) — Reference Docs
                           * [Lightspeed](/lightspeed) — AI Chat Assistant
                           * [Kuadrant API Management](/kuadrant) — API Products

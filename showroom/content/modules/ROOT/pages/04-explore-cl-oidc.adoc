@@ -1,0 +1,238 @@
+= Connectivity Link: OIDC Authentication (Neuralbank)
+
+In this module you will explore how *Red Hat Connectivity Link* protects the Neuralbank API with *OIDCPolicy* integrated with Keycloak, plus *RateLimitPolicy* for traffic control.
+
+== Context
+
+Neuralbank uses the full Connectivity Link pattern:
+
+[cols="1,2",options="header"]
+|===
+| Resource | Function
+| *Gateway* (Istio) | HTTPS entry point
+| *HTTPRoute* | Routes `/api` and `/q` to the Quarkus backend
+| *OIDCPolicy* | OIDC authentication with Keycloak (Bearer token)
+| *RateLimitPolicy* | 60 req/min per authenticated user
+|===
+
+== Step 1: Inspect the Gateway
+
+[source,bash]
+----
+oc get gateway -n neuralbank-stack
+----
+
+Expected output:
+
+----
+NAME                 CLASS   ADDRESS                                          PROGRAMMED
+neuralbank-gateway   istio   neuralbank-gateway-istio.neuralbank-stack.svc    True
+----
+
+Inspect the listeners:
+
+[source,bash]
+----
+oc get gateway neuralbank-gateway -n neuralbank-stack -o jsonpath='{.spec.listeners[*].name}' ; echo
+----
+
+== Step 2: Explore the HTTPRoute
+
+[source,bash]
+----
+oc get httproute -n neuralbank-stack
+----
+
+The HTTPRoute `neuralbank-api-route` routes requests to `neuralbank-backend-svc:8080` for paths `/api` and `/q`:
+
+[source,bash]
+----
+oc get httproute neuralbank-api-route -n neuralbank-stack -o yaml | grep -A5 "matches:" | head -15
+----
+
+== Step 3: Explore the OIDCPolicy
+
+The *OIDCPolicy* is the key Connectivity Link resource that protects the HTTPRoute with OIDC authentication:
+
+[source,bash]
+----
+oc get oidcpolicy -n neuralbank-stack
+----
+
+Inspect the configuration:
+
+[source,bash]
+----
+oc get oidcpolicy neuralbank-oidc -n neuralbank-stack -o yaml
+----
+
+Key configuration points:
+
+* `provider.issuerURL` — points to the Keycloak realm (`\https://rhbk.{cluster_domain}/realms/neuralbank`)
+* `provider.clientID` — the OIDC client configured in Keycloak
+* `auth.tokenSource` — extracts the Bearer token from the `Authorization` header
+* `targetRef` — points to the HTTPRoute `neuralbank-api-route`
+
+=== How it works internally
+
+The OIDCPolicy automatically generates an AuthPolicy under the hood:
+
+[source,bash]
+----
+oc get authpolicy -n neuralbank-stack
+----
+
+You will see two AuthPolicies:
+
+[cols="1,2",options="header"]
+|===
+| AuthPolicy | Function
+| `neuralbank-oidc` | Validates the JWT token against Keycloak
+| `neuralbank-oidc-callback` | Handles the OIDC redirect callback flow
+|===
+
+== Step 4: Explore the RateLimitPolicy
+
+[source,bash]
+----
+oc get ratelimitpolicy -n neuralbank-stack
+----
+
+[source,bash]
+----
+oc get ratelimitpolicy neuralbank-customers-ratelimit -n neuralbank-stack -o yaml
+----
+
+Configuration: *60 requests per minute* per authenticated user. The counter uses `auth.identity.username` to isolate rate limits per OIDC user.
+
+== Step 5: Test the OIDC flow from the browser
+
+Open the Neuralbank URL:
+
+----
+https://neuralbank.{cluster_domain}
+----
+
+You will be automatically redirected to the Keycloak login screen (realm `neuralbank`). Enter your workshop credentials (`{user_name}` / `{user_password}`). After authentication you are redirected back to the API.
+
+== Step 6: Test with curl
+
+=== 6.1 — Without token (302 redirect)
+
+[source,bash]
+----
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+  https://neuralbank.{cluster_domain}/api/v1/customers
+----
+
+Expected: `HTTP Status: 302` (redirect to Keycloak).
+
+=== 6.2 — Get a Bearer Token from Keycloak
+
+[source,bash]
+----
+TOKEN=$(curl -s -X POST \
+  "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" \
+  -d "client_id=neuralbank-frontend" \
+  -d "username={user_name}" \
+  -d "password={user_password}" \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
+
+echo "Token (first 50 chars): ${TOKEN:0:50}..."
+----
+
+=== 6.3 — List all customers
+
+[source,bash]
+----
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank.{cluster_domain}/api/v1/customers" \
+  | python3 -m json.tool
+----
+
+=== 6.4 — Get a customer by ID
+
+[source,bash]
+----
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank.{cluster_domain}/api/v1/customers/1" \
+  | python3 -m json.tool
+----
+
+=== 6.5 — Get credit score
+
+[source,bash]
+----
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank.{cluster_domain}/api/v1/customers/1/credit-score" \
+  | python3 -m json.tool
+----
+
+=== 6.6 — Create a new customer
+
+[source,bash]
+----
+curl -s -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Workshop",
+    "apellido": "Demo",
+    "email": "workshop.demo@neuralbank.io",
+    "tipoCliente": "PERSONAL",
+    "ciudad": "Buenos Aires",
+    "pais": "Argentina"
+  }' \
+  "https://neuralbank.{cluster_domain}/api/v1/customers" \
+  | python3 -m json.tool
+----
+
+=== 6.7 — Invalid token (rejected)
+
+[source,bash]
+----
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+  -H "Authorization: Bearer invalid-token-12345" \
+  "https://neuralbank.{cluster_domain}/api/v1/customers"
+----
+
+Expected: `HTTP Status: 302` or `401`.
+
+== OIDC flow diagram
+
+....
+User             Keycloak            Istio Gateway        Kuadrant          Backend
+ │                  │                     │                  │                 │
+ │ GET /api/customers                     │                  │                 │
+ │───────────────────────────────────────▶│                  │                 │
+ │                  │                     │ Validate JWT     │                 │
+ │                  │                     │─────────────────▶│                 │
+ │                  │                     │                  │ No token → 302  │
+ │ 302 → Login      │                     │◀─────────────────│                 │
+ │◀──────────────────────────────────────│                  │                 │
+ │                  │                     │                  │                 │
+ │ Login + creds    │                     │                  │                 │
+ │─────────────────▶│                     │                  │                 │
+ │ Token            │                     │                  │                 │
+ │◀─────────────────│                     │                  │                 │
+ │                  │                     │                  │                 │
+ │ GET /api + Bearer                      │ Validate JWT ✓   │                 │
+ │───────────────────────────────────────▶│─────────────────▶│                 │
+ │                  │                     │ Rate limit check │                 │
+ │                  │                     │ (60/min per user)│                 │
+ │                  │                     │ Forward ─────────────────────────▶│
+ │ 200 OK (data)    │                     │◀─────────────────────────────────│
+ │◀──────────────────────────────────────│                  │                 │
+....
+
+== Summary
+
+You have explored the complete *Connectivity Link + OIDCPolicy* stack:
+
+* *Gateway* (Istio) as the entry point
+* *HTTPRoute* for path-based routing
+* *OIDCPolicy* integrating OIDC authentication with Keycloak
+* *RateLimitPolicy* with per-user limits
+* Automatic redirect flow and JWT validation

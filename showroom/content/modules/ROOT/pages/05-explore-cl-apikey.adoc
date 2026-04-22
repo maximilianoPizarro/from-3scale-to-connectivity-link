@@ -1,0 +1,237 @@
+= Connectivity Link: API Key Authentication (NFL Wallet)
+
+In this module you will explore how *Red Hat Connectivity Link* protects the NFL Wallet API with *AuthPolicy* based on *API Key* — a different model from Neuralbank's OIDC, ideal for machine-to-machine (M2M) integrations.
+
+== OIDC vs API Key
+
+[cols="1,2,2",options="header"]
+|===
+| Aspect | Neuralbank (OIDC) | NFL Wallet (API Key)
+| *Auth type* | JWT Bearer token | API Key header
+| *Flow* | Redirect to login page | No redirect, static key
+| *Use case* | Interactive users (web) | M2M integrations, scripts
+| *Header* | `Authorization: Bearer <token>` | `X-API-Key: <key>`
+| *Key management* | Keycloak issues tokens | Kubernetes Secrets
+| *Rate limit* | Per authenticated user | Global (all keys)
+|===
+
+== Step 1: Inspect resources in OpenShift
+
+[source,bash]
+----
+echo "=== Gateway ===" && \
+oc get gateway -n nfl-wallet-prod && echo && \
+echo "=== HTTPRoute ===" && \
+oc get httproute -n nfl-wallet-prod && echo && \
+echo "=== AuthPolicy ===" && \
+oc get authpolicy -n nfl-wallet-prod && echo && \
+echo "=== RateLimitPolicy ===" && \
+oc get ratelimitpolicy -n nfl-wallet-prod && echo && \
+echo "=== APIProduct ===" && \
+oc get apiproduct -n nfl-wallet-prod
+----
+
+== Step 2: Explore the AuthPolicy
+
+[source,bash]
+----
+oc get authpolicy nfl-wallet-apikey -n nfl-wallet-prod -o yaml
+----
+
+Key points:
+
+* `authentication.api-key-auth.apiKey.selector` — selects Secrets with labels `app: nfl-wallet` and `kuadrant.io/apikey: "true"`
+* `credentials.customHeader.name: X-API-Key` — the key is sent via the `X-API-Key` header
+* `unauthenticated.code: 401` — returns 401 for missing/invalid keys (no redirect)
+
+=== How API Keys are stored
+
+Keys are Kubernetes Secrets with special labels that Authorino detects automatically:
+
+[source,bash]
+----
+oc get secrets -n nfl-wallet-prod -l kuadrant.io/apikey=true
+----
+
+[source,bash]
+----
+oc get secret nfl-wallet-apikey-admin -n nfl-wallet-prod -o jsonpath='{.data.api_key}' | base64 -d ; echo
+----
+
+Output: `nfl-wallet-demo-key-2024`
+
+== Step 3: Test the API with curl
+
+=== 3.1 — Without API Key (401)
+
+[source,bash]
+----
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+  https://nfl-wallet.{cluster_domain}/api/v1/customers
+----
+
+Expected: `HTTP Status: 401`
+
+=== 3.2 — With valid API Key
+
+[source,bash]
+----
+curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  "https://nfl-wallet.{cluster_domain}/api/v1/customers" \
+  | python3 -m json.tool
+----
+
+=== 3.3 — Get a customer by ID
+
+[source,bash]
+----
+curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  "https://nfl-wallet.{cluster_domain}/api/v1/customers/1" \
+  | python3 -m json.tool
+----
+
+=== 3.4 — Create a new customer
+
+[source,bash]
+----
+curl -s -X POST \
+  -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "API Key",
+    "apellido": "Test",
+    "email": "apikey.test@wallet.io",
+    "tipoCliente": "EMPRESA",
+    "ciudad": "Miami",
+    "pais": "USA"
+  }' \
+  "https://nfl-wallet.{cluster_domain}/api/v1/customers" \
+  | python3 -m json.tool
+----
+
+=== 3.5 — Invalid API Key (401)
+
+[source,bash]
+----
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+  -H "X-API-Key: invalid-key-12345" \
+  "https://nfl-wallet.{cluster_domain}/api/v1/customers"
+----
+
+== Step 4: Rate limiting
+
+The RateLimitPolicy allows *120 requests per minute*:
+
+[source,bash]
+----
+oc get ratelimitpolicy nfl-wallet-ratelimit -n nfl-wallet-prod -o yaml
+----
+
+Run a burst to test:
+
+[source,bash]
+----
+for i in $(seq 1 10); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' \
+    -H "X-API-Key: nfl-wallet-demo-key-2024" \
+    "https://nfl-wallet.{cluster_domain}/api/v1/customers")
+  echo "Request $i: HTTP $code"
+done
+----
+
+All 10 should return `200`. Extending to 130+ requests in one minute triggers `429 Too Many Requests`.
+
+== Step 5: Create your own API Key
+
+[source,bash]
+----
+oc create secret generic my-apikey-{user_name} \
+  --from-literal=api_key=my-custom-key-$(date +%s) \
+  -n nfl-wallet-prod
+
+oc label secret my-apikey-{user_name} \
+  app=nfl-wallet \
+  kuadrant.io/apikey=true \
+  authorino.kuadrant.io/managed-by=authorino \
+  -n nfl-wallet-prod
+----
+
+Kuadrant detects the new Secret automatically. Test:
+
+[source,bash]
+----
+MY_KEY=$(oc get secret my-apikey-{user_name} -n nfl-wallet-prod -o jsonpath='{.data.api_key}' | base64 -d)
+
+curl -s -H "X-API-Key: $MY_KEY" \
+  "https://nfl-wallet.{cluster_domain}/api/v1/customers" \
+  | python3 -m json.tool
+----
+
+== Step 6: PlanPolicy — Usage tiers
+
+Inspect the PlanPolicy:
+
+[source,bash]
+----
+oc get planpolicy -n nfl-wallet-prod -o yaml
+----
+
+[cols="1,1,1,2",options="header"]
+|===
+| Plan | Daily Limit | Per-Minute Limit | Use Case
+| *free* | 100 req/day | 10 req/min | Evaluation and testing
+| *basic* | 1,000 req/day | 60 req/min | Development
+| *pro* | 10,000 req/day | 300 req/min | Production
+|===
+
+The plan is assigned via the `secret.kuadrant.io/plan-id` annotation on the API Key Secret:
+
+[source,yaml]
+----
+metadata:
+  labels:
+    app: nfl-wallet
+    kuadrant.io/apikey: "true"
+  annotations:
+    secret.kuadrant.io/plan-id: "basic"
+----
+
+== Step 7: Swagger UI
+
+Open in your browser:
+
+----
+https://nfl-wallet.{cluster_domain}/q/swagger-ui
+----
+
+Click *Authorize*, enter `nfl-wallet-demo-key-2024`, and test the endpoints directly.
+
+== API Key flow diagram
+
+....
+Client/Script      Istio Gateway       Kuadrant/Authorino     Backend API
+ │                      │                     │                    │
+ │ GET /api/v1/customers│                     │                    │
+ │ X-API-Key: demo-key  │                     │                    │
+ │─────────────────────▶│                     │                    │
+ │                      │ Validate API Key    │                    │
+ │                      │────────────────────▶│                    │
+ │                      │                     │ Match Secret labels│
+ │                      │                     │ app=nfl-wallet     │
+ │                      │ Key valid           │                    │
+ │                      │◀────────────────────│                    │
+ │                      │ Check PlanPolicy    │                    │
+ │                      │ Check Rate Limit    │                    │
+ │                      │ Forward ──────────────────────────────▶│
+ │ 200 OK (data)        │◀──────────────────────────────────────│
+ │◀─────────────────────│                     │                    │
+....
+
+== Summary
+
+You have explored the *API Key Auth* model of Connectivity Link:
+
+* *AuthPolicy* with `apiKey` uses Kubernetes Secrets for authentication
+* API Keys are managed via labels — Authorino discovers them automatically
+* *PlanPolicy* defines tiered rate limits (free/basic/pro)
+* *APIProduct* publishes the API in the Developer Hub portal

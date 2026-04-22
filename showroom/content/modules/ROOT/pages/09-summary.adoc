@@ -1,0 +1,147 @@
+= Summary and Next Steps
+
+Congratulations! You have completed the migration workshop. This module recaps what you learned, shows the conversion patterns, and provides links to official documentation.
+
+== What you accomplished
+
+. Explored the *3scale environment* — Products, Backends, Application Plans, APIcast
+. Explored the *Connectivity Link environment* — Gateway, HTTPRoute, OIDCPolicy, AuthPolicy, RateLimitPolicy, PlanPolicy, APIProduct
+. Compared both approaches *side by side* across authentication, rate limiting, GitOps, and developer experience
+. Ran the *migration template* from Developer Hub to generate all Connectivity Link resources automatically
+. Verified the migrated application works identically to the 3scale original
+
+== Mapping Rules to HTTPRoute conversion
+
+=== 3scale MappingRules
+
+[source,yaml]
+----
+mappingRules:
+  - httpMethod: GET
+    pattern: "/api/v1/customers$"
+    metricMethodRef: hits
+  - httpMethod: POST
+    pattern: "/api/v1/customers$"
+    metricMethodRef: hits
+  - httpMethod: GET
+    pattern: "/q/openapi$"
+    metricMethodRef: hits
+----
+
+=== Equivalent HTTPRoute
+
+[source,yaml]
+----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+spec:
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: neuralbank-backend-svc
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /q
+      backendRefs:
+        - name: neuralbank-backend-svc
+          port: 8080
+----
+
+== Application Plans to PlanPolicy conversion
+
+=== 3scale Application Plans
+
+[source,yaml]
+----
+applicationPlans:
+  basic:
+    name: "Basic Plan"
+    limits:
+      - period: minute
+        value: 60
+        metricMethodRef:
+          systemName: hits
+  premium:
+    name: "Premium Plan"
+    limits:
+      - period: minute
+        value: 300
+        metricMethodRef:
+          systemName: hits
+----
+
+=== Equivalent PlanPolicy
+
+[source,yaml]
+----
+apiVersion: extensions.kuadrant.io/v1alpha1
+kind: PlanPolicy
+spec:
+  plans:
+    - tier: basic
+      predicate: |
+        auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "basic"
+      limits:
+        daily: 1000
+        custom:
+          - limit: 60
+            window: "1m"
+    - tier: pro
+      predicate: |
+        auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "pro"
+      limits:
+        daily: 10000
+        custom:
+          - limit: 300
+            window: "1m"
+----
+
+== Decommission flow
+
+Once the migration is validated, follow these steps to decommission the 3scale environment:
+
+. *Disable traffic to 3scale*: Update DNS or Routes to point exclusively to the Connectivity Link gateway.
+. *Disable the 3scale Product*: Set the Product to "disabled" or remove the public endpoint.
+. *Verify no traffic*: Monitor 3scale analytics to confirm zero traffic.
+. *Delete 3scale resources*: Remove the Product, Backend, and Application CRDs.
+. *Delete the source namespace*: `oc delete namespace neuralbank-3scale` (or `nfl-wallet-3scale`).
+. *Remove 3scale Operator* (optional): If no other APIs use 3scale, uninstall the operator.
+
+WARNING: Do not delete the source namespace until you have fully validated the Connectivity Link environment in production.
+
+== Official documentation
+
+[cols="1,3",options="header"]
+|===
+| Product | Documentation
+
+| *Red Hat 3scale API Management*
+| https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/
+
+| *Red Hat Connectivity Link*
+| https://docs.redhat.com/en/documentation/red_hat_connectivity_link/
+
+| *Kuadrant (upstream)*
+| https://docs.kuadrant.io/
+
+| *Gateway API*
+| https://gateway-api.sigs.k8s.io/
+
+| *Red Hat Developer Hub*
+| https://docs.redhat.com/en/documentation/red_hat_developer_hub/
+|===
+
+== Repository
+
+The source code, Helm charts, Software Templates, and this workshop documentation are available at:
+
+https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link
+
+== Thank you
+
+This workshop was created by https://maximilianopizarro.github.io/[Maximiliano Pizarro] and is powered by https://kuadrant.io/[Kuadrant] and https://developers.redhat.com/rhdh[Red Hat Developer Hub].

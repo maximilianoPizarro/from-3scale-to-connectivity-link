@@ -6,9 +6,9 @@ showroom:
 
   # Lab guide Git repository
   content:
-    repoUrl: "https://github.com/maximilianoPizarro/showroom-from-zero-to-hero.git"
+    repoUrl: "https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link.git"
     repoRef: "main"
-    antoraPlaybook: "site.yml"
+    antoraPlaybook: "showroom/site.yml"
     image: "quay.io/rhpds/showroom-content:v1.3.1"
 
   # Nookbag bundle (LlamaStack, Zero Trust UI) - disabled for this workshop
