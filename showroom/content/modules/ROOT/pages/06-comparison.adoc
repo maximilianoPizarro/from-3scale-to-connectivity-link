@@ -2,6 +2,14 @@
 
 Now that you have explored both environments, this module consolidates the comparison across all dimensions: authentication, rate limiting, GitOps, developer experience, and observability.
 
+== Resource comparison (3D view)
+
+The following chart compares the number of Kubernetes resources required per capability in each platform. Fewer dedicated resources means simpler configuration and easier GitOps management.
+
+image::comparison-3d.svg[3D Resource Comparison - 3scale vs Connectivity Link,900]
+
+Key takeaway: Connectivity Link reduces the total number of CRDs from *14 resources across 2 namespaces* (3scale) to *7 resources in a single namespace*, all managed via GitOps. The only area where Connectivity Link uses more resources is rate limiting — because PlanPolicy provides more granular tiered control than 3scale Application Plans.
+
 == Full comparison table
 
 [cols="1,2,2,2,2",options="header"]
