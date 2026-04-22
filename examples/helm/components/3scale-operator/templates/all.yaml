@@ -24,7 +24,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  channel: threescale-2.15
+  channel: threescale-2.16
   installPlanApproval: Automatic
   name: 3scale-operator
   source: redhat-operators

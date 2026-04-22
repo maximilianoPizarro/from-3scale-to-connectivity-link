@@ -254,6 +254,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: mock-apis-3scale
+      enabled: true
+      path: mock-apis-3scale
+      destinationNamespace: mock-apis-3scale
+      syncWave: "8"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: workshop-registration
       enabled: true
       path: workshop-registration
