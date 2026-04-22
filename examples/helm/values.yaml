@@ -327,6 +327,38 @@ connectivityLink:
           enabled: true
           route:
             enabled: true
+    - id: gateforge
+      enabled: true
+      repoURL: "https://maximilianopizarro.github.io/gateforge/"
+      chart: gateforge
+      targetRevision: "0.1.0"
+      destinationNamespace: gateforge
+      syncWave: "9"
+      values:
+        global:
+          clusterDomain: apps.cluster-4wrc6.dynamic.redhatworkshops.io
+        ai:
+          enabled: true
+          endpoint: https://litellm-prod.apps.maas.redhatworkshops.io/v1
+          model: deepseek-r1-distill-qwen-14b
+          apiKey: ""
+        threescale:
+          adminApi:
+            enabled: true
+            url: "https://3scale-admin.apps.cluster-4wrc6.dynamic.redhatworkshops.io"
+            accessToken: ""
+          crdDiscovery:
+            enabled: true
+            namespace: 3scale-system
+        connectivityLink:
+          targetNamespace: kuadrant-system
+          gatewayStrategy: shared
+          gatewayClassName: istio
+        route:
+          enabled: true
+          host: ""
+          tls:
+            termination: edge
 
 # ============================================================
 # Lightspeed / MCP — LLM provider config for OLS component

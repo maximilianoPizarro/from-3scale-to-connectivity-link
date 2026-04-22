@@ -98,3 +98,93 @@ spec:
       replicas: 1
     productionSpec:
       replicas: 1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: 3scale-token-sync
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: 3scale-token-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "create", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: 3scale-token-sync
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 3scale-token-sync
+subjects:
+  - kind: ServiceAccount
+    name: 3scale-token-sync
+    namespace: 3scale-system
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: 3scale-token-sync-{{ now | date "20060102150405" }}
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 20
+  activeDeadlineSeconds: 900
+  template:
+    spec:
+      serviceAccountName: 3scale-token-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              echo "Waiting for 3scale system-seed secret..."
+              for i in $(seq 1 60); do
+                if oc get secret system-seed -n 3scale-system >/dev/null 2>&1; then
+                  echo "system-seed found after ${i} attempts"
+                  break
+                fi
+                echo "Attempt ${i}/60 — waiting 15s..."
+                sleep 15
+              done
+              TOKEN=$(oc get secret system-seed -n 3scale-system \
+                -o jsonpath='{.data.ADMIN_ACCESS_TOKEN}' | base64 -d)
+              if [ -z "$TOKEN" ]; then
+                echo "ERROR: ADMIN_ACCESS_TOKEN is empty"
+                exit 1
+              fi
+              echo "Token extracted (length=${#TOKEN})"
+              oc create namespace gateforge --dry-run=client -o yaml | oc apply -f -
+              if oc get secret gateforge-config -n gateforge >/dev/null 2>&1; then
+                echo "Patching existing gateforge-config secret..."
+                oc patch secret gateforge-config -n gateforge \
+                  -p "{\"stringData\":{\"THREESCALE_ACCESS_TOKEN\":\"${TOKEN}\"}}"
+              else
+                echo "Creating gateforge-config secret..."
+                oc create secret generic gateforge-config -n gateforge \
+                  --from-literal=THREESCALE_ACCESS_TOKEN="${TOKEN}" \
+                  --from-literal=AI_API_KEY=""
+              fi
+              echo "3scale admin token synced to gateforge namespace"
