@@ -327,7 +327,7 @@ userCount: 200
 
 ```bash
 # Clone this template
-git clone https://github.com/maximilianoPizarro/test-drive-pe-oscg.git my-content
+git clone https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link.git my-content
 cd my-content
 
 # Choose an example and start customizing

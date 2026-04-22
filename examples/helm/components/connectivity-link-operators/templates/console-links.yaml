@@ -12,7 +12,7 @@ spec:
   text: Workshop Registration
   applicationMenu:
     section: Workshop Tools
-    imageURL: https://raw.githubusercontent.com/maximilianoPizarro/test-drive-pe-oscg/main/docs/assets/images/Logo-OSC_with_padding.png
+    imageURL: https://raw.githubusercontent.com/maximilianoPizarro/from-3scale-to-connectivity-link/main/docs/assets/images/Logo-OSC_with_padding.png
 ---
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink

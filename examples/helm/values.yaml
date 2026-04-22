@@ -6,7 +6,7 @@
 # ============================================================
 gitops:
   # Repository containing the component charts (your fork or this template)
-  repoUrl: "https://github.com/maximilianoPizarro/test-drive-pe-oscg.git"
+  repoUrl: "https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link.git"
   revision: "one"
   basePath: "examples/helm"
 
