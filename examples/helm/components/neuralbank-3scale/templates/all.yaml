@@ -283,8 +283,6 @@ spec:
   applicationPlans:
     basic:
       name: "Basic Plan"
-      setupFee: "0"
-      costPerMonth: "0"
       limits:
         - period: minute
           value: 60
@@ -292,8 +290,6 @@ spec:
             systemName: hits
     premium:
       name: "Premium Plan"
-      setupFee: "0"
-      costPerMonth: "0"
       limits:
         - period: minute
           value: 300
