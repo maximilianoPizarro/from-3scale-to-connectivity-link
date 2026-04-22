@@ -1,57 +1,311 @@
 = Run the Migration Template
 
-In this module you will use the *"Migrate from 3scale to Connectivity Link"* Software Template in Developer Hub to migrate one of the pre-deployed 3scale applications to Connectivity Link.
+In this module you will use the *"Migrate from 3scale to Connectivity Link"* Software Template in Developer Hub to migrate one of the pre-deployed 3scale applications.
 
-== Migration flow overview
+This page covers both the *user experience* (how to run it) and the *template internals* (what it generates and why).
 
-[cols="1,2,3",options="header"]
+== How the template works
+
+The migration template is a Backstage Scaffolder template that:
+
+. *Accepts parameters* — application name, source/target namespaces, auth model, backend service details
+. *Generates Kubernetes manifests* — all Connectivity Link CRDs needed to replace 3scale
+. *Publishes to Gitea* — pushes the manifests to a new Git repository
+. *Creates an ArgoCD Application* — GitOps syncs the manifests to the target namespace
+. *Registers in Catalog* — adds the migrated component to Developer Hub
+. *Sends a notification* — emails the user about the completed migration
+
+=== Template parameters
+
+The template has three parameter groups:
+
+[source,yaml]
+----
+# Group 1: Application Details
+parameters:
+  - title: Application Details
+    properties:
+      appName:        # e.g. neuralbank-backend
+      owner:          # e.g. user1
+      authModel:      # oidc | apikey
+
+  # Group 2: Source & Target Configuration
+  - title: Source & Target Configuration
+    properties:
+      sourceNamespace:    # e.g. neuralbank-3scale
+      targetNamespace:    # e.g. user1-neuralbank-cl
+      backendServiceName: # e.g. neuralbank-backend-svc
+      backendServicePort: # e.g. 8080
+
+  # Group 3: Authentication & Rate Limiting
+  - title: Authentication & Rate Limiting
+    properties:
+      keycloakRealm:      # e.g. neuralbank (OIDC only)
+      keycloakClientId:   # e.g. neuralbank-frontend (OIDC only)
+      rateLimitPerMinute: # e.g. 60
+----
+
+== What the template generates
+
+The skeleton generates 7 Kubernetes manifests plus a catalog registration:
+
+[cols="1,1,3",options="header"]
 |===
-| Step | Action | Details
+| File | Resource | What it replaces from 3scale
 
-| 1
-| *Identify the 3scale Product*
-| Note the auth type (OIDC or API Key), backend URL, mapping rules, and application plans.
+| `gateway.yaml`
+| Gateway
+| The APIcast gateway entry point
 
-| 2
-| *Open Developer Hub*
-| Navigate to *Create* -> select *"Migrate from 3scale to Connectivity Link"*.
+| `httproute.yaml`
+| HTTPRoute
+| MappingRules from the Backend CRD
 
-| 3
-| *Fill parameters*
-| App name, source namespace (3scale), target namespace (CL), auth model, backend service.
+| `authpolicy.yaml`
+| AuthPolicy
+| The Product authentication config (OIDC or API Key)
 
-| 4
-| *Template generates manifests*
-| Gateway, HTTPRoute, AuthPolicy, RateLimitPolicy, PlanPolicy, APIProduct, Route.
+| `ratelimitpolicy.yaml`
+| RateLimitPolicy
+| Application Plan rate limits
 
-| 5
-| *Publish to Gitea*
-| The scaffolder pushes the generated manifests to a Gitea repository.
+| `planpolicy.yaml`
+| PlanPolicy
+| Application Plan tiers (free/basic/pro)
 
-| 6
-| *ArgoCD syncs*
-| An ArgoCD Application is created; it syncs manifests to the target namespace.
+| `apiproduct.yaml`
+| APIProduct
+| 3scale Developer Portal + ActiveDoc
 
-| 7
-| *Verify*
-| Check Gateway is `PROGRAMMED`, AuthPolicy is `ENFORCED`, API responds correctly.
+| `route.yaml`
+| Route
+| OpenShift Route to the new Gateway
 
-| 8
-| *Compare side-by-side*
-| Both 3scale and CL namespaces coexist. Test the same API through both gateways.
-
-| 9
-| *Decommission 3scale*
-| Once validated, disable the 3scale Product and delete the source namespace.
+| `catalog-info.yaml`
+| Backstage entities
+| Catalog registration with Kuadrant annotations
 |===
 
-== Step 1: Open the template in Developer Hub
+=== Generated Gateway
 
-. Open *Developer Hub*: `\https://backstage-developer-hub-developer-hub.{cluster_domain}`
-. Click *Create* in the left sidebar.
-. Find and select *"Migrate from 3scale to Connectivity Link"*.
+Replaces the APIcast gateway with a standard Kubernetes Gateway API resource:
 
-== Step 2: Fill in the parameters
+[source,yaml]
+----
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: neuralbank-backend-gateway
+  namespace: user1-neuralbank-cl
+  annotations:
+    networking.istio.io/service-type: ClusterIP
+    kuadrant.io/namespace: kuadrant-system
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      port: 8080
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: Same
+----
+
+=== Generated HTTPRoute (replaces MappingRules)
+
+The 3scale MappingRules that map `GET /api/v1/customers` -> `hits` metric become standard HTTPRoute path matching:
+
+[source,yaml]
+----
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: neuralbank-backend-route
+  namespace: user1-neuralbank-cl
+spec:
+  parentRefs:
+    - name: neuralbank-backend-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: neuralbank-backend-svc
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /q
+      backendRefs:
+        - name: neuralbank-backend-svc
+          port: 8080
+----
+
+=== Generated AuthPolicy (replaces Product auth config)
+
+The template uses Nunjucks conditionals to generate different auth configurations based on the `authModel` parameter:
+
+*For OIDC* — replaces `Product.spec.deployment.apicastHosted.authentication.oidc`:
+
+[source,yaml]
+----
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+spec:
+  targetRef:
+    kind: HTTPRoute
+    name: neuralbank-backend-route
+  defaults:
+    rules:
+      authentication:
+        oidc:
+          jwt:
+            issuerUrl: https://rhbk.{cluster_domain}/realms/neuralbank
+          credentials:
+            authorizationHeader:
+              prefix: Bearer
+----
+
+*For API Key* — replaces `Product.spec.deployment.apicastHosted.authentication.userkey`:
+
+[source,yaml]
+----
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+spec:
+  targetRef:
+    kind: HTTPRoute
+    name: nfl-wallet-route
+  defaults:
+    rules:
+      authentication:
+        api-key-auth:
+          apiKey:
+            selector:
+              matchLabels:
+                app: nfl-wallet
+                kuadrant.io/apikey: "true"
+          credentials:
+            customHeader:
+              name: X-API-Key
+----
+
+NOTE: In 3scale, API Keys are `user_key` query parameters stored in the 3scale database. In Connectivity Link, they become `X-API-Key` headers validated against Kubernetes Secrets with labels — fully GitOps-manageable.
+
+=== Generated RateLimitPolicy (replaces Application Plan limits)
+
+The 3scale Application Plan `limits[].period: minute, value: 60` becomes:
+
+[source,yaml]
+----
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+spec:
+  targetRef:
+    kind: HTTPRoute
+    name: neuralbank-backend-route
+  limits:
+    global:
+      rates:
+        - limit: 60
+          window: 1m
+----
+
+=== Generated PlanPolicy (replaces Application Plan tiers)
+
+The 3scale basic/premium plans with different limits become a PlanPolicy with CEL predicates:
+
+[source,yaml]
+----
+apiVersion: extensions.kuadrant.io/v1alpha1
+kind: PlanPolicy
+spec:
+  targetRef:
+    kind: HTTPRoute
+    name: neuralbank-backend-route
+  plans:
+    - tier: free
+      predicate: |
+        auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "free"
+      limits:
+        daily: 100
+        custom:
+          - limit: 10
+            window: "1m"
+    - tier: basic
+      predicate: |
+        auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "basic"
+      limits:
+        daily: 1000
+        custom:
+          - limit: 60
+            window: "1m"
+    - tier: pro
+      predicate: |
+        auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "pro"
+      limits:
+        daily: 10000
+        custom:
+          - limit: 300
+            window: "1m"
+----
+
+=== Generated APIProduct (replaces 3scale Developer Portal + ActiveDoc)
+
+[source,yaml]
+----
+apiVersion: devportal.kuadrant.io/v1alpha1
+kind: APIProduct
+spec:
+  displayName: "neuralbank-backend — Migrated from 3scale"
+  publishStatus: Published
+  approvalMode: automatic
+  tags: [migrated, 3scale-to-cl, oidc, kuadrant]
+  documentation:
+    openAPISpecURL: "https://neuralbank-backend.{cluster_domain}/q/openapi"
+    swaggerUI: "https://neuralbank-backend.{cluster_domain}/q/swagger-ui"
+  targetRef:
+    kind: HTTPRoute
+    name: neuralbank-backend-route
+----
+
+== Template scaffolder steps
+
+After the manifests are generated, the template executes these steps:
+
+....
+Step 1: fetch:template
+   └─ Generates 7 manifests + catalog-info.yaml from the skeleton
+
+Step 2: publish:gitea
+   └─ Pushes to: gitea-gitea.{cluster_domain}/ws-user1/neuralbank-backend-cl-migration
+
+Step 3: catalog:register
+   └─ Registers the Component and API entities in the Developer Hub catalog
+
+Step 4: http:backstage:request (ArgoCD)
+   └─ Creates an ArgoCD Application:
+      - name: user1-neuralbank-backend-cl-migration
+      - source: the Gitea repo / manifests path
+      - destination: user1-neuralbank-cl namespace
+      - syncPolicy: automated, selfHeal, CreateNamespace
+
+Step 5: http:backstage:request (Notification)
+   └─ Sends email via Mailpit with migration summary
+....
+
+== Step-by-step: Run the migration
+
+=== 1. Open Developer Hub
+
+Navigate to `\https://backstage-developer-hub-developer-hub.{cluster_domain}` and click *Create*.
+
+=== 2. Select the template
+
+Find and select *"Migrate from 3scale to Connectivity Link"*.
+
+=== 3. Fill in the parameters
 
 For this exercise, migrate the *Neuralbank backend* from 3scale OIDC:
 
@@ -62,14 +316,17 @@ For this exercise, migrate the *Neuralbank backend* from 3scale OIDC:
 | *Application Name*
 | `neuralbank-backend`
 
+| *Owner*
+| `{user_name}`
+
+| *Authentication Model*
+| `oidc`
+
 | *Source Namespace (3scale)*
 | `neuralbank-3scale`
 
 | *Target Namespace (CL)*
 | `{user_name}-neuralbank-cl`
-
-| *Authentication Model*
-| `oidc`
 
 | *Backend Service Name*
 | `neuralbank-backend-svc`
@@ -85,34 +342,15 @@ For this exercise, migrate the *Neuralbank backend* from 3scale OIDC:
 
 | *Rate Limit (per minute)*
 | `60`
-
-| *Owner*
-| `{user_name}`
-
-| *Cluster Domain*
-| `{cluster_domain}`
 |===
 
-TIP: To migrate the NFL Wallet instead, change the auth model to `apikey` and adjust the namespace and service name accordingly.
+TIP: To migrate NFL Wallet instead, select `apikey` as auth model, use `nfl-wallet-3scale` as source, `{user_name}-nfl-wallet-cl` as target, `nfl-wallet-api` as backend service, and `120` as rate limit.
 
-== Step 3: Review and create
+=== 4. Review and create
 
-. Review the parameter summary.
-. Click *Create*.
-. The scaffolder will execute the following steps:
-.. *Fetch skeleton* — generates the Kubernetes manifests from the template
-.. *Publish to Gitea* — creates a new repository with the manifests
-.. *Register in Catalog* — adds the migrated component to the Developer Hub catalog
-.. *Create ArgoCD Application* — sets up GitOps sync to the target namespace
-.. *Send notification* — notifies you of the successful migration
+Click *Create*. Watch the scaffolder progress — each step shows a green checkmark when complete.
 
-== Step 4: Monitor progress
-
-Watch the scaffolder progress in Developer Hub. Each step shows a green checkmark when complete.
-
-Once all steps finish, click *Open in Catalog* to see the new component.
-
-== Step 5: Verify in ArgoCD
+=== 5. Verify in ArgoCD
 
 Open ArgoCD and confirm the new application is *Synced* and *Healthy*:
 
@@ -120,44 +358,7 @@ Open ArgoCD and confirm the new application is *Synced* and *Healthy*:
 https://openshift-gitops-server-openshift-gitops.{cluster_domain}
 ----
 
-== Step 6: Inspect the generated manifests
-
-The template generated these resources in the target namespace:
-
-[cols="1,1,2",options="header"]
-|===
-| Manifest | Resource | Purpose
-
-| `gateway.yaml`
-| Gateway
-| Istio Gateway with Kuadrant annotations
-
-| `httproute.yaml`
-| HTTPRoute
-| Routes HTTP traffic to the backend Service
-
-| `authpolicy.yaml`
-| AuthPolicy
-| OIDC JWT validation (or API Key, depending on auth model)
-
-| `ratelimitpolicy.yaml`
-| RateLimitPolicy
-| Rate limiting (e.g. 60 req/min)
-
-| `planpolicy.yaml`
-| PlanPolicy
-| Tiered usage plans (free/basic/pro)
-
-| `apiproduct.yaml`
-| APIProduct
-| Publishes the API in the Developer Hub portal
-
-| `route.yaml`
-| Route
-| OpenShift Route to the Gateway
-|===
-
-Verify in the terminal:
+=== 6. Verify the generated resources
 
 [source,bash]
 ----
@@ -165,6 +366,18 @@ oc get gateway,httproute,authpolicy,ratelimitpolicy,planpolicy,apiproduct \
   -n {user_name}-neuralbank-cl
 ----
 
-== What happens next
+All resources should exist and show healthy status.
 
-In the next module you will test the migrated application and compare it with the 3scale original running side by side.
+== 3scale → Connectivity Link resource mapping summary
+
+....
+3scale Product          ──→  AuthPolicy + RateLimitPolicy + PlanPolicy
+3scale Backend          ──→  HTTPRoute (path matching replaces MappingRules)
+3scale ActiveDoc        ──→  APIProduct (publishes OpenAPI in Developer Hub)
+3scale Application Plan ──→  PlanPolicy (CEL predicates on Secret annotations)
+3scale Developer Portal ──→  Kuadrant Backstage plugin (APIProduct discovery)
+APIcast Gateway         ──→  Istio Gateway (Gateway API standard)
+3scale Admin UI         ──→  Git + ArgoCD (full GitOps)
+....
+
+In the next module you will verify the migrated application and compare it with the 3scale original.

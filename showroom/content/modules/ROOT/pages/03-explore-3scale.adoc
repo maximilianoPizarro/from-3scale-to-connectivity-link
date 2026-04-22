@@ -1,8 +1,8 @@
 = Explore the 3scale Environment (Migration Source)
 
-In this module you will inspect the two applications that are deployed with *Red Hat 3scale API Management*. These are the *migration source* — the same applications also exist in Connectivity Link namespaces for comparison.
+In this module you will inspect the two applications deployed with *Red Hat 3scale API Management*. These are the *migration source*. Understanding exactly how they are configured is critical for planning the migration to Connectivity Link.
 
-== Part 1 — Neuralbank on 3scale (OIDC)
+== Part 1 — Neuralbank on 3scale (OIDC Authentication)
 
 The `neuralbank-3scale` namespace contains the Neuralbank banking API protected by a 3scale *Product* with OIDC authentication via Keycloak.
 
@@ -13,58 +13,181 @@ The `neuralbank-3scale` namespace contains the Neuralbank banking API protected 
 oc get pods -n neuralbank-3scale
 ----
 
-You should see the backend, frontend, and database pods:
-
 [cols="1,2",options="header"]
 |===
 | Pod | Role
-| `neuralbank-backend-*` | Quarkus REST API
-| `neuralbank-frontend-*` | Web SPA
-| `neuralbank-db-*` | PostgreSQL database
+| `neuralbank-backend-*` | Quarkus REST API (`/api/v1/customers`)
+| `neuralbank-frontend-*` | Web SPA (credit visualization)
+| `neuralbank-db-*` | PostgreSQL database with seed data
 |===
 
-=== 1.2 Inspect the 3scale Product
+=== 1.2 Inspect the 3scale Product (OIDC)
 
-The 3scale Product defines the API's public endpoint, authentication method, and rate limits:
+The *Product* is the central 3scale resource. It defines the public API endpoint, authentication method, backend references, and application plans.
 
 [source,bash]
 ----
 oc get product -n 3scale-system | grep neuralbank
-----
-
-Inspect the Product configuration:
-
-[source,bash]
-----
 oc get product neuralbank-oidc-product -n 3scale-system -o yaml
 ----
 
-Key fields to note:
+Here is the actual Product configuration deployed in the cluster:
 
-* `spec.deployment.apicastSelfManaged` — APIcast handles traffic
-* `spec.authentication.oidc.issuerEndpoint` — Points to the Keycloak realm
-* `spec.mappingRules` — Defines which URL patterns map to metrics
-* `spec.applicationPlans` — Rate limits per plan (basic/premium)
+[source,yaml]
+----
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: neuralbank-oidc-product
+  namespace: 3scale-system
+spec:
+  name: "Neuralbank API (OIDC)"
+  systemName: neuralbank-oidc
+  backendUsages:
+    neuralbank-backend-api:
+      path: /
+  deployment:
+    apicastHosted:
+      authentication:
+        oidc:
+          issuerType: keycloak
+          issuerEndpoint: "https://rhbk.{cluster_domain}/realms/neuralbank"
+          jwtClaimWithClientID: azp
+          jwtClaimWithClientIDType: plain
+          authenticationFlow:
+            standardFlowEnabled: true
+            implicitFlowEnabled: false
+            serviceAccountsEnabled: true
+            directAccessGrantsEnabled: true
+  applicationPlans:
+    basic:
+      name: "Basic Plan"
+      limits:
+        - period: minute
+          value: 60
+          metricMethodRef:
+            systemName: hits
+    premium:
+      name: "Premium Plan"
+      limits:
+        - period: minute
+          value: 300
+          metricMethodRef:
+            systemName: hits
+----
+
+Key configuration points:
+
+* `deployment.apicastHosted.authentication.oidc` — tells APIcast to validate JWT tokens against Keycloak
+* `issuerEndpoint` — the Keycloak realm URL that APIcast uses to discover OIDC endpoints
+* `jwtClaimWithClientID: azp` — the JWT claim used to identify the API consumer
+* `authenticationFlow` — enables standard (browser redirect) and direct access grants (password flow for CLI)
+* `applicationPlans` — two tiers: *basic* (60 req/min) and *premium* (300 req/min)
+* `backendUsages` — links to the Backend resource that defines the internal service URL
 
 === 1.3 Inspect the 3scale Backend
+
+The *Backend* resource defines the private base URL (the internal Kubernetes Service) and the *MappingRules* that map URL patterns to metrics:
 
 [source,bash]
 ----
 oc get backend -n 3scale-system | grep neuralbank
+oc get backend neuralbank-backend-api -n 3scale-system -o yaml
 ----
 
-The Backend resource defines the *private base URL* that APIcast forwards traffic to (the internal Kubernetes Service).
+[source,yaml]
+----
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: neuralbank-backend-api
+  namespace: 3scale-system
+spec:
+  name: "Neuralbank Backend API"
+  systemName: neuralbank-backend-api
+  privateBaseURL: "http://neuralbank-backend-svc.neuralbank-3scale.svc.cluster.local:8080"
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/api/v1/customers$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/customers/{id}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/v1/customers$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/q/openapi$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/q/swagger-ui"
+      metricMethodRef: hits
+      increment: 1
+  metrics:
+    hits:
+      friendlyName: Hits
+      unit: hit
+      description: Number of API hits
+----
 
-=== 1.4 Check the ActiveDoc (OpenAPI)
+Key configuration points:
+
+* `privateBaseURL` — the internal K8s Service URL that APIcast forwards traffic to
+* `mappingRules` — each rule maps an HTTP method + URL pattern to a metric; this is how 3scale tracks and limits API usage
+* Every API call increments the `hits` metric, which is used by the Application Plans to enforce rate limits
+
+=== 1.4 Inspect the ActiveDoc
+
+The *ActiveDoc* attaches an OpenAPI specification to the Product:
 
 [source,bash]
 ----
 oc get activedoc -n 3scale-system | grep neuralbank
 ----
 
-The ActiveDoc attaches the OpenAPI spec to the Product, making it available in the 3scale Developer Portal.
+[source,yaml]
+----
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: neuralbank-activedoc
+  namespace: 3scale-system
+spec:
+  name: "Neuralbank Credit Management API"
+  productSystemName: neuralbank-oidc
+  activeDocOpenAPIRef:
+    url: "https://neuralbank-3scale.{cluster_domain}/q/openapi"
+  published: true
+----
 
-== Part 2 — NFL Wallet on 3scale (API Key)
+=== 1.5 How it all fits together (Neuralbank OIDC)
+
+....
+Client → OpenShift Route → APIcast Gateway
+                              │
+                    ┌─────────┴──────────┐
+                    │  Product Config:    │
+                    │  - OIDC auth        │
+                    │  - Keycloak issuer  │
+                    │  - Application Plan │
+                    │    (60 or 300/min)  │
+                    └─────────┬──────────┘
+                              │
+                    ┌─────────┴──────────┐
+                    │  Backend Config:    │
+                    │  - MappingRules     │
+                    │  - privateBaseURL   │
+                    └─────────┬──────────┘
+                              │
+                    neuralbank-backend-svc:8080
+                    (neuralbank-3scale namespace)
+....
+
+== Part 2 — NFL Wallet on 3scale (API Key Authentication)
 
 The `nfl-wallet-3scale` namespace contains the NFL Wallet API protected by a 3scale *Product* with API Key (`user_key`) authentication.
 
@@ -75,30 +198,93 @@ The `nfl-wallet-3scale` namespace contains the NFL Wallet API protected by a 3sc
 oc get pods -n nfl-wallet-3scale
 ----
 
-=== 2.2 Inspect the 3scale Product
+=== 2.2 Inspect the 3scale Product (API Key)
 
 [source,bash]
 ----
 oc get product -n 3scale-system | grep nfl-wallet
+oc get product nfl-wallet-apikey-product -n 3scale-system -o yaml
 ----
 
-[source,bash]
+[source,yaml]
 ----
-oc get product nfl-wallet-apikey-product -n 3scale-system -o yaml
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: nfl-wallet-apikey-product
+  namespace: 3scale-system
+spec:
+  name: "NFL Wallet API (API Key)"
+  systemName: nfl-wallet-apikey
+  backendUsages:
+    nfl-wallet-backend-api:
+      path: /
+  deployment:
+    apicastHosted:
+      authentication:
+        userkey:
+          authUserKey: user_key
+          credentials: query
+  applicationPlans:
+    basic:
+      name: "Basic Plan"
+      limits:
+        - period: minute
+          value: 120
+          metricMethodRef:
+            systemName: hits
+    premium:
+      name: "Premium Plan"
+      limits:
+        - period: minute
+          value: 600
+          metricMethodRef:
+            systemName: hits
 ----
 
 Key differences from the Neuralbank Product:
 
-* `spec.authentication.userkey` — Uses `user_key` query parameter instead of OIDC
-* Applications hold a static `user_key` value
-* APIcast validates the key against the 3scale internal database
+* `authentication.userkey` — uses a `user_key` query parameter instead of OIDC tokens
+* `credentials: query` — the key is passed as a URL query parameter (e.g. `?user_key=abc123`)
+* Applications get a static `user_key` value when subscribing to a plan
+* APIcast validates the key against the 3scale internal database (Redis)
 
-=== 2.3 Inspect the Backend and ActiveDoc
+=== 2.3 Inspect the Backend (MappingRules)
 
 [source,bash]
 ----
-oc get backend -n 3scale-system | grep nfl-wallet
-oc get activedoc -n 3scale-system | grep nfl-wallet
+oc get backend nfl-wallet-backend-api -n 3scale-system -o yaml
+----
+
+[source,yaml]
+----
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: nfl-wallet-backend-api
+  namespace: 3scale-system
+spec:
+  name: "NFL Wallet Backend API"
+  systemName: nfl-wallet-backend-api
+  privateBaseURL: "http://nfl-wallet-api.nfl-wallet-3scale.svc.cluster.local:8080"
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/api/v1/customers$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/customers/{id}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/v1/customers$"
+      metricMethodRef: hits
+      increment: 1
+  metrics:
+    hits:
+      friendlyName: Hits
+      unit: hit
+      description: Number of API hits
 ----
 
 == 3scale resource summary
@@ -116,20 +302,67 @@ oc get activedoc -n 3scale-system | grep nfl-wallet
 | `nfl-wallet-backend-api`
 
 | *Auth Type*
-| OIDC (Keycloak issuer)
-| user_key (query parameter)
+| OIDC (`issuerEndpoint` -> Keycloak)
+| user_key (`authUserKey: user_key`, credentials in query)
 
 | *Application Plans*
 | basic (60/min), premium (300/min)
-| basic (60/min), premium (300/min)
+| basic (120/min), premium (600/min)
 
-| *Namespace*
+| *MappingRules*
+| 5 rules (GET/POST customers, openapi, swagger)
+| 3 rules (GET/POST customers)
+
+| *ActiveDoc*
+| `neuralbank-activedoc` (published)
+| `nfl-wallet-activedoc` (published)
+
+| *App Namespace*
 | `neuralbank-3scale`
 | `nfl-wallet-3scale`
 
-| *Operator*
+| *CRDs Namespace*
 | `3scale-system`
 | `3scale-system`
 |===
 
-NOTE: In the next two modules you will inspect the Connectivity Link equivalents of these applications. Keep this page open for reference during the comparison.
+IMPORTANT: Notice that 3scale CRDs (Product, Backend, ActiveDoc) live in `3scale-system`, separate from the application namespace. This is a key architectural difference — in Connectivity Link, all policies live in the *same namespace* as the application.
+
+== What to look for during migration
+
+When migrating from 3scale, extract these values from the Product and Backend:
+
+[cols="2,3,3",options="header"]
+|===
+| 3scale Value | Where to Find | Maps to in Connectivity Link
+
+| Auth type (OIDC or API Key)
+| `Product.spec.deployment.apicastHosted.authentication`
+| AuthPolicy type (jwt or apiKey)
+
+| Keycloak issuer URL
+| `Product.spec...oidc.issuerEndpoint`
+| AuthPolicy `jwt.issuerUrl`
+
+| Backend service URL
+| `Backend.spec.privateBaseURL`
+| HTTPRoute `backendRefs` Service name + port
+
+| MappingRules patterns
+| `Backend.spec.mappingRules[].pattern`
+| HTTPRoute `rules[].matches[].path`
+
+| Rate limits
+| `Product.spec.applicationPlans[].limits[]`
+| RateLimitPolicy `limits[].rates[]`
+
+| Plan tiers
+| `Product.spec.applicationPlans` (basic/premium)
+| PlanPolicy `plans[]` (free/basic/pro)
+
+| OpenAPI spec URL
+| `ActiveDoc.spec.activeDocOpenAPIRef.url`
+| APIProduct `spec.documentation.openAPISpecURL`
+|===
+
+This mapping is exactly what the *"Migrate from 3scale to Connectivity Link"* Software Template automates. In the next modules you will explore the Connectivity Link equivalents, and then run the migration template.

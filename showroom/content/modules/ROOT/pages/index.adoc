@@ -1,8 +1,6 @@
 = From 3scale to Connectivity Link
 
-image::https://raw.githubusercontent.com/maximilianoPizarro/from-3scale-to-connectivity-link/main/docs/assets/images/kuadrant-logo.svg[Kuadrant,200]
-
-*Migration Workshop — Red Hat Developer Hub*
+*Migration Workshop — Red Hat Developer Hub · Powered by https://kuadrant.io[Kuadrant]*
 
 == Welcome
 
