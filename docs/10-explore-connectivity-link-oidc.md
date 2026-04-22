@@ -248,11 +248,43 @@ Usuario                Keycloak               Istio Gateway           Kuadrant  
   │◀─────────────────────────────────────────────│──────────────────────────────────────────▶│
 ```
 
+## Paso 8: Comparar con 3scale OIDC (namespace neuralbank-3scale)
+
+En el namespace `neuralbank-3scale` se encuentra la misma aplicación Neuralbank pero protegida por **Red Hat 3scale** con autenticación OIDC. Esto permite hacer una comparación directa.
+
+### 8.1 — Inspeccionar los recursos de 3scale
+
+```bash
+oc get pods -n neuralbank-3scale
+oc get product -n 3scale-system | grep neuralbank
+oc get backend -n 3scale-system | grep neuralbank
+```
+
+### 8.2 — Tabla comparativa lado a lado
+
+| Aspecto | 3scale (neuralbank-3scale) | Connectivity Link (neuralbank-stack) |
+|---------|---------------------------|--------------------------------------|
+| **Gateway** | APIcast (gestionado por 3scale) | Istio Gateway (Gateway API) |
+| **Routing** | MappingRules en Product | HTTPRoute estándar |
+| **Auth** | Product OIDC config → APIcast | OIDCPolicy → Authorino |
+| **Rate Limit** | Application Plan (60/min) | RateLimitPolicy (60/min por usuario) |
+| **Config** | 3scale Admin UI / CRDs | Kubernetes CRDs en Git (GitOps) |
+| **Dev Portal** | 3scale Developer Portal | Kuadrant APIProduct + Backstage |
+
+### 8.3 — Ventajas de Connectivity Link
+
+1. **Gateway API estándar**: HTTPRoute es un recurso portable y estándar de Kubernetes
+2. **GitOps nativo**: toda la configuración vive en Git y se sincroniza con ArgoCD
+3. **Granularidad**: políticas a nivel de Gateway o HTTPRoute individual
+4. **Observabilidad integrada**: métricas nativas de Envoy/Istio + OpenTelemetry
+
+---
+
 ## Resumen
 
-Has explorado el stack completo de **Connectivity Link con OIDCPolicy** en Neuralbank:
-- **Gateway** Istio como punto de entrada
-- **HTTPRoute** para enrutamiento de paths
-- **OIDCPolicy** que integra autenticación OIDC con Keycloak
-- **RateLimitPolicy** con límite por usuario autenticado
+Has explorado el stack completo de **Connectivity Link con OIDCPolicy** en Neuralbank y lo has comparado con la implementación equivalente en 3scale:
+- **Gateway** Istio como punto de entrada (vs APIcast en 3scale)
+- **HTTPRoute** para enrutamiento de paths (vs MappingRules)
+- **OIDCPolicy** que integra autenticación OIDC con Keycloak (vs Product OIDC config)
+- **RateLimitPolicy** con límite por usuario autenticado (vs Application Plans)
 - Flujo de redirect automático y validación JWT

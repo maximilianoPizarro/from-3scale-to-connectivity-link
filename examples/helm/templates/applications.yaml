@@ -2,44 +2,6 @@
 # This template generates ArgoCD Applications for each enabled component
 # Connectivity-link components: see connectivity-link-applications.yaml
 
-{{- if .Values.components.operator.enabled }}
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: {{ .Release.Name }}-operator
-  namespace: {{ .Values.argocd.namespace }}
-  labels:
-    demo.redhat.com/application: "field-content"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: {{ .Values.argocd.project }}
-  source:
-    repoURL: {{ .Values.gitops.repoUrl }}
-    targetRevision: {{ .Values.gitops.revision }}
-    path: {{ .Values.gitops.basePath }}/components/operator
-    helm:
-      valuesObject:
-        operator:
-          enabled: {{ .Values.components.operator.enabled }}
-          name: {{ .Values.components.operator.name }}
-          namespace: {{ .Values.components.operator.namespace }}
-          channel: {{ .Values.components.operator.channel }}
-          source: {{ .Values.components.operator.source }}
-          sourceNamespace: {{ .Values.components.operator.sourceNamespace }}
-          installPlanApproval: {{ .Values.components.operator.installPlanApproval }}
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: {{ .Values.components.operator.namespace }}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-{{- end }}
-
 {{- if .Values.components.helloWorld.enabled }}
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -75,7 +37,7 @@ spec:
           enabled: {{ .Values.components.showroom.enabled }}
           namespace: {{ .Values.components.showroom.namespace }}
         operator:
-          name: {{ .Values.components.operator.name }}
+          name: web-terminal
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ .Values.components.helloWorld.namespace }}

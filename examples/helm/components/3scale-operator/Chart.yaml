@@ -1,0 +1,6 @@
+apiVersion: v2
+name: 3scale-operator
+description: Red Hat 3scale API Management operator and APIManager deployment
+type: application
+version: 0.1.0
+appVersion: "2.15"

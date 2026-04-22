@@ -1,0 +1,247 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    kubernetes.io/metadata.name: nfl-wallet-3scale
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nfl-wallet-3scale-argocd-role
+  namespace: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups: ["", "apps", "route.openshift.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["capabilities.3scale.net"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nfl-wallet-3scale-argocd-binding
+  namespace: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nfl-wallet-3scale-argocd-role
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
+---
+# NFL Wallet API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfl-wallet-api
+  namespace: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app: nfl-wallet-api
+    backstage.io/kubernetes-id: nfl-wallet-3scale-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfl-wallet-api
+  template:
+    metadata:
+      labels:
+        app: nfl-wallet-api
+    spec:
+      containers:
+        - name: api
+          image: quay.io/maximilianopizarro/neuralbank-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: "jdbc:postgresql://nfl-wallet-db:5432/nflwallet"
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: "nflwallet"
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: "nflwallet123!"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfl-wallet-api
+  namespace: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    app: nfl-wallet-api
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+# NFL Wallet Database
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfl-wallet-db
+  namespace: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app: nfl-wallet-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfl-wallet-db
+  template:
+    metadata:
+      labels:
+        app: nfl-wallet-db
+    spec:
+      containers:
+        - name: postgresql
+          image: registry.redhat.io/rhel8/postgresql-15:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRESQL_USER
+              value: "nflwallet"
+            - name: POSTGRESQL_PASSWORD
+              value: "nflwallet123!"
+            - name: POSTGRESQL_DATABASE
+              value: "nflwallet"
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/pgsql/data
+      volumes:
+        - name: db-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfl-wallet-db
+  namespace: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  selector:
+    app: nfl-wallet-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# 3scale Backend (internal API)
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: nfl-wallet-backend-api
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  name: "NFL Wallet Backend API"
+  systemName: nfl-wallet-backend-api
+  privateBaseURL: "http://nfl-wallet-api.nfl-wallet-3scale.svc.cluster.local:8080"
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/api/v1/customers$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/customers/{id}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/v1/customers$"
+      metricMethodRef: hits
+      increment: 1
+  metrics:
+    hits:
+      friendlyName: Hits
+      unit: hit
+      description: Number of API hits
+---
+# 3scale Product (API Key / user_key authentication)
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: nfl-wallet-apikey-product
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  name: "NFL Wallet API (API Key)"
+  systemName: nfl-wallet-apikey
+  backendUsages:
+    nfl-wallet-backend-api:
+      path: /
+  deployment:
+    apicastHosted:
+      authentication:
+        userkey:
+          authUserKey: user_key
+          credentials: query
+  applicationPlans:
+    basic:
+      name: "Basic Plan"
+      setupFee: "0"
+      costPerMonth: "0"
+      limits:
+        - period: minute
+          value: 120
+          metricMethodRef:
+            systemName: hits
+    premium:
+      name: "Premium Plan"
+      setupFee: "0"
+      costPerMonth: "0"
+      limits:
+        - period: minute
+          value: 600
+          metricMethodRef:
+            systemName: hits
+---
+# 3scale ActiveDoc
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: nfl-wallet-activedoc
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  name: "NFL Wallet Customer API"
+  productSystemName: nfl-wallet-apikey
+  activeDocOpenAPIRef:
+    url: "https://nfl-wallet-3scale.{{ .Values.clusterDomain }}/q/openapi"
+  published: true
+---
+# Direct Route for health/swagger
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: nfl-wallet-3scale-direct
+  namespace: nfl-wallet-3scale
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  host: nfl-wallet-3scale.{{ .Values.clusterDomain }}
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: nfl-wallet-api
+    weight: 100

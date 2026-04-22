@@ -17,7 +17,7 @@ argocd:
 
 # ============================================================
 # Connectivity Link (vendored from GitLab connectivity-link)
-# One Argo CD Application per entry; paths under components/connectivity-link-*
+# One Argo CD Application per entry; paths under components/*
 # ============================================================
 connectivityLink:
   mcpToken: "IpIbd50gbMb1p2+iCigrhkm21pZwbn0g"
@@ -80,7 +80,7 @@ connectivityLink:
   apps:
     - id: connectivity-link-namespaces
       enabled: true
-      path: connectivity-link-namespaces
+      path: namespaces
       destinationNamespace: openshift-gitops
       syncWave: "1"
       prune: true
@@ -88,7 +88,7 @@ connectivityLink:
       skipDryRunOnMissingResource: false
     - id: connectivity-link-openshift-gitops
       enabled: true
-      path: connectivity-link-openshift-gitops
+      path: openshift-gitops
       destinationNamespace: openshift-gitops
       syncWave: "0"
       prune: true
@@ -96,7 +96,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-operators
       enabled: true
-      path: connectivity-link-operators
+      path: operators
       destinationNamespace: openshift-operators
       syncWave: "2"
       prune: true
@@ -104,7 +104,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-servicemeshoperator3
       enabled: true
-      path: connectivity-link-servicemeshoperator3
+      path: servicemeshoperator3
       destinationNamespace: openshift-operators
       syncWave: "3"
       prune: false
@@ -112,7 +112,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-rhbk
       enabled: true
-      path: connectivity-link-rhbk
+      path: rhbk
       destinationNamespace: rhbk-operator
       syncWave: "2"
       prune: true
@@ -120,7 +120,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-developer-hub
       enabled: true
-      path: connectivity-link-developer-hub
+      path: developer-hub
       destinationNamespace: developer-hub
       syncWave: "3"
       prune: true
@@ -128,7 +128,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-rhcl-operator
       enabled: true
-      path: connectivity-link-rhcl-operator
+      path: rhcl-operator
       destinationNamespace: kuadrant-system
       syncWave: "6"
       prune: true
@@ -136,7 +136,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-observability
       enabled: true
-      path: connectivity-link-observability
+      path: observability
       destinationNamespace: openshift-cluster-observability-operator
       syncWave: "5"
       prune: true
@@ -144,7 +144,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-kiali
       enabled: true
-      path: connectivity-link-kiali
+      path: kiali
       destinationNamespace: openshift-cluster-observability-operator
       syncWave: "6"
       prune: true
@@ -152,7 +152,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-opentelemetry
       enabled: true
-      path: connectivity-link-opentelemetry
+      path: opentelemetry
       destinationNamespace: openshift-opentelemetry
       syncWave: "6"
       prune: true
@@ -160,7 +160,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-openshift-ai
       enabled: true
-      path: connectivity-link-openshift-ai
+      path: openshift-ai
       destinationNamespace: openshift-ai
       syncWave: "6"
       prune: true
@@ -168,7 +168,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-devspaces
       enabled: true
-      path: connectivity-link-devspaces
+      path: devspaces
       destinationNamespace: devspaces
       syncWave: "7"
       prune: false
@@ -176,7 +176,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-neuralbank-stack
       enabled: true
-      path: connectivity-link-neuralbank-stack
+      path: neuralbank-stack
       destinationNamespace: neuralbank-stack
       syncWave: "5"
       prune: true
@@ -184,7 +184,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: ols
       enabled: true
-      path: connectivity-link-openshift-lightspeed
+      path: openshift-lightspeed
       destinationNamespace: openshift-lightspeed
       syncWave: "8"
       prune: true
@@ -192,7 +192,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: mcp-gateway
       enabled: true
-      path: connectivity-link-mcp-gateway
+      path: mcp-gateway
       destinationNamespace: mcp-system
       syncWave: "9"
       prune: true
@@ -200,7 +200,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: gitea
       enabled: true
-      path: connectivity-link-gitea
+      path: gitea
       destinationNamespace: gitea
       syncWave: "3"
       prune: true
@@ -208,7 +208,7 @@ connectivityLink:
       skipDryRunOnMissingResource: false
     - id: connectivity-link-applicationsets
       enabled: true
-      path: connectivity-link-applicationsets
+      path: applicationsets
       destinationNamespace: openshift-gitops
       syncWave: "4"
       prune: true
@@ -216,7 +216,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-oauth-users
       enabled: true
-      path: connectivity-link-oauth-users
+      path: oauth-users
       destinationNamespace: openshift-config
       syncWave: "2"
       prune: true
@@ -224,15 +224,39 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-nfl-wallet
       enabled: true
-      path: connectivity-link-nfl-wallet
+      path: nfl-wallet
       destinationNamespace: nfl-wallet-prod
+      syncWave: "7"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
+    - id: 3scale-operator
+      enabled: true
+      path: 3scale-operator
+      destinationNamespace: 3scale-system
+      syncWave: "3"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
+    - id: neuralbank-3scale
+      enabled: true
+      path: neuralbank-3scale
+      destinationNamespace: neuralbank-3scale
+      syncWave: "6"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
+    - id: nfl-wallet-3scale
+      enabled: true
+      path: nfl-wallet-3scale
+      destinationNamespace: nfl-wallet-3scale
       syncWave: "7"
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
     - id: workshop-registration
       enabled: true
-      path: connectivity-link-workshop-registration
+      path: workshop-registration
       destinationNamespace: showroom
       syncWave: "10"
       prune: true
@@ -332,16 +356,6 @@ workshopRegistration:
 # Components - Enable/disable and configure each component
 # ============================================================
 components:
-
-  # --- Operator Installation (single OLM subscription, template repo) ---
-  operator:
-    enabled: false
-    name: web-terminal
-    namespace: openshift-operators
-    channel: fast
-    source: redhat-operators
-    sourceNamespace: openshift-marketplace
-    installPlanApproval: Automatic
 
   # --- Hello World Demo Application ---
   helloWorld:

@@ -177,9 +177,51 @@ All 10 should return `200`. If you extend the loop to 130+ requests within one m
 
 ---
 
-## Summary: Comparing the Two Authentication Models
+## Part 3 — 3scale Pre-Deployed Applications (Migration Source)
 
-| | Neuralbank | NFL Wallet |
+The cluster also includes the same applications deployed with **Red Hat 3scale API Management**, enabling a side-by-side comparison.
+
+### 3.1 Neuralbank on 3scale (OIDC)
+
+```bash
+oc get pods -n neuralbank-3scale
+oc get product -n 3scale-system | grep neuralbank
+```
+
+The `neuralbank-oidc-product` 3scale Product protects the API with OIDC authentication via Keycloak, using APIcast as the gateway.
+
+### 3.2 NFL Wallet on 3scale (API Key)
+
+```bash
+oc get pods -n nfl-wallet-3scale
+oc get product -n 3scale-system | grep nfl-wallet
+```
+
+The `nfl-wallet-apikey-product` 3scale Product uses `user_key` authentication, with Application Plans for rate limiting.
+
+### 3.3 Run the migration
+
+1. In **Developer Hub**, go to **Create** and select **"Migrate from 3scale to Connectivity Link"**.
+2. Fill in the parameters for one of the applications (e.g., `neuralbank-backend`, source: `neuralbank-3scale`, target: a new namespace).
+3. The template generates all Connectivity Link manifests and deploys via ArgoCD.
+4. Compare the behavior of both versions side by side.
+
+---
+
+## Summary: Full Comparison — 3scale vs Connectivity Link
+
+| | 3scale (neuralbank-3scale) | CL (neuralbank-stack) | 3scale (nfl-wallet-3scale) | CL (nfl-wallet-prod) |
+|---|---|---|---|---|
+| **Auth type** | OIDC (Product) | OIDC (OIDCPolicy) | API Key (user_key) | API Key (AuthPolicy) |
+| **Gateway** | APIcast | Istio Gateway | APIcast | Istio Gateway |
+| **Routing** | MappingRules | HTTPRoute | MappingRules | HTTPRoute |
+| **Rate Limit** | Application Plan | RateLimitPolicy | Application Plan | RateLimitPolicy |
+| **Dev Portal** | 3scale Portal | APIProduct+Backstage | 3scale Portal | APIProduct+Backstage |
+| **GitOps** | Partial (CRDs) | Full (ArgoCD) | Partial (CRDs) | Full (ArgoCD) |
+
+### Authentication Model Comparison
+
+| | Neuralbank (CL) | NFL Wallet (CL) |
 |---|---|---|
 | **Namespace** | `neuralbank-stack` | `nfl-wallet-prod` |
 | **Auth mechanism** | OIDCPolicy (Keycloak JWT) | AuthPolicy (API Key header) |
@@ -189,4 +231,4 @@ All 10 should return `200`. If you extend the loop to 130+ requests within one m
 | **Best for** | Interactive users (web apps) | M2M integrations, scripts, CI/CD |
 | **Key management** | Keycloak issues tokens | Kubernetes Secrets with labels |
 
-Both patterns are powered by the same underlying stack: **Istio Gateway + HTTPRoute + Kuadrant policies**, demonstrating the flexibility of Red Hat Connectivity Link to support different authentication models within the same platform.
+Both patterns are powered by the same underlying stack: **Istio Gateway + HTTPRoute + Kuadrant policies**, demonstrating the flexibility of Red Hat Connectivity Link to support different authentication models within the same platform. The migration from 3scale can be automated using the **"Migrate from 3scale to Connectivity Link" Software Template** in Developer Hub.

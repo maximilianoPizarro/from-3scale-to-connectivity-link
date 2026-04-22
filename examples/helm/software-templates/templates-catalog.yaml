@@ -8,4 +8,5 @@ spec:
     - ./customer-service-mcp/template.yaml
     - ./neuralbank-backend/template.yaml
     - ./neuralbank-frontend/template.yaml
+    - ./migrate-3scale-to-cl/template.yaml
     - ./remove-component/template.yaml

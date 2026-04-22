@@ -1,0 +1,2 @@
+clusterDomain: "apps.cluster.example.com"
+wildcardDomain: "apps.cluster.example.com"

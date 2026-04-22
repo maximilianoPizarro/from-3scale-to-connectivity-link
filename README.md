@@ -1,22 +1,40 @@
-# Field Content
+# From 3scale to Connectivity Link
 
-Self-service platform for developing RHDP Catalog Items using GitOps patterns.
+Demonstrates how to migrate API management from **Red Hat 3scale API Management** to **Red Hat Connectivity Link** (powered by [Kuadrant](https://kuadrant.io/)) using a **Software Template** in **Red Hat Developer Hub**.
+
+## Official Product Documentation
+
+| Product | Documentation | Description |
+|---------|---------------|-------------|
+| **Red Hat 3scale API Management** | [docs.redhat.com/3scale](https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/) | Full-lifecycle API management with APIcast gateway, developer portal, and analytics. Authentication via OIDC, API Key, or App ID/Key. Rate limiting via Application Plans. |
+| **Red Hat Connectivity Link** | [docs.redhat.com/connectivity-link](https://docs.redhat.com/en/documentation/red_hat_connectivity_link/) | Kubernetes-native API connectivity built on Gateway API and Kuadrant. Policies for auth (AuthPolicy), rate limiting (RateLimitPolicy), TLS, and DNS — attached directly to Gateway or HTTPRoute resources. |
+| **Red Hat Developer Hub** | [docs.redhat.com/rhdh](https://docs.redhat.com/en/documentation/red_hat_developer_hub/) | Enterprise Backstage-based internal developer portal. Software Templates automate scaffolding, CI/CD setup, and catalog registration. |
+| **Kuadrant (upstream)** | [docs.kuadrant.io](https://docs.kuadrant.io/) | Open-source project extending Gateway API with AuthPolicy, RateLimitPolicy, DNSPolicy, and TLSPolicy. |
+
+## Why Migrate from 3scale to Connectivity Link?
+
+| Aspect | 3scale | Connectivity Link |
+|--------|--------|-------------------|
+| **API Gateway** | APIcast (NGINX-based, proprietary config) | Istio Gateway (Envoy-based, Gateway API standard) |
+| **Configuration** | Admin UI / REST API / Operator CRDs | Kubernetes CRDs + GitOps (ArgoCD) |
+| **Routing** | MappingRules (method + pattern → metric) | HTTPRoute (Gateway API standard) |
+| **Auth** | Product-level OIDC / API Key config | AuthPolicy / OIDCPolicy per HTTPRoute |
+| **Rate Limiting** | Application Plans | RateLimitPolicy + PlanPolicy |
+| **Dev Portal** | 3scale built-in CMS | Kuadrant APIProduct + Backstage |
+| **GitOps** | Partial (Operator CRDs) | Native (all config is YAML in Git) |
+| **Standards** | Proprietary | Gateway API (CNCF standard) |
+| **Observability** | 3scale Analytics | Prometheus/Grafana + OpenTelemetry + Kiali |
 
 ## Overview
 
-Create demos and labs for Red Hat Demo Platform without deep AgnosticD knowledge:
+This repository provisions a complete migration workshop environment on OpenShift:
 
-1. Clone this template repository
-2. Choose an example (`helm/` or `ansible/`) as your starting point
-3. Customize the deployment for your use case
-4. Push to your Git repository
-5. Order the **Field Content CI** from RHDP with your repository URL
-
-ArgoCD deploys your content, and the platform handles health monitoring and data flow back to AgnosticD.
+1. **3scale environment** (source): Neuralbank (OIDC) + NFL Wallet (API Key) secured by 3scale
+2. **Connectivity Link environment** (target): Same apps secured by Kuadrant/Istio Gateway API
+3. **Migration Software Template**: A generic Backstage template that migrates any app from 3scale to Connectivity Link
+4. **Side-by-side comparison**: Both environments coexist for validation
 
 ## Architecture
-
-This deployment provisions a full Neuralbank developer workshop environment on OpenShift, including:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -33,15 +51,22 @@ This deployment provisions a full Neuralbank developer workshop environment on O
 │  │  (SCM)      │  │  (Auth)      │  │ Gateway  │  │ (API Mgmt)      │  │
 │  └─────────────┘  └──────────────┘  └──────────┘  └─────────────────┘  │
 │                                                                         │
+│  ┌──────────────────────── 3scale (Source) ────────────────────────┐    │
+│  │  neuralbank-3scale          nfl-wallet-3scale                   │    │
+│  │  (OIDC via 3scale Product)  (API Key via 3scale Product)        │    │
+│  │  APIcast → Backend          APIcast → Backend                   │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                         │
+│  ┌──────────────── Connectivity Link (Target) ────────────────────┐    │
+│  │  neuralbank-stack              nfl-wallet-prod                  │    │
+│  │  (OIDC via OIDCPolicy)        (API Key via AuthPolicy)         │    │
+│  │  Istio Gateway → Backend      Istio Gateway → Backend          │    │
+│  │  + RateLimitPolicy            + RateLimitPolicy + PlanPolicy   │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                         │
 │  ┌────────────────────────────────────────────────────────────────────┐  │
 │  │                    Per-User Namespaces (×200)                       │  │
-│  │  ┌─────────────────┐ ┌──────────────┐ ┌──────────────────────┐    │  │
-│  │  │ customer-service │ │  neuralbank  │ │  neuralbank-frontend │    │  │
-│  │  │    -mcp (MCP)    │ │   -backend   │ │     (SPA)            │    │  │
-│  │  └────────┬─────────┘ └──────┬───────┘ └──────────┬───────────┘    │  │
-│  │           │                  │                    │                │  │
-│  │           ▼                  ▼                    ▼                │  │
-│  │     Gateway + HTTPRoute + OIDCPolicy + RateLimitPolicy            │  │
+│  │     Gateway + HTTPRoute + AuthPolicy + RateLimitPolicy            │  │
 │  └────────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
@@ -55,27 +80,39 @@ This deployment provisions a full Neuralbank developer workshop environment on O
 
 | Component | Purpose |
 |-----------|---------|
-| **Developer Hub** | Self-service developer portal (Backstage) with 3 Neuralbank software templates |
+| **Developer Hub** | Self-service developer portal (Backstage) with software templates including migration template |
+| **Red Hat 3scale** | Source API management platform: APIcast gateway, Products, Application Plans ([docs](https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/)) |
+| **Red Hat Connectivity Link** | Target API management: Kuadrant AuthPolicy, RateLimitPolicy, PlanPolicy, APIProduct ([docs](https://docs.redhat.com/en/documentation/red_hat_connectivity_link/)) |
 | **ArgoCD** | GitOps continuous delivery, auto-syncs scaffolded apps from Gitea |
 | **Tekton Pipelines** | CI/CD pipelines: git-clone → maven-build → buildah → deploy |
 | **DevSpaces** | Cloud-based developer workspaces with pre-configured devfiles |
 | **Gitea** | In-cluster Git server for scaffolded application repos (200 users) |
 | **Keycloak** | Identity provider for backstage and neuralbank realms (200 users) |
 | **Istio / Gateway API** | Service mesh with Gateway, HTTPRoute per scaffolded service |
-| **Kuadrant** | API management: OIDCPolicy (auth) + RateLimitPolicy per service |
-| **Showroom** | Antora-based workshop lab guide (English) |
+| **Kuadrant** | API management engine: Authorino (auth) + Limitador (rate limiting) |
+| **Showroom** | Antora-based workshop lab guide |
 | **OLS (Lightspeed)** | AI assistant with MCP Gateway integration |
 | **LiteMaaS** | LLM proxy for model access |
 
-### Software Templates (Neuralbank)
+### Software Templates
 
-Each template generates a full application with CI/CD pipeline, connectivity-link manifests (Gateway, HTTPRoute, OIDCPolicy, RateLimitPolicy), DevSpaces devfile, and catalog registration.
+Each template generates a full application with CI/CD pipeline, Connectivity Link manifests (Gateway, HTTPRoute, AuthPolicy, RateLimitPolicy), DevSpaces devfile, and catalog registration.
 
 | Template | Type | Description |
 |----------|------|-------------|
+| **migrate-3scale-to-cl** | Migration | Generic template that migrates any app from 3scale to Connectivity Link. Supports OIDC and API Key auth models. Generates Gateway, HTTPRoute, AuthPolicy, RateLimitPolicy, PlanPolicy, APIProduct. |
 | **customer-service-mcp** | Quarkus MCP Server | MCP server with `@Tool`/`@ToolArg` annotations, REST client to backend, SSE transport. Includes MCP Inspector in DevSpaces. |
 | **neuralbank-backend** | Quarkus REST API | Credit management API (`/api/customers`, `/api/credits`, `/api/credits/{id}/update`) |
 | **neuralbank-frontend** | Static HTML/CSS/JS | Credit visualization SPA with Neuralbank theme (Red Hat palette) |
+
+### Pre-deployed Migration Scenarios
+
+| Namespace | Platform | Auth Model | Purpose |
+|-----------|----------|------------|---------|
+| `neuralbank-3scale` | 3scale | OIDC (Keycloak) | Source — Neuralbank secured by 3scale Product with OIDC |
+| `neuralbank-stack` | Connectivity Link | OIDC (OIDCPolicy) | Target — Neuralbank secured by Kuadrant OIDCPolicy |
+| `nfl-wallet-3scale` | 3scale | API Key (user_key) | Source — NFL Wallet secured by 3scale Product with API Key |
+| `nfl-wallet-prod` | Connectivity Link | API Key (AuthPolicy) | Target — NFL Wallet secured by Kuadrant AuthPolicy |
 
 ### Scaffolding Flow (End-to-End CI/CD)
 
@@ -595,32 +632,42 @@ For a fresh installation, run these prompts in sequence to validate the full sta
 
 ## Documentation
 
-- [Workshop (GitHub Pages)](https://maximilianopizarro.github.io/test-drive-pe-oscg/) - Full workshop guide
+- [Workshop (GitHub Pages)](https://maximilianopizarro.github.io/from-3scale-to-connectivity-link/) - Full workshop guide
+- [Migration Specification](docs/SHOWROOM-UPDATE-SPEC.md) - 3scale vs Connectivity Link: definitions, comparison tables, migration flows
 - [examples/helm/README.md](examples/helm/README.md) - Helm deployment guide
 - [examples/ansible/README.md](examples/ansible/README.md) - Ansible deployment guide
 - [docs/ansible-developer-guide.md](docs/ansible-developer-guide.md) - In-depth Ansible patterns
-- [docs/SHOWROOM-UPDATE-SPEC.md](docs/SHOWROOM-UPDATE-SPEC.md) - Showroom maintenance guide
+- [Red Hat 3scale Documentation](https://docs.redhat.com/en/documentation/red_hat_3scale_api_management/) - Official 3scale docs
+- [Red Hat Connectivity Link Documentation](https://docs.redhat.com/en/documentation/red_hat_connectivity_link/) - Official Connectivity Link docs
 
 ## Repository Structure
 
 ```
-field-content/
+from-3scale-to-connectivity-link/
 ├── examples/
 │   ├── helm/
 │   │   ├── values.yaml                    # Parent chart values
 │   │   ├── templates/                     # ArgoCD Application definitions
 │   │   ├── components/                    # Per-component Helm sub-charts
-│   │   │   ├── connectivity-link-*/       # Infrastructure components
-│   │   │   ├── connectivity-link-workshop-registration/  # Self-service registration portal
-│   │   │   ├── showroom/                  # Workshop lab guide
-│   │   │   └── ...
+│   │   │   ├── 3scale-operator/           # 3scale operator + APIManager
+│   │   │   ├── neuralbank-3scale/         # Neuralbank on 3scale (OIDC)
+│   │   │   ├── nfl-wallet-3scale/         # NFL Wallet on 3scale (API Key)
+│   │   │   ├── neuralbank-stack/          # Neuralbank on Connectivity Link (OIDC)
+│   │   │   ├── nfl-wallet/               # NFL Wallet on Connectivity Link (API Key)
+│   │   │   ├── rhcl-operator/            # Kuadrant operator + policies
+│   │   │   ├── operators/                # OLM subscriptions
+│   │   │   ├── developer-hub/            # Backstage instance
+│   │   │   ├── workshop-registration/    # Self-service registration portal
+│   │   │   ├── showroom/                 # Workshop lab guide
+│   │   │   └── ...                       # Other infrastructure components
 │   │   └── software-templates/            # Backstage scaffolder templates
 │   │       ├── templates-catalog.yaml     # Auto-import catalog
+│   │       ├── migrate-3scale-to-cl/      # Migration template (generic)
 │   │       ├── customer-service-mcp/      # Quarkus MCP server template
 │   │       ├── neuralbank-backend/        # REST API template
 │   │       └── neuralbank-frontend/       # SPA frontend template
 │   └── ansible/                           # Ansible-based deployment example
 ├── roles/
 │   └── ocp4_workload_field_content/       # AgnosticD workload role
-└── docs/                                  # Developer guides and diagrams
+└── docs/                                  # Developer guides, migration spec
 ```

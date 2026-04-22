@@ -8,25 +8,27 @@ has_children: false
 ---
 
 <div style="text-align:center;margin:24px 0;">
-  <img src="{{ site.baseurl }}/assets/images/Logo-OSC_with_padding.png" alt="OpenShift Commons" style="height:80px;">
-  <h3 style="margin:8px 0 0;color:#6a6e73;">OpenShift Commons Gathering — Buenos Aires 2026</h3>
+  <img src="{{ site.baseurl }}/assets/images/kuadrant-logo.svg" alt="Kuadrant" style="height:80px;">
+  <h3 style="margin:8px 0 0;color:#6a6e73;">From 3scale to Connectivity Link — Migration Workshop</h3>
 </div>
 
 ## Bienvenido al Workshop
 
-En este workshop aprenderás a utilizar **Red Hat Developer Hub** como portal de desarrollo self-service para construir, desplegar y gestionar aplicaciones en OpenShift.
+En este workshop aprenderás a migrar la gestión de APIs desde **Red Hat 3scale API Management** a **Red Hat Connectivity Link** (Kuadrant), utilizando **Red Hat Developer Hub** como portal de desarrollo self-service.
 
 ### Qué vas a aprender
 
-- Comprender la propuesta de valor de Red Hat Developer Hub
-- Explorar la arquitectura: Developer Hub, ArgoCD, Tekton, DevSpaces, Gitea, Keycloak, Lightspeed
-- Crear servicios backend y frontend usando **Software Templates** con naming convention multi-usuario
-- Explorar pipelines automatizados (pestaña **CI** en Developer Hub), topology view y detalles de la aplicación
-- Desplegar y configurar API Gateways con seguridad (OIDCPolicy, RateLimitPolicy)
-- **Explorar Connectivity Link** con dos modelos de autenticación:
+- Comprender la propuesta de valor de Red Hat Developer Hub como plataforma de migración
+- Explorar la arquitectura: Developer Hub, ArgoCD, Tekton, DevSpaces, Gitea, Keycloak, Kuadrant, 3scale
+- Comparar dos escenarios de API management pre-desplegados:
+  - **Neuralbank**: OIDC con 3scale (namespace `neuralbank-3scale`) vs OIDC con Connectivity Link (namespace `neuralbank-stack`)
+  - **NFL Wallet**: API Key con 3scale (namespace `nfl-wallet-3scale`) vs API Key con Connectivity Link (namespace `nfl-wallet-prod`)
+- **Ejecutar la migración** usando el Software Template genérico "Migrate from 3scale to Connectivity Link"
+- Explorar **Connectivity Link** con dos modelos de autenticación:
   - **OIDCPolicy** (Neuralbank) — autenticación interactiva con Keycloak
   - **AuthPolicy con API Key** (NFL Wallet) — autenticación M2M programática
-- **Hands-on:** explorar las aplicaciones pre-desplegadas (Neuralbank overview + NFL Wallet API Key test desde la terminal)
+- Crear servicios backend y frontend usando **Software Templates** con naming convention multi-usuario
+- Explorar pipelines automatizados (pestaña **CI** en Developer Hub), topology view y detalles de la aplicación
 - Actualizar código fuente usando **Red Hat OpenShift Dev Spaces** con CI/CD automatizado
 - Utilizar **Red Hat Developer Lightspeed** como asistente de IA integrado en el portal
 - Recibir **notificaciones** en tiempo real y por email sobre el estado de tus componentes

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 60">
-  <rect width="400" height="60" fill="none"/>
-  <circle cx="28" cy="30" r="22" fill="#EE0000"/>
-  <path d="M18 30 L24 24 L24 28 L38 28 L38 32 L24 32 L24 36 Z" fill="#fff"/>
-  <text x="60" y="25" font-family="Red Hat Display, Overpass, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#151515">OpenShift</text>
-  <text x="60" y="45" font-family="Red Hat Display, Overpass, Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#151515">Commons</text>
-</svg>

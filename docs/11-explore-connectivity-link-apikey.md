@@ -387,11 +387,46 @@ Cliente/Script           Istio Gateway              Kuadrant/Authorino         B
 
 ## Resumen
 
-Has explorado el modelo de **API Key Auth** de Connectivity Link y lo has comparado con el modelo **OIDC** de Neuralbank. Has aprendido:
-- Como `AuthPolicy` con `apiKey` usa Secrets de Kubernetes para autenticacion
-- Como las API Keys se gestionan con labels de Kuadrant/Authorino
-- Como **PlanPolicy** define planes de consumo (free/basic/pro) con rate limits diferenciados
-- Como **APIProduct** publica la API en el Dev Portal para que los developers soliciten acceso
+## Comparar con 3scale API Key (namespace nfl-wallet-3scale)
+
+En el namespace `nfl-wallet-3scale` se encuentra la misma API NFL Wallet pero protegida por **Red Hat 3scale** con autenticación API Key (`user_key`).
+
+### Inspeccionar los recursos de 3scale
+
+```bash
+oc get pods -n nfl-wallet-3scale
+oc get product -n 3scale-system | grep nfl-wallet
+oc get backend -n 3scale-system | grep nfl-wallet
+```
+
+### Tabla comparativa
+
+| Aspecto | 3scale (nfl-wallet-3scale) | Connectivity Link (nfl-wallet-prod) |
+|---------|---------------------------|--------------------------------------|
+| **Credencial** | `user_key` (query parameter) | `X-API-Key` (header HTTP) |
+| **Storage** | Base de datos de 3scale (Application) | Kubernetes Secrets con labels |
+| **Validación** | APIcast busca user_key en Redis | Authorino matchea Secrets etiquetados |
+| **Sin auth** | 403 de APIcast | 401 JSON de Authorino |
+| **Plans** | Application Plans en Product | PlanPolicy con predicados CEL |
+| **Dev Portal** | 3scale Developer Portal | Kuadrant APIProduct + Backstage |
+
+### Ventajas de Connectivity Link para API Keys
+
+1. **Secrets nativos de Kubernetes**: las API Keys son Secrets estándar, gestionables con `kubectl`, Helm, o GitOps
+2. **Labels como selector**: Authorino descubre las keys automáticamente por labels, sin configuración centralizada
+3. **PlanPolicy con CEL**: los tiers se definen con predicados sobre metadata del Secret, más flexibles que Application Plans
+4. **GitOps completo**: toda la configuración (AuthPolicy, PlanPolicy, APIProduct) vive en Git
+
+---
+
+## Resumen
+
+Has explorado el modelo de **API Key Auth** de Connectivity Link y lo has comparado con el modelo equivalente en **3scale**. Has aprendido:
+- Como `AuthPolicy` con `apiKey` usa Secrets de Kubernetes para autenticacion (vs 3scale Applications con user_key)
+- Como las API Keys se gestionan con labels de Kuadrant/Authorino (vs base de datos de 3scale)
+- Como **PlanPolicy** define planes de consumo (free/basic/pro) con rate limits diferenciados (vs Application Plans)
+- Como **APIProduct** publica la API en el Dev Portal para que los developers soliciten acceso (vs 3scale Developer Portal)
 - Como las **annotations `kuadrant.io/*`** vinculan la entidad API del catalogo con el APIProduct
 - Como el **Scaffolder automatiza** la creacion de todos los recursos de Kuadrant (AuthPolicy, APIProduct, PlanPolicy)
 - La diferencia entre autenticacion interactiva (OIDC) y programatica (API Key)
+- La migración desde 3scale se puede automatizar con el **Software Template "Migrate from 3scale to Connectivity Link"**

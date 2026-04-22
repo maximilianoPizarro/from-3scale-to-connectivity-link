@@ -129,33 +129,43 @@ spec:
       jsonPointers:
         - /metadata/annotations
         - /status
+    - group: apps.3scale.net
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+    - group: capabilities.3scale.net
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
   source:
     repoURL: {{ $.Values.gitops.repoUrl }}
     targetRevision: {{ $.Values.gitops.revision }}
     path: {{ $.Values.gitops.basePath }}/components/{{ .path }}
     {{- $domain := $.Values.deployer.domain | default "apps.cluster.example.com" }}
-    {{- if eq .path "connectivity-link-openshift-gitops" }}
+    {{- if eq .path "openshift-gitops" }}
     helm:
       valuesObject:
         userCount: {{ $.Values.userCount | default 200 }}
         clusterDomain: {{ $domain }}
-    {{- else if eq .path "connectivity-link-namespaces" }}
+    {{- else if eq .path "namespaces" }}
     helm:
       valuesObject:
         userCount: {{ $.Values.userCount | default 200 }}
-    {{- else if eq .path "connectivity-link-devspaces" }}
+    {{- else if eq .path "devspaces" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
-    {{- else if eq .path "connectivity-link-operators" }}
+    {{- else if eq .path "operators" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
         channel: {{ $.Values.connectivityLink.operators.channel | quote }}
         version: {{ $.Values.connectivityLink.operators.version | quote }}
         subscriptions: {{ $.Values.connectivityLink.operators.subscriptions | toJson }}
-    {{- else if eq .path "connectivity-link-openshift-lightspeed" }}
+    {{- else if eq .path "openshift-lightspeed" }}
     {{- $llmKey := $.Values.lightspeed.llmApiKey }}
     {{- $llmEndpoint := $.Values.lightspeed.llmEndpoint }}
     {{- $llmModel := $.Values.lightspeed.model | default "granite-3-2-8b-instruct" }}
@@ -165,38 +175,38 @@ spec:
         llmApiKey: {{ $llmKey | quote }}
         llmEndpoint: {{ $llmEndpoint | quote }}
         llmModel: {{ $llmModel | quote }}
-    {{- else if eq .path "connectivity-link-rhbk" }}
+    {{- else if eq .path "rhbk" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
-    {{- else if eq .path "connectivity-link-mcp-gateway" }}
+    {{- else if eq .path "mcp-gateway" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
         mcpToken: {{ $.Values.connectivityLink.mcpToken | default "IpIbd50gbMb1p2+iCigrhkm21pZwbn0g" | quote }}
         argocdApiToken: {{ $.Values.connectivityLink.argocdMcpToken | default "" | quote }}
-    {{- else if eq .path "connectivity-link-oauth-users" }}
+    {{- else if eq .path "oauth-users" }}
     helm:
       valuesObject:
         userCount: {{ $.Values.userCount | default 200 }}
-    {{- else if eq .path "connectivity-link-applicationsets" }}
-    helm:
-      valuesObject:
-        clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 200 }}
-    {{- else if eq .path "connectivity-link-gitea" }}
+    {{- else if eq .path "applicationsets" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
-    {{- else if eq .path "connectivity-link-developer-hub" }}
+    {{- else if eq .path "gitea" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
+        userCount: {{ $.Values.userCount | default 200 }}
+    {{- else if eq .path "developer-hub" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
-    {{- else if eq .path "connectivity-link-workshop-registration" }}
+    {{- else if eq .path "workshop-registration" }}
     helm:
       valuesObject:
         deployer:
@@ -212,11 +222,11 @@ spec:
           adminPassword: {{ $.Values.workshopRegistration.keycloakAdminPassword | default "" | quote }}
         showroom:
           url: {{ printf "https://showroom-showroom.%s" $domain | quote }}
-    {{- else if eq .path "connectivity-link-nfl-wallet" }}
+    {{- else if eq .path "nfl-wallet" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-    {{- else if eq .path "connectivity-link-neuralbank-stack" }}
+    {{- else if eq .path "neuralbank-stack" }}
     helm:
       valuesObject:
         {{- $nb := deepCopy $.Values.connectivityLink.neuralbank }}
@@ -228,19 +238,34 @@ spec:
         {{- $_ := set $kc "postLogoutRedirectUri" (printf "https://neuralbank.%s" $domain) }}
         {{- $_ := set $nb "keycloak" $kc }}
         {{- toYaml $nb | nindent 8 }}
-    {{- else if eq .path "connectivity-link-kiali" }}
+    {{- else if eq .path "kiali" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-    {{- else if eq .path "connectivity-link-rhcl-operator" }}
+    {{- else if eq .path "rhcl-operator" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-    {{- else if eq .path "connectivity-link-opentelemetry" }}
+    {{- else if eq .path "opentelemetry" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-    {{- else if eq .path "connectivity-link-observability" }}
+    {{- else if eq .path "observability" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
+    {{- else if eq .path "3scale-operator" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
+        wildcardDomain: {{ $domain }}
+    {{- else if eq .path "neuralbank-3scale" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
+        {{- $nb3s := deepCopy $.Values.connectivityLink.neuralbank }}
+        {{- toYaml $nb3s | nindent 8 }}
+    {{- else if eq .path "nfl-wallet-3scale" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}

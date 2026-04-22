@@ -17,7 +17,7 @@ namespace:
 ansible:
   repository:
     # IMPORTANT: Update this to point to YOUR playbook repository
-    url: "https://github.com/rhpds/test-drive-pe-oscg"
+    url: "https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link"
     branch: "main"
     # Path within the repo to the playbooks directory
     path: "examples/ansible/playbooks"
