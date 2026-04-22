@@ -111,3 +111,31 @@ spec:
   applicationMenu:
     section: Workshop Tools
     imageURL: https://fonts.gstatic.com/s/i/materialiconsoutlined/mail/v6/24px.svg
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: 3scale-admin-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://3scale-admin.{{ $domain }}
+  location: ApplicationMenu
+  text: 3scale Admin Portal
+  applicationMenu:
+    section: API Management
+    imageURL: https://avatars.githubusercontent.com/u/808058?s=200
+---
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: gateforge-link
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  href: https://gateforge-gateforge.{{ $domain }}
+  location: ApplicationMenu
+  text: GateForge
+  applicationMenu:
+    section: API Management
+    imageURL: https://maximilianopizarro.github.io/gateforge/assets/logo.svg
