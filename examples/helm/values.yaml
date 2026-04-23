@@ -373,7 +373,7 @@ connectivityLink:
           enabled: true
           endpoint: https://litellm-prod.apps.maas.redhatworkshops.io/v1
           model: deepseek-r1-distill-qwen-14b
-          apiKey: "sk-cgZXacnOS8Sesp0RcqtnFw"
+          apiKey: ""
         threescale:
           adminApi:
             enabled: true
