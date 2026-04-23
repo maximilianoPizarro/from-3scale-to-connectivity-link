@@ -814,6 +814,19 @@ data:
                         sm: { w: 12, h: 5 }
                         xs: { w: 12, h: 7 }
                         xxs: { w: 12, h: 13 }
+      - package: "oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-3scale-backend:bs_1.45.3__3.10.0"
+        disabled: false
+        pluginConfig:
+          catalog:
+            providers:
+              threeScaleApiEntity:
+                default:
+                  baseUrl: "${THREESCALE_BASE_URL}"
+                  accessToken: "${THREESCALE_ACCESS_TOKEN}"
+                  schedule:
+                    frequency: { minutes: 5 }
+                    timeout: { minutes: 3 }
+                    initialDelay: { seconds: 30 }
 kind: ConfigMap
 metadata:
   annotations:
