@@ -373,7 +373,7 @@ connectivityLink:
           enabled: true
           endpoint: https://litellm-prod.apps.maas.redhatworkshops.io/v1
           model: deepseek-r1-distill-qwen-14b
-          apiKey: ""
+          apiKey: "sk-cgZXacnOS8Sesp0RcqtnFw"
         threescale:
           adminApi:
             enabled: true
@@ -390,6 +390,15 @@ connectivityLink:
           enabled: true
           username: gateforge
           password: gateforge
+        datagrid:
+          enabled: true
+          image:
+            repository: quay.io/infinispan/server
+            tag: "15.0"
+          replicas: 1
+          credentials:
+            username: developer
+            password: changeme
         route:
           enabled: true
           host: ""
