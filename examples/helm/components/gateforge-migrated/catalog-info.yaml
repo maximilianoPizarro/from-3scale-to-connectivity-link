@@ -9,7 +9,7 @@ metadata:
     - connectivity-link
     - migration
 spec:
-  owner: platform-engineering
+  owner: group:default/3scale
   domain: api-management
 
 ---
@@ -31,13 +31,15 @@ metadata:
     - gateway-api
   links:
     - title: API Gateway Endpoint
+      url: https://account-mgmt-api.apps.cluster-4wrc6.dynamic.redhatworkshops.io
       icon: api
     - title: GateForge Dashboard
+      url: https://gateforge.apps.cluster-4wrc6.dynamic.redhatworkshops.io
       icon: dashboard
 spec:
   type: openapi
   lifecycle: production
-  owner: platform-engineering
+  owner: group:default/3scale
   system: gateforge-migrated-apis
   definition: |
     openapi: "3.0.3"
@@ -115,13 +117,15 @@ metadata:
     - gateway-api
   links:
     - title: API Gateway Endpoint
+      url: https://card-issuing-api.apps.cluster-4wrc6.dynamic.redhatworkshops.io
       icon: api
     - title: GateForge Dashboard
+      url: https://gateforge.apps.cluster-4wrc6.dynamic.redhatworkshops.io
       icon: dashboard
 spec:
   type: openapi
   lifecycle: production
-  owner: platform-engineering
+  owner: group:default/3scale
   system: gateforge-migrated-apis
   definition: |
     openapi: "3.0.3"
