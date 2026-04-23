@@ -363,6 +363,7 @@ connectivityLink:
           clusterDomain: apps.cluster-4wrc6.dynamic.redhatworkshops.io
         backend:
           image:
+            repository: image-registry.openshift-image-registry.svc:5000/gateforge/gateforge-backend
             tag: v0.1.7
         frontend:
           image:
@@ -377,7 +378,7 @@ connectivityLink:
           adminApi:
             enabled: true
             url: "https://3scale-admin.apps.cluster-4wrc6.dynamic.redhatworkshops.io"
-            accessToken: ""
+            accessToken: "GuiO3eGbxWnlwZAG"
           crdDiscovery:
             enabled: true
             namespace: 3scale-system
@@ -385,6 +386,10 @@ connectivityLink:
           targetNamespace: kuadrant-system
           gatewayStrategy: shared
           gatewayClassName: istio
+        postgresql:
+          enabled: true
+          username: gateforge
+          password: gateforge
         route:
           enabled: true
           host: ""
