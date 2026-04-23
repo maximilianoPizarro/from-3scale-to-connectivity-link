@@ -355,7 +355,7 @@ connectivityLink:
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/gateforge/"
       chart: gateforge
-      targetRevision: "0.1.6"
+      targetRevision: "0.1.7"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
@@ -363,10 +363,10 @@ connectivityLink:
           clusterDomain: apps.cluster-4wrc6.dynamic.redhatworkshops.io
         backend:
           image:
-            tag: v0.1.6
+            tag: v0.1.7
         frontend:
           image:
-            tag: v0.1.6
+            tag: v0.1.7
         ai:
           enabled: true
           endpoint: https://litellm-prod.apps.maas.redhatworkshops.io/v1
