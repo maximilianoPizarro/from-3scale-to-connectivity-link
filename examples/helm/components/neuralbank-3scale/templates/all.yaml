@@ -78,6 +78,74 @@ spec:
       pattern: "/api/v1/customers$"
       metricMethodRef: hits
       increment: 1
+    - httpMethod: PUT
+      pattern: "/api/v1/customers/{id}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: DELETE
+      pattern: "/api/v1/customers/{id}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/customers/{id}/accounts$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/v1/accounts$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/accounts/{id}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/accounts/{id}/balance$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/accounts/{id}/transactions$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/v1/transactions$"
+      metricMethodRef: transactions
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/transactions/{id}$"
+      metricMethodRef: transactions
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/v1/transfers$"
+      metricMethodRef: transactions
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/transfers/{id}/status$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/customers/{id}/credit-score$"
+      metricMethodRef: credit_checks
+      increment: 1
+    - httpMethod: POST
+      pattern: "/api/v1/loans/applications$"
+      metricMethodRef: credit_checks
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/loans/{id}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/loans/{id}/schedule$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/statements/{accountId}$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/api/v1/statements/{accountId}/pdf$"
+      metricMethodRef: hits
+      increment: 1
     - httpMethod: GET
       pattern: "/q/openapi$"
       metricMethodRef: hits
@@ -86,11 +154,23 @@ spec:
       pattern: "/q/swagger-ui"
       metricMethodRef: hits
       increment: 1
+    - httpMethod: GET
+      pattern: "/q/health$"
+      metricMethodRef: hits
+      increment: 1
   metrics:
     hits:
       friendlyName: Hits
       unit: hit
       description: Number of API hits
+    transactions:
+      friendlyName: Transactions
+      unit: transaction
+      description: Financial transaction operations
+    credit_checks:
+      friendlyName: Credit Checks
+      unit: check
+      description: Credit scoring and loan operations
 ---
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product

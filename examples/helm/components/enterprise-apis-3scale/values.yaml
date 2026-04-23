@@ -16,12 +16,36 @@ apis:
     paths:
       - method: GET
         pattern: "/api/v1/accounts$"
-      - method: GET
-        pattern: "/api/v1/accounts/{id}$"
       - method: POST
         pattern: "/api/v1/accounts$"
       - method: GET
+        pattern: "/api/v1/accounts/{id}$"
+      - method: PUT
+        pattern: "/api/v1/accounts/{id}$"
+      - method: DELETE
+        pattern: "/api/v1/accounts/{id}$"
+      - method: GET
         pattern: "/api/v1/accounts/{id}/balance$"
+      - method: GET
+        pattern: "/api/v1/accounts/{id}/transactions$"
+      - method: GET
+        pattern: "/api/v1/accounts/{id}/statements$"
+      - method: GET
+        pattern: "/api/v1/accounts/{id}/statements/{period}$"
+      - method: POST
+        pattern: "/api/v1/accounts/{id}/freeze$"
+      - method: POST
+        pattern: "/api/v1/accounts/{id}/unfreeze$"
+      - method: GET
+        pattern: "/api/v1/accounts/{id}/beneficiaries$"
+      - method: POST
+        pattern: "/api/v1/accounts/{id}/beneficiaries$"
+      - method: GET
+        pattern: "/api/v1/currencies$"
+      - method: GET
+        pattern: "/api/v1/currencies/exchange-rates$"
+      - method: GET
+        pattern: "/q/health$"
 
   - name: wire-transfer
     systemName: wire-transfer-api
@@ -37,11 +61,35 @@ apis:
       - method: POST
         pattern: "/api/v1/transfers$"
       - method: GET
+        pattern: "/api/v1/transfers$"
+      - method: GET
         pattern: "/api/v1/transfers/{id}$"
       - method: GET
         pattern: "/api/v1/transfers/{id}/status$"
       - method: POST
+        pattern: "/api/v1/transfers/{id}/cancel$"
+      - method: POST
         pattern: "/api/v1/transfers/swift$"
+      - method: POST
+        pattern: "/api/v1/transfers/sepa$"
+      - method: POST
+        pattern: "/api/v1/transfers/ach$"
+      - method: GET
+        pattern: "/api/v1/transfers/{id}/receipt$"
+      - method: POST
+        pattern: "/api/v1/transfers/batch$"
+      - method: GET
+        pattern: "/api/v1/transfers/batch/{batchId}$"
+      - method: GET
+        pattern: "/api/v1/transfers/batch/{batchId}/status$"
+      - method: GET
+        pattern: "/api/v1/banks/swift-codes$"
+      - method: GET
+        pattern: "/api/v1/banks/swift-codes/{code}$"
+      - method: POST
+        pattern: "/api/v1/transfers/validate$"
+      - method: GET
+        pattern: "/q/health$"
 
   - name: card-issuing
     systemName: card-issuing-api
@@ -53,6 +101,8 @@ apis:
     basePlanLimit: 80
     premiumPlanLimit: 400
     paths:
+      - method: GET
+        pattern: "/api/v1/cards$"
       - method: POST
         pattern: "/api/v1/cards$"
       - method: GET
@@ -60,7 +110,29 @@ apis:
       - method: PUT
         pattern: "/api/v1/cards/{id}/activate$"
       - method: PUT
+        pattern: "/api/v1/cards/{id}/block$"
+      - method: PUT
+        pattern: "/api/v1/cards/{id}/unblock$"
+      - method: PUT
         pattern: "/api/v1/cards/{id}/limits$"
+      - method: GET
+        pattern: "/api/v1/cards/{id}/limits$"
+      - method: GET
+        pattern: "/api/v1/cards/{id}/transactions$"
+      - method: POST
+        pattern: "/api/v1/cards/{id}/pin/reset$"
+      - method: POST
+        pattern: "/api/v1/cards/virtual$"
+      - method: GET
+        pattern: "/api/v1/cards/{id}/virtual-number$"
+      - method: POST
+        pattern: "/api/v1/cards/{id}/replace$"
+      - method: GET
+        pattern: "/api/v1/cards/{id}/disputes$"
+      - method: POST
+        pattern: "/api/v1/cards/{id}/disputes$"
+      - method: GET
+        pattern: "/q/health$"
 
   - name: kyc-verification
     systemName: kyc-verification-api
@@ -74,9 +146,33 @@ apis:
     paths:
       - method: POST
         pattern: "/api/v1/kyc/verify$"
-      - method: POST
-        pattern: "/api/v1/kyc/documents$"
+      - method: GET
+        pattern: "/api/v1/kyc/{id}$"
       - method: GET
         pattern: "/api/v1/kyc/{id}/status$"
       - method: GET
         pattern: "/api/v1/kyc/{id}/report$"
+      - method: POST
+        pattern: "/api/v1/kyc/documents$"
+      - method: GET
+        pattern: "/api/v1/kyc/{id}/documents$"
+      - method: GET
+        pattern: "/api/v1/kyc/documents/{docId}$"
+      - method: POST
+        pattern: "/api/v1/kyc/aml-screening$"
+      - method: GET
+        pattern: "/api/v1/kyc/aml-screening/{id}$"
+      - method: POST
+        pattern: "/api/v1/kyc/pep-check$"
+      - method: POST
+        pattern: "/api/v1/kyc/sanctions-check$"
+      - method: POST
+        pattern: "/api/v1/kyc/address-verification$"
+      - method: GET
+        pattern: "/api/v1/kyc/risk-assessment/{customerId}$"
+      - method: POST
+        pattern: "/api/v1/kyc/biometric$"
+      - method: GET
+        pattern: "/api/v1/kyc/compliance-report/{customerId}$"
+      - method: GET
+        pattern: "/q/health$"
