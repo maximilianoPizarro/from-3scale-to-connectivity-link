@@ -399,6 +399,10 @@ connectivityLink:
           credentials:
             username: developer
             password: changeme
+        developerHub:
+          enabled: true
+          url: "https://backstage-developer-hub-developer-hub.apps.cluster-4wrc6.dynamic.redhatworkshops.io"
+          pluginWebhookUrl: "http://backstage-developer-hub.developer-hub.svc.cluster.local/api/catalog/migration-event"
         route:
           enabled: true
           host: ""
