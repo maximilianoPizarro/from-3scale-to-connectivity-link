@@ -403,7 +403,7 @@ connectivityLink:
           enabled: true
           url: "https://backstage-developer-hub-developer-hub.apps.cluster-4wrc6.dynamic.redhatworkshops.io"
           scaffolderUrl: "https://backstage-developer-hub-developer-hub.apps.cluster-4wrc6.dynamic.redhatworkshops.io/api/scaffolder/v2/tasks"
-          scaffolderToken: ""
+          scaffolderToken: "a01bb6ee68d5afbd9e82402b1a37a73d900bc653d6dc2375dec06bce6d62f34d"
         route:
           enabled: true
           host: ""
