@@ -62,7 +62,7 @@ spec:
       name: Register Component in Catalog
       action: catalog:register
       input:
-        catalogInfoUrl: "https://gateforge-backend-gateforge.${{ parameters.clusterDomain }}/api/migration/plans/${{ parameters.planId }}/catalog-info/${{ parameters.productName }}"
+        catalogInfoUrl: "https://gateforge-gateforge.${{ parameters.clusterDomain }}/api/migration/plans/${{ parameters.planId }}/catalog-info/${{ parameters.productName }}"
 
     - id: notify
       name: Send Registration Notification

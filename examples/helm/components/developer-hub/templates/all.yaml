@@ -422,7 +422,7 @@ data:
           - host: github.com
           - host: raw.githubusercontent.com
           - host: gitea-gitea.{{ .Values.clusterDomain }}
-          - host: gateforge-backend-gateforge.{{ .Values.clusterDomain }}
+          - host: gateforge-gateforge.{{ .Values.clusterDomain }}
     signInPage: oidc
     scaffolder:
       defaultValues:
