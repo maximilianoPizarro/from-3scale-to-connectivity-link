@@ -10,3 +10,5 @@ spec:
     - ./neuralbank-frontend/template.yaml
     - ./migrate-3scale-to-cl/template.yaml
     - ./remove-component/template.yaml
+    - ./gateforge-register-component/template.yaml
+    - ./gateforge-unregister-component/template.yaml

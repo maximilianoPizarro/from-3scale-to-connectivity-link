@@ -422,6 +422,7 @@ data:
           - host: github.com
           - host: raw.githubusercontent.com
           - host: gitea-gitea.{{ .Values.clusterDomain }}
+          - host: gateforge-backend-gateforge.{{ .Values.clusterDomain }}
     signInPage: oidc
     scaffolder:
       defaultValues:
@@ -831,6 +832,37 @@ data:
                     initialDelay: { seconds: 30 }
       - package: oci://quay.io/maximilianopizarro/gateforge-devhub-plugin:0.1.7!gateforge-backstage-plugin-catalog-backend-module-gateforge
         disabled: false
+      - package: oci://quay.io/maximilianopizarro/gateforge-devhub-frontend-plugin:0.1.7!gateforge-backstage-plugin-gateforge-frontend
+        disabled: false
+        pluginConfig:
+          dynamicPlugins:
+            frontend:
+              gateforge.backstage-plugin-gateforge-frontend:
+                mountPoints:
+                  - mountPoint: entity.page.observability/cards
+                    importName: GateForgeObservabilityTab
+                    config:
+                      layout:
+                        gridColumn: "1 / -1"
+                      if:
+                        allOf:
+                          - hasAnnotation: kuadrant.io/namespace
+                  - mountPoint: entity.page.topology/cards
+                    importName: GateForgeTopologyTab
+                    config:
+                      layout:
+                        gridColumn: "1 / -1"
+                      if:
+                        allOf:
+                          - hasAnnotation: kuadrant.io/namespace
+                  - mountPoint: entity.page.component/cards
+                    importName: GateForgeComponentEditorTab
+                    config:
+                      layout:
+                        gridColumn: "1 / -1"
+                      if:
+                        allOf:
+                          - isKind: component
 kind: ConfigMap
 metadata:
   annotations:
