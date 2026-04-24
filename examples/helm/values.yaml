@@ -363,11 +363,11 @@ connectivityLink:
           clusterDomain: apps.cluster-4wrc6.dynamic.redhatworkshops.io
         backend:
           image:
-            repository: image-registry.openshift-image-registry.svc:5000/gateforge/gateforge-backend
+            repository: quay.io/maximilianopizarro/gateforge-backend
             tag: v0.1.7
         frontend:
           image:
-            repository: image-registry.openshift-image-registry.svc:5000/gateforge/gateforge-frontend
+            repository: quay.io/maximilianopizarro/gateforge-frontend
             tag: v0.1.7
         ai:
           enabled: true
@@ -402,7 +402,8 @@ connectivityLink:
         developerHub:
           enabled: true
           url: "https://backstage-developer-hub-developer-hub.apps.cluster-4wrc6.dynamic.redhatworkshops.io"
-          pluginWebhookUrl: "http://backstage-developer-hub.developer-hub.svc.cluster.local/api/catalog/migration-event"
+          scaffolderUrl: "https://backstage-developer-hub-developer-hub.apps.cluster-4wrc6.dynamic.redhatworkshops.io/api/scaffolder/v2/tasks"
+          scaffolderToken: ""
         route:
           enabled: true
           host: ""
