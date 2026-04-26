@@ -57,13 +57,13 @@ subjects:
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
-  name: neuralbank-backend-api
+  name: neuralbank-accounts-backend
   namespace: 3scale-system
   annotations:
     argocd.argoproj.io/sync-wave: "4"
 spec:
-  name: "Neuralbank Backend API"
-  systemName: neuralbank-backend-api
+  name: "Neuralbank Accounts Backend"
+  systemName: neuralbank-accounts-backend
   privateBaseURL: "http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
@@ -103,6 +103,36 @@ spec:
       metricMethodRef: hits
       increment: 1
     - httpMethod: GET
+      pattern: "/q/openapi$"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/q/swagger-ui"
+      metricMethodRef: hits
+      increment: 1
+    - httpMethod: GET
+      pattern: "/q/health$"
+      metricMethodRef: hits
+      increment: 1
+  metrics:
+    hits:
+      friendlyName: Hits
+      unit: hit
+      description: Number of API hits
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: neuralbank-transactions-backend
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  name: "Neuralbank Transactions Backend"
+  systemName: neuralbank-transactions-backend
+  privateBaseURL: "http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080"
+  mappingRules:
+    - httpMethod: GET
       pattern: "/api/v1/accounts/{id}/transactions$"
       metricMethodRef: hits
       increment: 1
@@ -122,6 +152,28 @@ spec:
       pattern: "/api/v1/transfers/{id}/status$"
       metricMethodRef: hits
       increment: 1
+  metrics:
+    hits:
+      friendlyName: Hits
+      unit: hit
+      description: Number of API hits
+    transactions:
+      friendlyName: Transactions
+      unit: transaction
+      description: Financial transaction operations
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: neuralbank-lending-backend
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  name: "Neuralbank Lending Backend"
+  systemName: neuralbank-lending-backend
+  privateBaseURL: "http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080"
+  mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/customers/{id}/credit-score$"
       metricMethodRef: credit_checks
@@ -146,27 +198,11 @@ spec:
       pattern: "/api/v1/statements/{accountId}/pdf$"
       metricMethodRef: hits
       increment: 1
-    - httpMethod: GET
-      pattern: "/q/openapi$"
-      metricMethodRef: hits
-      increment: 1
-    - httpMethod: GET
-      pattern: "/q/swagger-ui"
-      metricMethodRef: hits
-      increment: 1
-    - httpMethod: GET
-      pattern: "/q/health$"
-      metricMethodRef: hits
-      increment: 1
   metrics:
     hits:
       friendlyName: Hits
       unit: hit
       description: Number of API hits
-    transactions:
-      friendlyName: Transactions
-      unit: transaction
-      description: Financial transaction operations
     credit_checks:
       friendlyName: Credit Checks
       unit: check
@@ -183,8 +219,12 @@ spec:
   name: "Neuralbank API (OIDC)"
   systemName: neuralbank-oidc
   backendUsages:
-    neuralbank-backend-api:
-      path: /
+    neuralbank-accounts-backend:
+      path: /api/v1/customers
+    neuralbank-transactions-backend:
+      path: /api/v1/transactions
+    neuralbank-lending-backend:
+      path: /api/v1/loans
   deployment:
     apicastHosted:
       authentication:

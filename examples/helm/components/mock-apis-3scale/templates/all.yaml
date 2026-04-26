@@ -54,6 +54,7 @@ subjects:
     name: default
     namespace: mock-apis-3scale
 {{- range .Values.apis }}
+{{- $api := . }}
 ---
 # ============================================================
 # {{ .displayName }} — Deployment + Service + Route
@@ -147,6 +148,36 @@ spec:
 # ============================================================
 # {{ .displayName }} — 3scale Backend
 # ============================================================
+{{- if .backends }}
+{{- range .backends }}
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: {{ .systemName }}-backend
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  name: {{ .displayName | quote }}
+  systemName: {{ .systemName }}
+  privateBaseURL: "http://{{ $api.name }}.mock-apis-3scale.svc.cluster.local:8080"
+  description: {{ .displayName | quote }}
+  mappingRules:
+    {{- range .paths }}
+    - httpMethod: {{ .method }}
+      pattern: {{ .pattern | quote }}
+      metricMethodRef: hits
+      increment: 1
+    {{- end }}
+  metrics:
+    hits:
+      friendlyName: Hits
+      unit: hit
+      description: "Number of API hits"
+{{- end }}
+{{- else }}
+---
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
@@ -171,10 +202,65 @@ spec:
       friendlyName: Hits
       unit: hit
       description: "Number of API hits"
+{{- end }}
 ---
 # ============================================================
 # {{ .displayName }} — 3scale Product ({{ .authType }})
 # ============================================================
+{{- if .backends }}
+---
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: {{ .name }}-product
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  name: {{ printf "%s (%s)" .displayName (upper .authType) | quote }}
+  systemName: {{ .systemName }}
+  description: {{ .description | quote }}
+  backendUsages:
+    {{- range .backends }}
+    {{ .systemName }}:
+      path: {{ .pathPrefix }}
+    {{- end }}
+  deployment:
+    apicastHosted:
+      authentication:
+        {{- if eq .authType "oidc" }}
+        oidc:
+          issuerType: keycloak
+          issuerEndpoint: "https://rhbk.{{ $.Values.clusterDomain }}/realms/{{ .keycloakRealm }}"
+          jwtClaimWithClientID: azp
+          jwtClaimWithClientIDType: plain
+          authenticationFlow:
+            standardFlowEnabled: true
+            implicitFlowEnabled: false
+            serviceAccountsEnabled: true
+            directAccessGrantsEnabled: true
+        {{- else }}
+        userkey:
+          authUserKey: user_key
+          credentials: query
+        {{- end }}
+  applicationPlans:
+    basic:
+      name: "Basic Plan"
+      limits:
+        - period: minute
+          value: {{ .basePlanLimit }}
+          metricMethodRef:
+            systemName: hits
+    premium:
+      name: "Premium Plan"
+      limits:
+        - period: minute
+          value: {{ .premiumPlanLimit }}
+          metricMethodRef:
+            systemName: hits
+{{- else }}
+---
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Product
 metadata:
@@ -223,6 +309,7 @@ spec:
           value: {{ .premiumPlanLimit }}
           metricMethodRef:
             systemName: hits
+{{- end }}
 ---
 # ============================================================
 # {{ .displayName }} — 3scale ActiveDoc
