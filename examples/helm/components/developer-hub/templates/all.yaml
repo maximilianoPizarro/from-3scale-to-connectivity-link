@@ -830,9 +830,9 @@ data:
                     frequency: { minutes: 5 }
                     timeout: { minutes: 3 }
                     initialDelay: { seconds: 30 }
-      - package: oci://quay.io/maximilianopizarro/gateforge-devhub-plugin:0.1.8!gateforge-backstage-plugin-catalog-backend-module-gateforge
+      - package: oci://quay.io/maximilianopizarro/gateforge-devhub-plugin:v0.1.8!gateforge-backstage-plugin-catalog-backend-module-gateforge
         disabled: false
-      - package: oci://quay.io/maximilianopizarro/gateforge-devhub-frontend-plugin:0.1.8!gateforge-backstage-plugin-gateforge-frontend
+      - package: oci://quay.io/maximilianopizarro/gateforge-devhub-frontend-plugin:v0.1.8!gateforge-backstage-plugin-gateforge-frontend
         disabled: false
         pluginConfig:
           dynamicPlugins:
