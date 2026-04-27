@@ -21,6 +21,7 @@ metadata:
   description: "Account CRUD, balance queries, statement generation and multi-currency support — migrated from 3scale to Connectivity Link by GateForge"
   annotations:
     kuadrant.io/namespace: user1-neuralbank
+    kuadrant.io/apiproduct: account-mgmt-api
     kuadrant.io/httproute: account-mgmt-api-route
     backstage.io/kubernetes-namespace: user1-neuralbank
     backstage.io/kubernetes-id: account-mgmt-api
@@ -105,6 +106,7 @@ metadata:
   description: "Card provisioning, activation, limit management, and virtual card generation — migrated from 3scale to Connectivity Link by GateForge"
   annotations:
     kuadrant.io/namespace: user1-neuralbank
+    kuadrant.io/apiproduct: card-issuing-api
     kuadrant.io/httproute: card-issuing-api-route
     backstage.io/kubernetes-namespace: user1-neuralbank
     backstage.io/kubernetes-id: card-issuing-api
