@@ -363,7 +363,7 @@ connectivityLink:
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/gateforge/"
       chart: gateforge
-      targetRevision: "0.1.8"
+      targetRevision: "0.1.9"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
