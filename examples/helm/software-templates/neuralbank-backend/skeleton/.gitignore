@@ -1,0 +1,21 @@
+# Maven / Quarkus build output
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Quarkus dev
+.quarkus/
+
+# Gradle (if used)
+.gradle/
+build/
