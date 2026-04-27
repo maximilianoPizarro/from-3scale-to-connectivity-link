@@ -105,7 +105,6 @@ spec:
           title: Cluster Domain
           type: string
           ui:widget: hidden
-          default: "apps.cluster.example.com"
 
   steps:
     - id: fetch-skeleton

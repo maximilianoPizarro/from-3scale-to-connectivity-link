@@ -39,8 +39,10 @@ spec:
         clusterDomain:
           title: Cluster Domain
           type: string
-          default: "apps.cluster.example.com"
           ui:widget: hidden
+          ui:backstage:
+            review:
+              show: false
           description: "Auto-populated from app config workshop.clusterDomain"
   steps:
     - id: fetch-skeleton
