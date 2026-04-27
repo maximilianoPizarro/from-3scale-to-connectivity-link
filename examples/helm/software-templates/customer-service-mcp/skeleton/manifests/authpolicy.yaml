@@ -19,8 +19,7 @@ spec:
             allNamespaces: true
             selector:
               matchLabels:
-                app: ${{values.name}}
-                kuadrant.io/apikey: "true"
+                devportal.kuadrant.io/apiproduct: ${{values.uniqueName}}-api
           credentials:
             customHeader:
               name: X-API-Key
