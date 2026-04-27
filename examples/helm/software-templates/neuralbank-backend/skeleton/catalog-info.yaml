@@ -56,15 +56,20 @@ spec:
   owner: user:${{values.owner}}
   system: ${{values.owner}}-neuralbank
   definition: |
-    openapi: 3.0.0
+    openapi: 3.0.3
     info:
       title: Neuralbank Credit API
       version: 1.0.0
-      description: >
+      description: |
         REST API for credit and customer management.
         Protected by Kuadrant AuthPolicy (API Key via X-API-Key header)
         and RateLimitPolicy (120 req/min).
         Generate your API Key from the Dev Portal.
+      contact:
+        name: Neuralbank Team
+    servers:
+      - url: https://${{values.name}}-${{values.namespace}}.${{values.clusterDomain}}
+        description: Production Gateway
     components:
       securitySchemes:
         ApiKeyAuth:
@@ -72,15 +77,132 @@ spec:
           in: header
           name: X-API-Key
           description: API Key generated from the Kuadrant Dev Portal
+      schemas:
+        Customer:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "C001"
+            name:
+              type: string
+              example: "Juan Pérez"
+            email:
+              type: string
+              example: "juan@neuralbank.com"
+            creditScore:
+              type: integer
+              example: 750
+        Credit:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "CR001"
+            customerId:
+              type: string
+              example: "C001"
+            type:
+              type: string
+              enum: [personal, mortgage, auto]
+              example: "personal"
+            amount:
+              type: number
+              example: 25000
+            status:
+              type: string
+              enum: [active, pending, closed, defaulted]
+              example: "active"
+        HealthCheck:
+          type: object
+          properties:
+            status:
+              type: string
+              example: "UP"
+            checks:
+              type: array
+              items:
+                type: object
     security:
       - ApiKeyAuth: []
+    tags:
+      - name: customers
+        description: Customer management
+      - name: credits
+        description: Credit management
+      - name: health
+        description: Health checks
     paths:
       /api/customers:
         get:
-          summary: List customers
+          tags: [customers]
+          summary: List all customers
+          operationId: listCustomers
+          responses:
+            '200':
+              description: List of customers
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Customer'
+            '401':
+              description: Missing or invalid API Key
       /api/credits:
         get:
-          summary: List credits
+          tags: [credits]
+          summary: List all credits
+          operationId: listCredits
+          responses:
+            '200':
+              description: List of credits
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Credit'
+            '401':
+              description: Missing or invalid API Key
       /api/credits/{id}/update:
         post:
+          tags: [credits]
           summary: Update credit status
+          operationId: updateCreditStatus
+          parameters:
+            - name: id
+              in: path
+              required: true
+              schema:
+                type: string
+              example: "CR001"
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      enum: [active, pending, closed, defaulted]
+          responses:
+            '200':
+              description: Credit updated
+            '401':
+              description: Missing or invalid API Key
+            '404':
+              description: Credit not found
+      /q/health:
+        get:
+          tags: [health]
+          summary: Health check endpoint
+          operationId: healthCheck
+          security: []
+          responses:
+            '200':
+              description: Health status
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/HealthCheck'
