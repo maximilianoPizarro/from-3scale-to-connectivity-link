@@ -838,8 +838,15 @@ data:
           dynamicPlugins:
             frontend:
               gateforge.backstage-plugin-gateforge-frontend:
+                entityTabs:
+                  - mountPoint: entity.page.gateforge-observability
+                    path: /gateforge-observability
+                    title: Observability
+                  - mountPoint: entity.page.gateforge-editor
+                    path: /gateforge-editor
+                    title: Component Editor
                 mountPoints:
-                  - mountPoint: entity.page.observability/cards
+                  - mountPoint: entity.page.gateforge-observability/cards
                     importName: GateForgeObservabilityTab
                     config:
                       layout:
@@ -855,7 +862,7 @@ data:
                       if:
                         allOf:
                           - hasAnnotation: kuadrant.io/namespace
-                  - mountPoint: entity.page.component/cards
+                  - mountPoint: entity.page.gateforge-editor/cards
                     importName: GateForgeComponentEditorTab
                     config:
                       layout:
