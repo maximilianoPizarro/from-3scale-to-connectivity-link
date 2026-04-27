@@ -51,17 +51,18 @@ spec:
           type: string
           description: "Entity owner reference"
           default: "group:default/3scale"
-        clusterDomain:
-          title: Cluster Domain
-          type: string
-          ui:widget: hidden
-
   steps:
+    - id: get-config
+      name: Resolve Cluster Domain
+      action: http:backstage:request
+      input:
+        method: GET
+        path: /proxy/k8s-api/api/v1/namespaces/developer-hub/configmaps/workshop-config
     - id: register
       name: Register Component in Catalog
       action: catalog:register
       input:
-        catalogInfoUrl: "https://gateforge-gateforge.${{ parameters.clusterDomain }}/api/migration/plans/${{ parameters.planId }}/catalog-info/${{ parameters.productName }}"
+        catalogInfoUrl: "https://gateforge-gateforge.${{ steps['get-config'].output.body.data.clusterDomain }}/api/migration/plans/${{ parameters.planId }}/catalog-info/${{ parameters.productName }}"
 
     - id: notify
       name: Send Registration Notification

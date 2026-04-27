@@ -101,12 +101,13 @@ spec:
           type: integer
           description: "Maximum requests per minute per client"
           default: 60
-        clusterDomain:
-          title: Cluster Domain
-          type: string
-          ui:widget: hidden
-
   steps:
+    - id: get-config
+      name: Resolve Cluster Domain
+      action: http:backstage:request
+      input:
+        method: GET
+        path: /proxy/k8s-api/api/v1/namespaces/developer-hub/configmaps/workshop-config
     - id: fetch-skeleton
       name: Generate Connectivity Link manifests
       action: fetch:template
@@ -126,13 +127,13 @@ spec:
           keycloakRealm: ${{ parameters.keycloakRealm }}
           keycloakClientId: ${{ parameters.keycloakClientId }}
           rateLimitPerMinute: ${{ parameters.rateLimitPerMinute }}
-          clusterDomain: ${{ parameters.clusterDomain }}
+          clusterDomain: ${{ steps['get-config'].output.body.data.clusterDomain }}
 
     - id: publish
       name: Push to Gitea
       action: publish:gitea
       input:
-        repoUrl: "gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.appName }}-cl-migration"
+        repoUrl: "gitea-gitea.${{ steps['get-config'].output.body.data.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.appName }}-cl-migration"
         description: "Migration from 3scale to Connectivity Link: ${{ parameters.appName }}"
         defaultBranch: main
         repoVisibility: public

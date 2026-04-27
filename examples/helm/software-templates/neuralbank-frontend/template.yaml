@@ -35,15 +35,13 @@ spec:
           default: ${{ user.entity.metadata.name }}
           pattern: "^user[0-9]+$"
           ui:help: "E.g.: user1 → namespace user1-neuralbank"
-        clusterDomain:
-          title: Cluster Domain
-          type: string
-          ui:widget: hidden
-          ui:backstage:
-            review:
-              show: false
-          description: "Auto-populated from app config workshop.clusterDomain"
   steps:
+    - id: get-config
+      name: Resolve Cluster Domain
+      action: http:backstage:request
+      input:
+        method: GET
+        path: /proxy/k8s-api/api/v1/namespaces/developer-hub/configmaps/workshop-config
     - id: fetch-skeleton
       name: Generate Skeleton
       action: fetch:template
@@ -56,12 +54,12 @@ spec:
           description: ${{ parameters.description }}
           namespace: "${{ parameters.owner }}-neuralbank"
           imageRegistry: "image-registry.openshift-image-registry.svc:5000"
-          clusterDomain: ${{ parameters.clusterDomain }}
+          clusterDomain: ${{ steps['get-config'].output.body.data.clusterDomain }}
     - id: publish
       name: Publish to Gitea
       action: publish:gitea
       input:
-        repoUrl: "gitea-gitea.${{ parameters.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}"
+        repoUrl: "gitea-gitea.${{ steps['get-config'].output.body.data.clusterDomain }}?owner=ws-${{ parameters.owner }}&repo=${{ parameters.name }}"
         description: ${{ parameters.description }}
         defaultBranch: main
         repoVisibility: public

@@ -1751,3 +1751,13 @@ spec:
 
           echo ""
           echo "Notification sent successfully"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workshop-config
+  namespace: developer-hub
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  clusterDomain: {{ .Values.clusterDomain }}
