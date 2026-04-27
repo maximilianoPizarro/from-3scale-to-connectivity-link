@@ -278,6 +278,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: apicast-scenarios
+      enabled: true
+      path: apicast-scenarios
+      destinationNamespace: apicast-scenario-1
+      syncWave: "9"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: workshop-registration
       enabled: true
       path: workshop-registration

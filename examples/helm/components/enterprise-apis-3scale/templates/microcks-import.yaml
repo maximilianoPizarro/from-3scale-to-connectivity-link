@@ -578,24 +578,33 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              MICROCKS_URL="http://microcks:8080"
+              MICROCKS_URL="http://microcks.microcks.svc.cluster.local:8080"
               echo "Waiting for Microcks to be ready..."
-              for i in $(seq 1 30); do
+              for i in $(seq 1 60); do
                 if curl -sf "$MICROCKS_URL/api/health" >/dev/null 2>&1; then
                   echo "Microcks is ready"
                   break
                 fi
-                echo "Attempt $i/30 - waiting..."
+                if [ "$i" = "60" ]; then
+                  echo "Microcks not ready after 60 attempts, proceeding anyway..."
+                fi
+                echo "Attempt $i/60 - waiting..."
                 sleep 5
               done
               echo "Importing OpenAPI specs into Microcks..."
               for spec in /specs/*.json; do
                 name=$(basename "$spec")
                 echo "Importing $name..."
-                curl -sf -X POST "$MICROCKS_URL/api/artifact/upload" \
-                  -F "file=@$spec;type=application/json" \
-                  && echo " -> $name imported successfully" \
-                  || echo " -> $name import failed (non-fatal)"
+                for attempt in 1 2 3; do
+                  if curl -sf -X POST "$MICROCKS_URL/api/artifact/upload" \
+                    -F "file=@$spec;type=application/json"; then
+                    echo " -> $name imported successfully"
+                    break
+                  else
+                    echo " -> $name import attempt $attempt failed, retrying..."
+                    sleep 3
+                  fi
+                done
               done
               echo "Import complete."
           volumeMounts:
