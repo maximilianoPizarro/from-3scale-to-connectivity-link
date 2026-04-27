@@ -82,6 +82,9 @@ spec:
     - neuralbank-stack
     - litemaas
     - istio-system
+    - user1-neuralbank
+    - kuadrant-system
+    - mcp-system
   podMetricsEndpoints:
   - interval: 30s
     path: /stats/prometheus
@@ -560,8 +563,8 @@ spec:
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
           "targets": [
             {
-              "expr": "sum(increase(ratelimit_service_rate_limit_total{status=\"over_limit\"}[1h]))",
-              "legendFormat": "Rejected"
+              "expr": "sum(rate(istio_requests_total{response_code=\"429\"}[5m]))",
+              "legendFormat": "429 Too Many Requests"
             }
           ],
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" }
@@ -1098,24 +1101,33 @@ data:
     echo "Interval: ${INTERVAL:-5}s"
 
     while true; do
+      TS=$(date '+%H:%M:%S')
       # Neuralbank via gateway (OIDC 302, L7 waypoint metrics)
-      curl -sk -o /dev/null -w "%{http_code} nb-gw/q/health\n" --connect-timeout 2 --max-time 4 \
+      curl -sk -o /dev/null -w "${TS} %{http_code} nb-gw/q/health\n" --connect-timeout 2 --max-time 4 \
         -H "Host: $NB_HOST" "http://neuralbank-gateway-istio.neuralbank-stack.svc:8080/q/health" &
-      curl -sk -o /dev/null -w "%{http_code} nb-gw/api/v1/customers\n" --connect-timeout 2 --max-time 4 \
+      curl -sk -o /dev/null -w "${TS} %{http_code} nb-gw/api/v1/customers\n" --connect-timeout 2 --max-time 4 \
         -H "Host: $NB_HOST" "http://neuralbank-gateway-istio.neuralbank-stack.svc:8080/api/v1/customers" &
       # Neuralbank direct backend (200, L4 ztunnel metrics)
-      curl -sk -o /dev/null -w "%{http_code} nb-svc/q/health\n" --connect-timeout 2 --max-time 4 \
+      curl -sk -o /dev/null -w "${TS} %{http_code} nb-svc/q/health\n" --connect-timeout 2 --max-time 4 \
         "http://neuralbank-backend-svc.neuralbank-stack.svc:8080/q/health" &
       # NFL Wallet via gateway with API key (200, L7 waypoint metrics)
-      curl -sk -o /dev/null -w "%{http_code} nfl-gw/api/v1/customers\n" --connect-timeout 2 --max-time 4 \
+      curl -sk -o /dev/null -w "${TS} %{http_code} nfl-gw/api/v1/customers\n" --connect-timeout 2 --max-time 4 \
         -H "Host: $NFL_HOST" -H "X-API-Key: $NFL_KEY" \
         "http://nfl-wallet-gateway-istio.nfl-wallet-prod.svc:8080/api/v1/customers" &
       # NFL Wallet direct backend (200, L4 ztunnel metrics)
-      curl -sk -o /dev/null -w "%{http_code} nfl-svc/q/health\n" --connect-timeout 2 --max-time 4 \
+      curl -sk -o /dev/null -w "${TS} %{http_code} nfl-svc/q/health\n" --connect-timeout 2 --max-time 4 \
         "http://nfl-wallet-api.nfl-wallet-prod.svc:8080/q/health" &
       # LiteMaaS via gateway (200, L7 waypoint metrics)
-      curl -sk -o /dev/null -w "%{http_code} lm-gw/\n" --connect-timeout 2 --max-time 4 \
+      curl -sk -o /dev/null -w "${TS} %{http_code} lm-gw/\n" --connect-timeout 2 --max-time 4 \
         -H "Host: $LM_HOST" "http://litemaas-gateway-istio.litemaas.svc:8080/" &
+      # user1-neuralbank-backend via gateway (API Key auth)
+      curl -sk -o /dev/null -w "${TS} %{http_code} u1-nb/api/customers\n" --connect-timeout 2 --max-time 4 \
+        "http://neuralbank-backend-gateway-istio.user1-neuralbank.svc:8080/api/customers" &
+      curl -sk -o /dev/null -w "${TS} %{http_code} u1-nb/api/credits\n" --connect-timeout 2 --max-time 4 \
+        "http://neuralbank-backend-gateway-istio.user1-neuralbank.svc:8080/api/credits" &
+      # user1-customer-service-mcp via gateway
+      curl -sk -o /dev/null -w "${TS} %{http_code} u1-mcp/mcp\n" --connect-timeout 2 --max-time 4 \
+        -X POST -d '{}' "http://customer-service-mcp-gateway-istio.user1-neuralbank.svc:8080/mcp" &
       wait
       sleep $(( ${INTERVAL:-5} + RANDOM % 3 ))
     done
