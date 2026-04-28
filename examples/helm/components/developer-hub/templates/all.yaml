@@ -895,6 +895,8 @@ data:
                       if:
                         allOf:
                           - hasAnnotation: kuadrant.io/namespace
+                          - isKind: component
+                          - isType: service
                   - mountPoint: entity.page.gateforge-editor/cards
                     importName: GateForgeComponentEditorTab
                     config:
