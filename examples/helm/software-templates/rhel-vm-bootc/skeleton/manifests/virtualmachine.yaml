@@ -72,7 +72,9 @@ spec:
 {%- if values.bootSource === "registry" %}
           registry:
             url: "docker://${{values.registryUrl}}"
+            secretRef: cdi-pull-secret
 {%- elif values.bootSource === "bootc-image" %}
           registry:
             url: "docker://${{values.bootcImageUrl}}"
+            secretRef: cdi-pull-secret
 {%- endif %}
