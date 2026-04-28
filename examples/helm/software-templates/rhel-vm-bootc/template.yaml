@@ -308,47 +308,6 @@ spec:
         repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
         catalogInfoPath: /main/catalog-info.yaml
 
-    - id: create-namespace
-      name: Create Target Namespace
-      action: http:backstage:request
-      input:
-        method: POST
-        path: /proxy/k8s-api/api/v1/namespaces
-        headers:
-          Content-Type: application/json
-        body:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: "${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}"
-      continueOnError: true
-
-    - id: read-pull-secret
-      name: Read Cluster Pull Secret
-      action: http:backstage:request
-      input:
-        method: GET
-        path: /proxy/k8s-api/api/v1/namespaces/openshift-config/secrets/pull-secret
-
-    - id: create-pull-secret
-      name: Create Pull Secret in VM Namespace
-      action: http:backstage:request
-      input:
-        method: POST
-        path: "/proxy/k8s-api/api/v1/namespaces/${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}/secrets"
-        headers:
-          Content-Type: application/json
-        body:
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: cdi-pull-secret
-            namespace: "${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}"
-          type: kubernetes.io/dockerconfigjson
-          data:
-            .dockerconfigjson: "${{ steps['read-pull-secret'].output.body.data['.dockerconfigjson'] }}"
-      continueOnError: true
-
     - id: create-argocd-app
       name: Create ArgoCD Application
       action: http:backstage:request
