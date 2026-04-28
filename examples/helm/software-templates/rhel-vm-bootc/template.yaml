@@ -168,7 +168,14 @@ spec:
     - title: Network & Access
       required:
         - sshPublicKey
+        - vmPassword
       properties:
+        vmPassword:
+          title: VM Password
+          type: string
+          description: "Password for the cloud-user account (for console/VNC login)"
+          default: "redhat123"
+          ui:widget: password
         sshPublicKey:
           title: SSH Public Key
           type: string
@@ -282,6 +289,7 @@ spec:
           bootcImageUrl: ${{ parameters.bootcImageUrl if parameters.bootcImageUrl else "" }}
           sshPublicKey: ${{ parameters.sshPublicKey }}
           hostname: "${{ parameters.hostname if parameters.hostname else parameters.vmName }}"
+          vmPassword: ${{ parameters.vmPassword }}
           cloudInitExtra: ${{ parameters.cloudInitExtra }}
           enableConnectivityLink: ${{ parameters.enableConnectivityLink }}
           exposedPort: ${{ parameters.exposedPort }}

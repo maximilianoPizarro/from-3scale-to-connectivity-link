@@ -11,5 +11,6 @@ spec:
     - ./migrate-3scale-to-cl/template.yaml
     - ./remove-component/template.yaml
     - ./rhel-vm-bootc/template.yaml
+    - ./remove-vm/template.yaml
     - ./gateforge-register-component/template.yaml
     - ./gateforge-unregister-component/template.yaml
