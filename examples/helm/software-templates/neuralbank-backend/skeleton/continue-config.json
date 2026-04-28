@@ -1,0 +1,57 @@
+{
+  "models": [
+    {
+      "title": "Qwen 2.5 7B (OpenShift AI)",
+      "model": "qwen25-7b-instruct",
+      "apiBase": "CONTINUE_API_BASE_PLACEHOLDER",
+      "provider": "openai",
+      "apiKey": "CONTINUE_API_KEY_PLACEHOLDER",
+      "contextLength": 32768,
+      "completionOptions": {
+        "maxTokens": 4096
+      },
+      "capabilities": {
+        "tools": true
+      },
+      "systemMessage": "You are an expert Java and Quarkus developer specializing in REST APIs, microservices, and cloud-native patterns on OpenShift. This project is a Neuralbank Credit Management backend built with Quarkus. You help with JAX-RS endpoints, CDI beans, Hibernate Panache, MicroProfile Health/OpenAPI, and Maven builds. Always follow Quarkus best practices and produce clean, testable code."
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Qwen 2.5 7B Autocomplete",
+    "model": "qwen25-7b-instruct",
+    "apiBase": "CONTINUE_API_BASE_PLACEHOLDER",
+    "provider": "openai",
+    "apiKey": "CONTINUE_API_KEY_PLACEHOLDER",
+    "contextLength": 32768,
+    "completionOptions": {
+      "maxTokens": 256
+    }
+  },
+  "contextProviders": [
+    { "name": "codebase", "params": {} },
+    { "name": "folder", "params": {} },
+    { "name": "file", "params": {} },
+    { "name": "code", "params": {} },
+    { "name": "currentFile", "params": {} },
+    { "name": "tree", "params": {} },
+    { "name": "problems", "params": {} },
+    { "name": "terminal", "params": {} }
+  ],
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "streamable-http",
+          "url": "http://openshift-mcp-server.openshift-lightspeed.svc.cluster.local:8080/mcp"
+        }
+      },
+      {
+        "transport": {
+          "type": "streamable-http",
+          "url": "http://argocd-mcp-server.mcp-system.svc.cluster.local:8080/mcp"
+        }
+      }
+    ]
+  },
+  "allowAnonymousTelemetry": false
+}

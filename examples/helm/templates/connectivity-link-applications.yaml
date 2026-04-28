@@ -110,6 +110,18 @@ spec:
       jsonPointers:
         - /metadata/annotations
         - /status
+    - group: datasciencecluster.opendatahub.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+        - /spec
+    - group: opendatahub.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+        - /spec
     - group: mcp.openshift.io
       kind: "*"
       jsonPointers:

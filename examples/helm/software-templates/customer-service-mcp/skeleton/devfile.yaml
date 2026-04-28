@@ -6,13 +6,47 @@ metadata:
   description: ${{values.description}}
   language: Java
   projectType: Quarkus
+  tags:
+    - Java
+    - Quarkus
+    - MCP
+    - Neuralbank
+    - AI
+attributes:
+  .vscode/extensions.json: |
+    {
+      "recommendations": [
+        "redhat.java",
+        "redhat.vscode-quarkus",
+        "redhat.vscode-yaml",
+        "redhat.vscode-xml",
+        "redhat.vscode-openshift-connector",
+        "Continue.continue"
+      ]
+    }
 components:
   - name: tools
     container:
       image: registry.redhat.io/devspaces/udi-rhel9:latest
-      memoryLimit: 2Gi
-      cpuLimit: "1"
+      memoryLimit: 3Gi
+      cpuLimit: "2"
       mountSources: true
+      env:
+        - name: CONTINUE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: continue-ai-config
+              key: CONTINUE_API_KEY
+        - name: CONTINUE_API_BASE
+          valueFrom:
+            secretKeyRef:
+              name: continue-ai-config
+              key: CONTINUE_API_BASE
+        - name: CONTINUE_MODEL
+          valueFrom:
+            secretKeyRef:
+              name: continue-ai-config
+              key: CONTINUE_MODEL
       volumeMounts:
         - name: m2
           path: /home/user/.m2
@@ -20,6 +54,33 @@ components:
     volume:
       size: 2Gi
 commands:
+  - id: install-extensions
+    exec:
+      component: tools
+      commandLine: |
+        export LD_LIBRARY_PATH=/checode/checode-linux-libc/ubi9/ld_libs:/checode/checode-linux-libc/ubi9/ld_libs/openssl:/checode/checode-linux-libc/ubi9/ld_libs/core:/usr/lib64
+        CHE_CODE=/checode/checode-linux-libc/ubi9/bin/che-code
+        EXT_DIR=/checode/checode-linux-libc/ubi9/extensions
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension Continue.continue --force 2>/dev/null || true
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.java --force 2>/dev/null || true
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.vscode-quarkus --force 2>/dev/null || true
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.vscode-yaml --force 2>/dev/null || true
+        $CHE_CODE --extensions-dir $EXT_DIR --install-extension redhat.vscode-openshift-connector --force 2>/dev/null || true
+  - id: setup-continue
+    exec:
+      component: tools
+      commandLine: |
+        mkdir -p /home/user/.continue
+        cp /projects/${{values.name}}/continue-config.json /home/user/.continue/config.json
+        if [ -n "$CONTINUE_API_KEY" ]; then
+          sed -i "s|CONTINUE_API_KEY_PLACEHOLDER|$CONTINUE_API_KEY|g" /home/user/.continue/config.json
+        fi
+        if [ -n "$CONTINUE_API_BASE" ]; then
+          sed -i "s|CONTINUE_API_BASE_PLACEHOLDER|$CONTINUE_API_BASE|g" /home/user/.continue/config.json
+        fi
+        if [ -n "$CONTINUE_MODEL" ]; then
+          sed -i "s|qwen25-7b-instruct|$CONTINUE_MODEL|g" /home/user/.continue/config.json
+        fi
   - id: init-maven
     exec:
       component: tools
@@ -60,3 +121,7 @@ commands:
       workingDir: ${PROJECT_SOURCE}
       group:
         kind: debug
+events:
+  postStart:
+    - install-extensions
+    - setup-continue
