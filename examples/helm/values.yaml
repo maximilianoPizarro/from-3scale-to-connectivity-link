@@ -102,6 +102,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: openshift-virtualization
+      enabled: true
+      path: openshift-virtualization
+      destinationNamespace: openshift-cnv
+      syncWave: "3"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: connectivity-link-servicemeshoperator3
       enabled: true
       path: connectivity-link-servicemeshoperator3
