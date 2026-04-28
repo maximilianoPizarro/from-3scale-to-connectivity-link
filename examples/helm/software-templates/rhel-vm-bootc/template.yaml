@@ -183,6 +183,17 @@ spec:
           ui:widget: textarea
           ui:options:
             rows: 3
+        installHttpd:
+          title: Install Apache HTTP Server
+          type: boolean
+          description: "Install and enable httpd with a default landing page"
+          default: true
+        extraPackages:
+          title: Extra Packages
+          type: string
+          description: "Additional packages to install via cloud-init (space-separated)"
+          default: ""
+          ui:help: "E.g.: vim-enhanced git podman"
         hostname:
           title: Hostname
           type: string
@@ -290,6 +301,8 @@ spec:
           sshPublicKey: ${{ parameters.sshPublicKey }}
           hostname: "${{ parameters.hostname if parameters.hostname else parameters.vmName }}"
           vmPassword: ${{ parameters.vmPassword }}
+          installHttpd: ${{ parameters.installHttpd }}
+          extraPackages: ${{ parameters.extraPackages }}
           cloudInitExtra: ${{ parameters.cloudInitExtra }}
           enableConnectivityLink: ${{ parameters.enableConnectivityLink }}
           exposedPort: ${{ parameters.exposedPort }}
