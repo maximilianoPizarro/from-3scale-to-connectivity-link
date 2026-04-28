@@ -93,6 +93,23 @@ spec:
       jsonPointers:
         - /metadata/annotations
         - /status
+    - group: kubevirt.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+        - /spec
+    - group: hco.kubevirt.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
+        - /spec
+    - group: cdi.kubevirt.io
+      kind: "*"
+      jsonPointers:
+        - /metadata/annotations
+        - /status
     - group: mcp.openshift.io
       kind: "*"
       jsonPointers:

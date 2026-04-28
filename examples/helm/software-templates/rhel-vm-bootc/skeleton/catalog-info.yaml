@@ -1,0 +1,33 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{values.uniqueName}}
+  title: "${{values.vmName}} (RHEL VM)"
+  description: ${{values.description}}
+  annotations:
+    backstage.io/kubernetes-id: ${{values.uniqueName}}
+    backstage.io/kubernetes-namespace: ${{values.namespace}}
+    argocd/app-name: "${{values.owner}}-${{values.vmName}}-vm"
+    argocd/app-namespace: openshift-gitops
+{%- if values.enableConnectivityLink %}
+    kuadrant.io/namespace: ${{values.namespace}}
+    kuadrant.io/httproute: ${{values.vmName}}-route
+{%- endif %}
+  tags:
+    - vm
+    - rhel
+    - bootc
+    - openshift-virtualization
+{%- if values.enableConnectivityLink %}
+    - connectivity-link
+    - gateway-api
+{%- endif %}
+  links:
+    - url: "https://gitea-gitea.${{values.clusterDomain}}/ws-${{values.owner}}/${{values.vmName}}-vm"
+      title: Gitea Repository
+      icon: source
+spec:
+  type: vm
+  lifecycle: production
+  owner: ${{values.owner}}
+  system: ${{values.owner}}-vms

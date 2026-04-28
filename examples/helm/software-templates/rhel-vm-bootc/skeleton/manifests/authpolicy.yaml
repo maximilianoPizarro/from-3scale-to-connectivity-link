@@ -1,0 +1,41 @@
+{%- if values.enableConnectivityLink and values.authModel !== "none" %}
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+metadata:
+  name: ${{values.vmName}}-auth
+  namespace: ${{values.namespace}}
+  labels:
+    app: ${{values.vmName}}
+    app.kubernetes.io/name: ${{values.vmName}}
+    backstage.io/kubernetes-id: ${{values.uniqueName}}
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: ${{values.vmName}}-route
+  defaults:
+    rules:
+      authentication:
+{%- if values.authModel === "apikey" %}
+        api-key-auth:
+          apiKey:
+            allNamespaces: true
+            selector:
+              matchLabels:
+                app: ${{values.vmName}}
+                kuadrant.io/apikey: "true"
+          credentials:
+            customHeader:
+              name: X-API-Key
+          priority: 0
+{%- endif %}
+{%- if values.authModel === "oidc" %}
+        oidc:
+          jwt:
+            issuerUrl: https://rhbk.${{values.clusterDomain}}/realms/${{values.keycloakRealm}}
+          credentials:
+            authorizationHeader:
+              prefix: Bearer
+          priority: 1
+{%- endif %}
+{%- endif %}
