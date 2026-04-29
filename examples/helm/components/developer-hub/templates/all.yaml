@@ -1527,9 +1527,7 @@ data:
       tls_cafile: null
       tls_certfile: null
       tls_keyfile: null
-    shields:
-      - shield_id: lightspeed_question_validity-shield
-        provider_id: lightspeed_question_validity
+    shields: []
     tool_groups:
     - provider_id: rag-runtime
       toolgroup_id: builtin::rag
