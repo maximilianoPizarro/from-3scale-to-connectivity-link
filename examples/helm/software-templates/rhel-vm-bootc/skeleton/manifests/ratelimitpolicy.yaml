@@ -1,4 +1,4 @@
-{%- if values.enableConnectivityLink and values.rateLimitPerMinute > 0 %}
+{%- if values.enableConnectivityLink and values.rateLimitPerMinute > 0 and values.authModel !== "apikey" %}
 apiVersion: kuadrant.io/v1
 kind: RateLimitPolicy
 metadata:
