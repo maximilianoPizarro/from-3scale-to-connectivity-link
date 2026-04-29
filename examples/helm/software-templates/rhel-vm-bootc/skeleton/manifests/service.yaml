@@ -5,6 +5,7 @@ metadata:
   namespace: ${{values.namespace}}
   labels:
     app: ${{values.vmName}}
+    backstage.io/kubernetes-id: ${{values.uniqueName}}
 spec:
   selector:
     kubevirt.io/domain: ${{values.vmName}}

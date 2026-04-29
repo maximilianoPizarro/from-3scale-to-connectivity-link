@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/part-of: ${{values.vmName}}
     app.kubernetes.io/managed-by: argocd
     vm.kubevirt.io/template: rhel9-server
+    backstage.io/kubernetes-id: ${{values.uniqueName}}
   annotations:
     description: ${{values.description}}
 spec:
