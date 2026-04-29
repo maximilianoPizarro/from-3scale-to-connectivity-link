@@ -1,8 +1,8 @@
 {
   "models": [
     {
-      "title": "Qwen 2.5 7B (OpenShift AI)",
-      "model": "qwen25-7b-instruct",
+      "title": "DeepSeek R1 Distill Qwen 14B (LiteLLM)",
+      "model": "deepseek-r1-distill-qwen-14b",
       "apiBase": "http://openshift-mcp-server-litellm.openshift-lightspeed.svc.cluster.local:4000/v1",
       "provider": "openai",
       "apiKey": "sk-openshift-mcp-1234",
@@ -17,8 +17,8 @@
     }
   ],
   "tabAutocompleteModel": {
-    "title": "Qwen 2.5 7B Autocomplete",
-    "model": "qwen25-7b-instruct",
+    "title": "DeepSeek R1 Distill Qwen 14B Autocomplete",
+    "model": "deepseek-r1-distill-qwen-14b",
     "apiBase": "http://openshift-mcp-server-litellm.openshift-lightspeed.svc.cluster.local:4000/v1",
     "provider": "openai",
     "apiKey": "sk-openshift-mcp-1234",

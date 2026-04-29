@@ -1247,7 +1247,7 @@ data:
       url: "http://localhost:8321"
     inference:
       default_provider: vllm
-      default_model: {{ .Values.litellmModel | default "qwen25-7b-instruct" }}
+      default_model: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" }}
     user_data_collection:
       feedback_storage: "/tmp/data/feedback"
       transcripts_storage: "/tmp/data/transcripts"
@@ -1327,7 +1327,7 @@ stringData:
   VLLM_MAX_TOKENS: "4096"
   VLLM_TLS_VERIFY: "false"
   VALIDATION_PROVIDER: "vllm"
-  VALIDATION_MODEL_NAME: {{ .Values.litellmModel | default "qwen25-7b-instruct" | quote }}
+  VALIDATION_MODEL_NAME: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
   MCP_TOKEN: "backstage"
 ---
 apiVersion: v1
@@ -1339,10 +1339,10 @@ metadata:
     rhdh.redhat.com/ext-config-sync: "true"
 type: Opaque
 stringData:
-  LIGHTSPEED_SERVER_ID: {{ .Values.litellmModel | default "qwen25-7b-instruct" | quote }}
+  LIGHTSPEED_SERVER_ID: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
   LIGHTSPEED_SERVICE_PORT: "8080"
   LIGHTSPEED_QUESTION_VALIDATION: "true"
-  LLM_SERVER_ID: {{ .Values.litellmModel | default "qwen25-7b-instruct" | quote }}
+  LLM_SERVER_ID: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
   LLM_SERVER_URL: "http://localhost:8080"
   LLM_SERVER_TOKEN: ""
 ---
