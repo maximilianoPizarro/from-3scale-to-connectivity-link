@@ -351,10 +351,10 @@ connectivityLink:
         namespace: openshift-lightspeed
         litellm:
           model:
-            name: qwen25-7b-instruct
-            modelId: qwen25-7b-instruct
-            apiBase: "http://qwen-2-5-7b-cpu-predictor.openshift-ai-models.svc.cluster.local:8080/v1"
-            apiKey: "none"
+            name: deepseek-r1-distill-qwen-14b
+            modelId: deepseek-r1-distill-qwen-14b
+            apiBase: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
+            apiKey: "sk-cgZXacnOS8Sesp0RcqtnFw"
     - id: n8n
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/n8n-helm-chart/"
@@ -432,9 +432,9 @@ connectivityLink:
 # Keys are injected at deploy time (RHDP or --set), NOT in git
 # ============================================================
 lightspeed:
-  llmApiKey: "sk-no-key"
-  llmEndpoint: "https://qwen25-7b-instruct-my-first-model.apps.ocp.xbgvw.sandbox67.opentlc.com/v1"
-  model: "qwen25-7b-instruct"
+  llmApiKey: "sk-cgZXacnOS8Sesp0RcqtnFw"
+  llmEndpoint: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
+  model: "deepseek-r1-distill-qwen-14b"
 
 # ============================================================
 # User Scaling — single parameter controls all user provisioning
