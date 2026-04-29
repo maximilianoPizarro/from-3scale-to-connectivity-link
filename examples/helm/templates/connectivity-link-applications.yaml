@@ -235,6 +235,7 @@ spec:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
+        litellmModel: {{ $.Values.lightspeed.model | default "deepseek-r1-distill-qwen-14b" | quote }}
     {{- else if eq .path "workshop-registration" }}
     helm:
       valuesObject:
