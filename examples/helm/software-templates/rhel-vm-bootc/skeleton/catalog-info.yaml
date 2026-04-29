@@ -37,3 +37,62 @@ spec:
   lifecycle: production
   owner: ${{values.owner}}
   system: ${{values.owner}}-vms
+{%- if values.enableConnectivityLink and values.authModel === "apikey" %}
+  providesApis:
+    - ${{values.uniqueName}}-api
+{%- endif %}
+{%- if values.enableConnectivityLink and values.authModel === "apikey" %}
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: ${{values.uniqueName}}-api
+  description: "API expuesta desde la VM ${{values.vmName}} via Gateway API, protegida con API Key"
+  annotations:
+    kuadrant.io/namespace: ${{values.namespace}}
+    kuadrant.io/apiproduct: ${{values.uniqueName}}-api
+    kuadrant.io/httproute: ${{values.vmName}}-route
+  tags:
+    - vm
+    - api-key
+    - kuadrant
+spec:
+  type: openapi
+  lifecycle: production
+  owner: ${{values.owner}}
+  system: ${{values.owner}}-vms
+  definition: |
+    openapi: "3.0.3"
+    info:
+      title: "${{values.vmName}} VM API"
+      description: |
+        API expuesta desde la VM ${{values.vmName}} via Gateway API.
+        Protegida con API Key (header X-API-Key o cookie vm-api-key).
+        Planes: free (100/dia), basic (1000/dia), pro (10000/dia).
+      version: "1.0.0"
+    servers:
+      - url: /
+        description: Resolved via Gateway API HTTPRoute
+    security:
+      - apiKeyHeader: []
+      - apiKeyCookie: []
+    paths:
+      /:
+        get:
+          summary: Home page
+          responses:
+            "200":
+              description: VM home page
+            "401":
+              description: API Key required
+    components:
+      securitySchemes:
+        apiKeyHeader:
+          type: apiKey
+          in: header
+          name: X-API-Key
+        apiKeyCookie:
+          type: apiKey
+          in: cookie
+          name: vm-api-key
+{%- endif %}
