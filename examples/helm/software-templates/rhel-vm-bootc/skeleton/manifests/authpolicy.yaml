@@ -25,8 +25,7 @@ spec:
             allNamespaces: true
             selector:
               matchLabels:
-                app: ${{values.vmName}}
-                kuadrant.io/apikey: "true"
+                authorino.kuadrant.io/managed-by: authorino
           credentials:
             customHeader:
               name: X-API-Key
@@ -36,8 +35,7 @@ spec:
             allNamespaces: true
             selector:
               matchLabels:
-                app: ${{values.vmName}}
-                kuadrant.io/apikey: "true"
+                authorino.kuadrant.io/managed-by: authorino
           credentials:
             cookie:
               name: vm-api-key
