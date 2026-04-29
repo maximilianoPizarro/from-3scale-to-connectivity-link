@@ -284,7 +284,7 @@ spec:
     - --served-model-name=qwen25-7b-instruct
     - --dtype=bfloat16
     - --device=cpu
-    - --max-model-len=4096
+    - --max-model-len=16384
     - --enforce-eager
     - --enable-auto-tool-choice
     - --tool-call-parser=hermes
@@ -296,7 +296,7 @@ spec:
     - name: HOME
       value: /tmp
     - name: VLLM_CPU_KVCACHE_SPACE
-      value: "4"
+      value: "8"
     - name: HF_HOME
       value: /tmp/hf
     image: quay.io/rh-aiservices-bu/vllm-cpu-openai-ubi9:0.3
