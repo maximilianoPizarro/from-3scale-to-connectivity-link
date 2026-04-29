@@ -1341,7 +1341,7 @@ type: Opaque
 stringData:
   LIGHTSPEED_SERVER_ID: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
   LIGHTSPEED_SERVICE_PORT: "8080"
-  LIGHTSPEED_QUESTION_VALIDATION: "true"
+  LIGHTSPEED_QUESTION_VALIDATION: "false"
   LLM_SERVER_ID: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
   LLM_SERVER_URL: "http://localhost:8080"
   LLM_SERVER_TOKEN: ""
