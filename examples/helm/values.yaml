@@ -432,7 +432,7 @@ connectivityLink:
 # Keys are injected at deploy time (RHDP or --set), NOT in git
 # ============================================================
 lightspeed:
-  llmApiKey: "sk-cgZXacnOS8Sesp0RcqtnFw"
+  llmApiKey: "sk-openshift-mcp-1234"
   llmEndpoint: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
   model: "deepseek-r1-distill-qwen-14b"
 
