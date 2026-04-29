@@ -122,7 +122,7 @@ data:
     }
   ArgoCD-MCP-Server: |
     {
-      "url": "http://argocd-mcp-server.mcp-system.svc.cluster.local:8080/mcp",
+      "url": "http://argocd-mcp-server.mcp-system.svc.cluster.local:3000/mcp",
       "description": "ArgoCD MCP Server — provides tools to manage ArgoCD applications: list apps, get app details, sync, refresh, check health status, and manage GitOps workflows."
     }
 ---
