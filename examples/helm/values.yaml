@@ -353,8 +353,8 @@ connectivityLink:
           model:
             name: qwen25-7b-instruct
             modelId: qwen25-7b-instruct
-            apiBase: "https://qwen25-7b-instruct-my-first-model.apps.ocp.xbgvw.sandbox67.opentlc.com/v1"
-            apiKey: "sk-no-key"
+            apiBase: "http://qwen-2-5-7b-cpu-predictor.openshift-ai-models.svc.cluster.local:8080/v1"
+            apiKey: "none"
     - id: n8n
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/n8n-helm-chart/"
