@@ -253,9 +253,9 @@ metadata:
   name: vllm-model-cache
   namespace: openshift-ai-models
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  storageClassName: ocs-external-storagecluster-ceph-rbd-immediate
   accessModes:
   - ReadWriteOnce
   resources:
@@ -267,7 +267,6 @@ kind: ServingRuntime
 metadata:
   annotations:
     openshift.io/display-name: vLLM CPU Runtime
-    argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   labels:
     opendatahub.io/dashboard: "true"
@@ -322,7 +321,6 @@ metadata:
   annotations:
     openshift.io/display-name: Qwen 2.5 7B CPU
     serving.kserve.io/deploymentMode: RawDeployment
-    argocd.argoproj.io/sync-wave: "6"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
   labels:
     opendatahub.io/dashboard: "true"
