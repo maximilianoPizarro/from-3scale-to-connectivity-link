@@ -43,6 +43,29 @@ spec:
 
 ---
 apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-engineering
+  namespace: default
+  description: "Platform Engineering team responsible for infrastructure, API management, and developer experience"
+  tags:
+    - platform-engineering
+    - infrastructure
+spec:
+  type: team
+  profile:
+    displayName: Platform Engineering
+  children: []
+  members:
+    - platformadmin
+    - maximilianopizarro
+    - user1
+    - user2
+    - user3
+    - user4
+    - user5
+---
+apiVersion: backstage.io/v1alpha1
 kind: Domain
 metadata:
   name: api-management
@@ -51,4 +74,4 @@ metadata:
   tags:
     - api-management
 spec:
-  owner: group:default/3scale
+  owner: group:default/platform-engineering
