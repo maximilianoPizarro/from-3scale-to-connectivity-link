@@ -98,6 +98,7 @@ metadata:
 spec:
   dashboardConfig:
     genAiStudio: true
+    modelAsService: true
     disableModelCatalog: false
 ---
 apiVersion: v1
