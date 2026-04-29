@@ -3,9 +3,9 @@
     {
       "title": "Qwen 2.5 7B (OpenShift AI)",
       "model": "qwen25-7b-instruct",
-      "apiBase": "CONTINUE_API_BASE_PLACEHOLDER",
+      "apiBase": "http://openshift-mcp-server-litellm.openshift-lightspeed.svc.cluster.local:4000/v1",
       "provider": "openai",
-      "apiKey": "CONTINUE_API_KEY_PLACEHOLDER",
+      "apiKey": "sk-openshift-mcp-1234",
       "contextLength": 32768,
       "completionOptions": {
         "maxTokens": 4096
@@ -19,9 +19,9 @@
   "tabAutocompleteModel": {
     "title": "Qwen 2.5 7B Autocomplete",
     "model": "qwen25-7b-instruct",
-    "apiBase": "CONTINUE_API_BASE_PLACEHOLDER",
+    "apiBase": "http://openshift-mcp-server-litellm.openshift-lightspeed.svc.cluster.local:4000/v1",
     "provider": "openai",
-    "apiKey": "CONTINUE_API_KEY_PLACEHOLDER",
+    "apiKey": "sk-openshift-mcp-1234",
     "contextLength": 32768,
     "completionOptions": {
       "maxTokens": 256
@@ -41,14 +41,8 @@
     "modelContextProtocolServers": [
       {
         "transport": {
-          "type": "streamable-http",
+          "type": "sse",
           "url": "http://openshift-mcp-server.openshift-lightspeed.svc.cluster.local:8080/mcp"
-        }
-      },
-      {
-        "transport": {
-          "type": "streamable-http",
-          "url": "http://argocd-mcp-server.mcp-system.svc.cluster.local:8080/mcp"
         }
       }
     ]

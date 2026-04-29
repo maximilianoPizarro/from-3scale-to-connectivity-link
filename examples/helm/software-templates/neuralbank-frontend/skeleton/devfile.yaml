@@ -28,22 +28,6 @@ components:
       memoryLimit: 2Gi
       cpuLimit: "1"
       mountSources: true
-      env:
-        - name: CONTINUE_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: continue-ai-config
-              key: CONTINUE_API_KEY
-        - name: CONTINUE_API_BASE
-          valueFrom:
-            secretKeyRef:
-              name: continue-ai-config
-              key: CONTINUE_API_BASE
-        - name: CONTINUE_MODEL
-          valueFrom:
-            secretKeyRef:
-              name: continue-ai-config
-              key: CONTINUE_MODEL
 commands:
   - id: install-extensions
     exec:
@@ -61,15 +45,6 @@ commands:
       commandLine: |
         mkdir -p /home/user/.continue
         cp /projects/${{values.name}}/continue-config.json /home/user/.continue/config.json
-        if [ -n "$CONTINUE_API_KEY" ]; then
-          sed -i "s|CONTINUE_API_KEY_PLACEHOLDER|$CONTINUE_API_KEY|g" /home/user/.continue/config.json
-        fi
-        if [ -n "$CONTINUE_API_BASE" ]; then
-          sed -i "s|CONTINUE_API_BASE_PLACEHOLDER|$CONTINUE_API_BASE|g" /home/user/.continue/config.json
-        fi
-        if [ -n "$CONTINUE_MODEL" ]; then
-          sed -i "s|qwen25-7b-instruct|$CONTINUE_MODEL|g" /home/user/.continue/config.json
-        fi
   - id: serve
     exec:
       component: tools
