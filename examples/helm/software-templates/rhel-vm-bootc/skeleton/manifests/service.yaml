@@ -16,7 +16,7 @@ spec:
 {%- if values.enableConnectivityLink %}
     - name: http
       protocol: TCP
-      port: ${{values.exposedPort}}
-      targetPort: ${{values.exposedPort}}
+      port: 8080
+      targetPort: 8080
 {%- endif %}
   type: ClusterIP

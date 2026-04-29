@@ -37,6 +37,15 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
+              ports:
+                - name: ssh
+                  port: 22
+                  protocol: TCP
+{%- if values.enableConnectivityLink %}
+                - name: http
+                  port: 8080
+                  protocol: TCP
+{%- endif %}
           rng: {}
         features:
           acpi: {}

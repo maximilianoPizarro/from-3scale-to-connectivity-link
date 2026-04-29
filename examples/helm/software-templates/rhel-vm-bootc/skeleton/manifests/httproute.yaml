@@ -21,6 +21,6 @@ spec:
         - group: ""
           kind: Service
           name: ${{values.vmName}}
-          port: ${{values.exposedPort}}
+          port: 8080
           weight: 1
 {%- endif %}

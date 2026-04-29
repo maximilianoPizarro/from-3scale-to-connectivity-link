@@ -217,11 +217,6 @@ spec:
     - title: Connectivity Link Configuration
       description: "Configure Gateway API routing and policies (only applies when 'Expose via Connectivity Link' is enabled)"
       properties:
-        exposedPort:
-          title: Exposed Service Port
-          type: integer
-          description: "TCP port on the VM to expose through the Gateway"
-          default: 8080
         routePath:
           title: Route Path Prefix
           type: string
@@ -305,7 +300,6 @@ spec:
           extraPackages: ${{ parameters.extraPackages }}
           cloudInitExtra: ${{ parameters.cloudInitExtra }}
           enableConnectivityLink: ${{ parameters.enableConnectivityLink }}
-          exposedPort: ${{ parameters.exposedPort }}
           routePath: ${{ parameters.routePath }}
           authModel: ${{ parameters.authModel }}
           rateLimitPerMinute: ${{ parameters.rateLimitPerMinute }}

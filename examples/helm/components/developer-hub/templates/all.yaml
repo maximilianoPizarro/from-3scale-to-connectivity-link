@@ -887,6 +887,8 @@ data:
                       if:
                         allOf:
                           - hasAnnotation: kuadrant.io/namespace
+                          - isKind: component
+                          - isType: service
                   - mountPoint: entity.page.topology/cards
                     importName: GateForgeTopologyTab
                     config:
@@ -905,6 +907,7 @@ data:
                       if:
                         allOf:
                           - isKind: component
+                          - isType: service
 kind: ConfigMap
 metadata:
   annotations:

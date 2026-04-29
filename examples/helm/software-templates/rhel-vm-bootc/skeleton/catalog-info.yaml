@@ -7,12 +7,9 @@ metadata:
   annotations:
     backstage.io/kubernetes-id: ${{values.uniqueName}}
     backstage.io/kubernetes-namespace: ${{values.namespace}}
+    backstage.io/kubernetes-label-selector: "kubevirt.io/domain=${{values.vmName}}"
     argocd/app-name: "${{values.owner}}-${{values.vmName}}-vm"
     argocd/app-namespace: openshift-gitops
-{%- if values.enableConnectivityLink %}
-    kuadrant.io/namespace: ${{values.namespace}}
-    kuadrant.io/httproute: ${{values.vmName}}-route
-{%- endif %}
   tags:
     - vm
     - rhel
