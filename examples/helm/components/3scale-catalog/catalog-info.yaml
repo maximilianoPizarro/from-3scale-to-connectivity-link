@@ -10,7 +10,7 @@ metadata:
     - red-hat
   links:
     - title: 3scale Admin Portal
-      url: https://3scale-admin.apps.cluster-h4jtk.dynamic.redhatworkshops.io
+      url: https://3scale-admin.apps.cluster-zgksw.dynamic.redhatworkshops.io
       icon: dashboard
 spec:
   owner: group:default/3scale

@@ -4,7 +4,7 @@
 
 La API de NFL Wallet expone una interfaz Swagger UI para explorar y probar los endpoints.
 
-**URL**: [https://nfl-wallet.apps.cluster-h4jtk.dynamic.redhatworkshops.io/q/swagger-ui](https://nfl-wallet.apps.cluster-h4jtk.dynamic.redhatworkshops.io/q/swagger-ui)
+**URL**: [https://nfl-wallet.apps.cluster-zgksw.dynamic.redhatworkshops.io/q/swagger-ui](https://nfl-wallet.apps.cluster-zgksw.dynamic.redhatworkshops.io/q/swagger-ui)
 
 ## Configuración de autenticación en Swagger
 
@@ -52,7 +52,7 @@ El spec OpenAPI se puede descargar en formato JSON/YAML:
 
 ```bash
 curl -H "X-API-Key: nfl-wallet-demo-key-2024" \
-  https://nfl-wallet.apps.cluster-h4jtk.dynamic.redhatworkshops.io/q/openapi
+  https://nfl-wallet.apps.cluster-zgksw.dynamic.redhatworkshops.io/q/openapi
 ```
 
 ## Kuadrant Auth Flow
