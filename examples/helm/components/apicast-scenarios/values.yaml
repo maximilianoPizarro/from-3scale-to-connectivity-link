@@ -1,2 +1,2 @@
-clusterDomain: apps.cluster-zgksw.dynamic.redhatworkshops.io
+clusterDomain: apps.cluster-2fjv7.dynamic.redhatworkshops.io
 microcksUrl: http://microcks.microcks.svc.cluster.local:8080
