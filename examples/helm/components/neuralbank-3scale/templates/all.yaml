@@ -265,5 +265,5 @@ spec:
   name: "Neuralbank Credit Management API"
   productSystemName: neuralbank-oidc
   activeDocOpenAPIRef:
-    url: "http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080/q/openapi"
+    url: "http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080/q/openapi?format=json"
   published: true
