@@ -24,9 +24,6 @@ spec:
       managementState: Removed
     kserve:
       managementState: Managed
-      serving:
-        managementState: Removed
-        name: knative-serving
     kueue:
       managementState: Removed
     llamastackoperator:
