@@ -224,16 +224,15 @@ spec:
         command: ["sh", "-c"]
         args:
         - |
-          cd /showroom/repo
+          cd /showroom
           if [ ! -d .git ]; then
             git init
             git add -A
             git commit -m "init" --allow-empty
           fi
         volumeMounts:
-        - mountPath: /showroom/repo
+        - mountPath: /showroom
           name: showroom-files
-          subPath: repo
       - name: antora-builder
         image: "quay.io/rhpds/antora:v1.0.1"
         env:
