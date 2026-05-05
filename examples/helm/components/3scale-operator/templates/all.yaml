@@ -12,7 +12,9 @@ metadata:
   namespace: 3scale-system
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-spec: {}
+spec:
+  targetNamespaces:
+    - 3scale-system
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
