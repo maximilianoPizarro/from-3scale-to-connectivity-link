@@ -4,7 +4,8 @@ site:
   start_page: modules::index.adoc
 content:
   sources:
-    - url: ..
+    - url: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link.git
+      branches: HEAD
       start_path: showroom/content
 ui:
   bundle:

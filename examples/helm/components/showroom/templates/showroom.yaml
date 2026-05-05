@@ -219,20 +219,6 @@ spec:
         - mountPath: /showroom/repo
           name: showroom-files
           subPath: repo
-      - name: git-init
-        image: "quay.io/rhpds/git-cloner:v1.1.2"
-        command: ["sh", "-c"]
-        args:
-        - |
-          cd /showroom
-          if [ ! -d .git ]; then
-            git init
-            git add -A
-            git commit -m "init" --allow-empty
-          fi
-        volumeMounts:
-        - mountPath: /showroom
-          name: showroom-files
       - name: antora-builder
         image: "quay.io/rhpds/antora:v1.0.1"
         env:
