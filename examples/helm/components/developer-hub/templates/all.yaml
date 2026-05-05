@@ -1314,6 +1314,8 @@ stringData:
   ARGOCD_INSTANCE_2_URL: "https://openshift-gitops-server-openshift-gitops.{{ .Values.clusterDomain }}"
   ARGOCD_INSTANCE_2_USERNAME: "admin"
   MCP_TOKEN: "{{ .Values.mcpToken | default "IpIbd50gbMb1p2+iCigrhkm21pZwbn0g" }}"
+  THREESCALE_BASE_URL: "https://3scale-admin.{{ .Values.clusterDomain }}"
+  THREESCALE_ACCESS_TOKEN: "{{ .Values.threescaleAccessToken | default "placeholder-set-in-argocd" }}"
 ---
 apiVersion: v1
 kind: Secret

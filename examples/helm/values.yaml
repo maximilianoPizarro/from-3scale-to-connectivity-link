@@ -22,6 +22,7 @@ argocd:
 connectivityLink:
   mcpToken: "IpIbd50gbMb1p2+iCigrhkm21pZwbn0g"
   argocdMcpToken: ""
+  threescaleAccessToken: "placeholder-set-in-argocd"
   operators:
     channel: stable-4.20
     version: 4.20.4
@@ -128,6 +129,7 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-developer-hub
       enabled: true
+      autoSync: false
       path: developer-hub
       destinationNamespace: developer-hub
       syncWave: "3"
@@ -342,6 +344,7 @@ connectivityLink:
             port: 3000
     - id: openshift-mcp-server
       enabled: true
+      autoSync: false
       repoURL: "https://maximilianoPizarro.github.io/openshift-mcp-server"
       chart: openshift-mcp-server
       targetRevision: "0.1.0-alpha"
@@ -351,10 +354,37 @@ connectivityLink:
         namespace: openshift-lightspeed
         litellm:
           model:
-            name: deepseek-r1-distill-qwen-14b
-            modelId: deepseek-r1-distill-qwen-14b
-            apiBase: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
-            apiKey: "sk-cgZXacnOS8Sesp0RcqtnFw"
+            name: "{{ .Values.maas.model }}"
+            modelId: "{{ .Values.maas.model }}"
+            apiBase: "{{ .Values.maas.endpoint }}"
+            apiKey: "{{ .Values.maas.apiKey }}"
+    - id: microcks
+      enabled: true
+      repoURL: "https://microcks.io/helm"
+      chart: microcks
+      targetRevision: "1.14.0"
+      destinationNamespace: microcks
+      syncWave: "8"
+      values:
+        microcks:
+          url: "microcks.{{ .Values.deployer.domain }}"
+          openshift: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+        keycloak:
+          install: true
+          persistent: true
+          url: "microcks-keycloak.{{ .Values.deployer.domain }}"
+          volumeSize: 1Gi
+        mongodb:
+          install: true
+          persistent: true
+          volumeSize: 2Gi
     - id: n8n
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/n8n-helm-chart/"
@@ -369,6 +399,7 @@ connectivityLink:
             enabled: true
     - id: gateforge
       enabled: true
+      autoSync: false
       repoURL: "https://maximilianopizarro.github.io/gateforge/"
       chart: gateforge
       targetRevision: "0.1.9"
@@ -376,7 +407,7 @@ connectivityLink:
       syncWave: "9"
       values:
         global:
-          clusterDomain: apps.cluster-lfm7v.dynamic2.redhatworkshops.io
+          clusterDomain: "{{ .Values.deployer.domain }}"
         backend:
           image:
             repository: quay.io/maximilianopizarro/gateforge-backend
@@ -387,14 +418,14 @@ connectivityLink:
             tag: v0.1.9
         ai:
           enabled: true
-          endpoint: https://litellm-prod.apps.maas.redhatworkshops.io/v1
-          model: deepseek-r1-distill-qwen-14b
-          apiKey: "sk-cgZXacnOS8Sesp0RcqtnFw"
+          endpoint: "{{ .Values.maas.endpoint }}"
+          model: "{{ .Values.maas.model }}"
+          apiKey: "{{ .Values.maas.apiKey }}"
         threescale:
           adminApi:
             enabled: true
-            url: "https://3scale-admin.apps.cluster-lfm7v.dynamic2.redhatworkshops.io"
-            accessToken: "GuiO3eGbxWnlwZAG"
+            url: "https://3scale-admin.{{ .Values.deployer.domain }}"
+            accessToken: "placeholder-set-in-argocd"
           crdDiscovery:
             enabled: true
             namespace: 3scale-system
@@ -417,9 +448,9 @@ connectivityLink:
             password: changeme
         developerHub:
           enabled: true
-          url: "https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic2.redhatworkshops.io"
-          scaffolderUrl: "https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/scaffolder/v2/tasks"
-          scaffolderToken: "a01bb6ee68d5afbd9e82402b1a37a73d900bc653d6dc2375dec06bce6d62f34d"
+          url: "https://backstage-developer-hub-developer-hub.{{ .Values.deployer.domain }}"
+          scaffolderUrl: "https://backstage-developer-hub-developer-hub.{{ .Values.deployer.domain }}/api/scaffolder/v2/tasks"
+          scaffolderToken: "placeholder-set-in-argocd"
           componentSuffix: "-product"
         route:
           enabled: true
@@ -428,13 +459,21 @@ connectivityLink:
             termination: edge
 
 # ============================================================
-# Lightspeed / MCP — LLM provider config for OLS component
-# Keys are injected at deploy time (RHDP or --set), NOT in git
+# MaaS — Model-as-a-Service provider (RHDP)
+# apiKey rotates every 7 days; set real value in ArgoCD UI
+# ============================================================
+maas:
+  apiKey: "sk-placeholder-set-in-argocd"
+  endpoint: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
+  model: "deepseek-r1-distill-qwen-14b"
+
+# ============================================================
+# Lightspeed / MCP — LLM proxy config for OLS component
+# llmApiKey is the LiteLLM internal master key (fixed)
 # ============================================================
 lightspeed:
   llmApiKey: "sk-openshift-mcp-1234"
   llmEndpoint: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
-  model: "deepseek-r1-distill-qwen-14b"
 
 # ============================================================
 # User Scaling — single parameter controls all user provisioning

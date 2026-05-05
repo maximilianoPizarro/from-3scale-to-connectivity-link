@@ -1,2 +1,2 @@
-clusterDomain: apps.cluster-lfm7v.dynamic2.redhatworkshops.io
+clusterDomain: apps.cluster.example.com
 microcksUrl: http://microcks.microcks.svc.cluster.local:8080

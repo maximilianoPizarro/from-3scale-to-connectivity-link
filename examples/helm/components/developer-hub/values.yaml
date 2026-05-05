@@ -6,3 +6,4 @@ userCount: 200
 litellmUrl: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
 litellmModel: "deepseek-r1-distill-qwen-14b"
 litellmApiKey: "sk-openshift-mcp-1234"
+threescaleAccessToken: "placeholder-set-in-argocd"

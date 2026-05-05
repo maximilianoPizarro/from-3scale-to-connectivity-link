@@ -197,7 +197,7 @@ spec:
     {{- else if eq .path "openshift-lightspeed" }}
     {{- $llmKey := $.Values.lightspeed.llmApiKey }}
     {{- $llmEndpoint := $.Values.lightspeed.llmEndpoint }}
-    {{- $llmModel := $.Values.lightspeed.model | default "granite-3-2-8b-instruct" }}
+    {{- $llmModel := $.Values.maas.model | default "deepseek-r1-distill-qwen-14b" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
@@ -235,7 +235,8 @@ spec:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
-        litellmModel: {{ $.Values.lightspeed.model | default "deepseek-r1-distill-qwen-14b" | quote }}
+        litellmModel: {{ $.Values.maas.model | default "deepseek-r1-distill-qwen-14b" | quote }}
+        threescaleAccessToken: {{ $.Values.connectivityLink.threescaleAccessToken | default "placeholder-set-in-argocd" | quote }}
     {{- else if eq .path "workshop-registration" }}
     helm:
       valuesObject:
@@ -312,14 +313,20 @@ spec:
       valuesObject:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
+    {{- else if eq .path "apicast-scenarios" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
     {{- end }}
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ .destinationNamespace }}
   syncPolicy:
+    {{- if ne (.autoSync | toString) "false" }}
     automated:
       prune: {{ .prune }}
       selfHeal: {{ .selfHeal }}
+    {{- end }}
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
@@ -381,14 +388,16 @@ spec:
     helm:
       releaseName: {{ .chart }}
       valuesObject:
-        {{- toYaml .values | nindent 8 }}
+        {{- tpl (toYaml .values) $ | nindent 8 }}
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ .destinationNamespace }}
   syncPolicy:
+    {{- if ne (.autoSync | toString) "false" }}
     automated:
       prune: true
       selfHeal: true
+    {{- end }}
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
