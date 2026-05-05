@@ -15,8 +15,8 @@ Stack de observabilidad pre-desplegado en el clúster para monitoreo de APIs, ga
 
 ## Acceso rápido
 
-- **Grafana**: [grafana-observability.apps.cluster-4wrc6.dynamic.redhatworkshops.io](https://grafana-observability.apps.cluster-4wrc6.dynamic.redhatworkshops.io)
-- **Thanos Querier**: [thanos-querier.apps.cluster-4wrc6.dynamic.redhatworkshops.io](https://thanos-querier.apps.cluster-4wrc6.dynamic.redhatworkshops.io)
+- **Grafana**: [grafana-observability.apps.cluster-h4jtk.dynamic.redhatworkshops.io](https://grafana-observability.apps.cluster-h4jtk.dynamic.redhatworkshops.io)
+- **Thanos Querier**: [thanos-querier.apps.cluster-h4jtk.dynamic.redhatworkshops.io](https://thanos-querier.apps.cluster-h4jtk.dynamic.redhatworkshops.io)
 
 ## Credenciales
 
