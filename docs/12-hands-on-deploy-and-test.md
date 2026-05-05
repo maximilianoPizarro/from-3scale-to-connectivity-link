@@ -20,7 +20,7 @@ All three deploy to namespace `YOUR_USER-neuralbank` and are connected.
 
 ## Step 1: Deploy the Backend
 
-1. Log in to **Developer Hub**: `https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic.redhatworkshops.io`
+1. Log in to **Developer Hub**: `https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic2.redhatworkshops.io`
 2. Click **Create** in the left sidebar.
 3. Select **"Neuralbank: Backend API"**.
 4. Fill: **Name** = `neuralbank-backend`, **Owner** = `YOUR_USER`
@@ -43,7 +43,7 @@ All three deploy to namespace `YOUR_USER-neuralbank` and are connected.
 Open ArgoCD and confirm three apps are **Synced** and **Healthy**:
 
 ```
-https://openshift-gitops-server-openshift-gitops.apps.cluster-lfm7v.dynamic.redhatworkshops.io
+https://openshift-gitops-server-openshift-gitops.apps.cluster-lfm7v.dynamic2.redhatworkshops.io
 ```
 
 ## Step 5: Wait for Pipelines
@@ -60,7 +60,7 @@ Wait until status shows `Succeeded` (3-5 minutes).
 
 ```bash
 TOKEN=$(curl -s -X POST \
-  "https://rhbk.apps.cluster-lfm7v.dynamic.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token" \
+  "https://rhbk.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "client_id=neuralbank-frontend" \
@@ -75,7 +75,7 @@ echo "Token: ${TOKEN:0:50}..."
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" \
-  "https://neuralbank.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers" \
+  "https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers" \
   | python3 -m json.tool | head -30
 ```
 
@@ -83,7 +83,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" \
-  "https://neuralbank.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers/1" \
+  "https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers/1" \
   | python3 -m json.tool
 ```
 
@@ -91,7 +91,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" \
-  "https://neuralbank.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers/1/credit-score" \
+  "https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers/1/credit-score" \
   | python3 -m json.tool
 ```
 
@@ -109,7 +109,7 @@ curl -s -X POST \
     "ciudad": "Buenos Aires",
     "pais": "Argentina"
   }' \
-  "https://neuralbank.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers" \
+  "https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers" \
   | python3 -m json.tool
 ```
 
@@ -121,14 +121,14 @@ API Key is simpler — no token exchange needed:
 
 ```bash
 curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
-  https://nfl-wallet.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers
+  https://nfl-wallet.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers
 ```
 
 ### 7.2 — With valid API Key (expect 200)
 
 ```bash
 curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
-  "https://nfl-wallet.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers" \
+  "https://nfl-wallet.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers" \
   | python3 -m json.tool | head -20
 ```
 
@@ -146,7 +146,7 @@ curl -s -X POST \
     "ciudad": "Miami",
     "pais": "USA"
   }' \
-  "https://nfl-wallet.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers" \
+  "https://nfl-wallet.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers" \
   | python3 -m json.tool
 ```
 
@@ -155,7 +155,7 @@ curl -s -X POST \
 ```bash
 curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
   -H "X-API-Key: invalid-key-12345" \
-  https://nfl-wallet.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/v1/customers
+  https://nfl-wallet.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers
 ```
 
 ## Step 8: Access the Frontend
@@ -163,7 +163,7 @@ curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
 Open in your browser:
 
 ```
-https://neuralbank.apps.cluster-lfm7v.dynamic.redhatworkshops.io
+https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io
 ```
 
 Log in with `YOUR_USER` / `Welcome123!` to see the credit visualization dashboard.

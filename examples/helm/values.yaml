@@ -376,7 +376,7 @@ connectivityLink:
       syncWave: "9"
       values:
         global:
-          clusterDomain: apps.cluster-lfm7v.dynamic.redhatworkshops.io
+          clusterDomain: apps.cluster-lfm7v.dynamic2.redhatworkshops.io
         backend:
           image:
             repository: quay.io/maximilianopizarro/gateforge-backend
@@ -393,7 +393,7 @@ connectivityLink:
         threescale:
           adminApi:
             enabled: true
-            url: "https://3scale-admin.apps.cluster-lfm7v.dynamic.redhatworkshops.io"
+            url: "https://3scale-admin.apps.cluster-lfm7v.dynamic2.redhatworkshops.io"
             accessToken: "GuiO3eGbxWnlwZAG"
           crdDiscovery:
             enabled: true
@@ -417,8 +417,8 @@ connectivityLink:
             password: changeme
         developerHub:
           enabled: true
-          url: "https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic.redhatworkshops.io"
-          scaffolderUrl: "https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic.redhatworkshops.io/api/scaffolder/v2/tasks"
+          url: "https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic2.redhatworkshops.io"
+          scaffolderUrl: "https://backstage-developer-hub-developer-hub.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/scaffolder/v2/tasks"
           scaffolderToken: "a01bb6ee68d5afbd9e82402b1a37a73d900bc653d6dc2375dec06bce6d62f34d"
           componentSuffix: "-product"
         route:
@@ -496,7 +496,7 @@ components:
 # Values injected by field content workload (do not modify)
 # ============================================================
 deployer:
-  domain: "apps.cluster-lfm7v.dynamic.redhatworkshops.io"
+  domain: "apps.cluster-lfm7v.dynamic2.redhatworkshops.io"
   apiUrl: ""
 
 fieldContent:

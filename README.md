@@ -378,7 +378,7 @@ The cluster domain is injected by RHDP via `deployer.domain`. For manual deploym
 
 ```bash
 # Replace with your cluster's domain
-./update-cluster-domain.sh apps.cluster-xxxxx.dynamic.redhatworkshops.io
+./update-cluster-domain.sh apps.cluster-xxxxx.dynamic2.redhatworkshops.io
 git add -A && git commit -m "update cluster domain" && git push
 ```
 
