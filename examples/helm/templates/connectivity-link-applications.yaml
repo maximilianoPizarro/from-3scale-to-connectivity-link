@@ -260,6 +260,8 @@ spec:
     {{- else if eq .path "neuralbank-stack" }}
     helm:
       valuesObject:
+        global:
+          clusterDomain: {{ $domain }}
         {{- $nb := deepCopy $.Values.connectivityLink.neuralbank }}
         {{- $kc := deepCopy $nb.keycloak }}
         {{- $_ := set $kc "issuerUrl" (printf "https://rhbk.%s/realms/neuralbank" $domain) }}

@@ -47,6 +47,8 @@ spec:
           value: "nflwallet"
         - name: QUARKUS_DATASOURCE_PASSWORD
           value: "nflwallet123!"
+        - name: QUARKUS_SMALLRYE_OPENAPI_SERVERS
+          value: "https://nfl-wallet.{{ .Values.clusterDomain }}"
         resources:
           limits:
             cpu: "500m"

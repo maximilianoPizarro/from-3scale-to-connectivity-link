@@ -92,6 +92,8 @@ spec:
               value: "mockapis"
             - name: QUARKUS_DATASOURCE_PASSWORD
               value: "mockapis123!"
+            - name: QUARKUS_SMALLRYE_OPENAPI_SERVERS
+              value: "https://{{ .name }}-mock.{{ $.Values.clusterDomain }}"
           readinessProbe:
             httpGet:
               path: /q/health/ready
