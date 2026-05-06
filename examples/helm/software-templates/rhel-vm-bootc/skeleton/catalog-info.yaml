@@ -36,7 +36,7 @@ spec:
   type: vm
   lifecycle: production
   owner: ${{values.owner}}
-  system: ${{values.owner}}-vms
+  system: ${{values.owner}}-neuralbank
 {%- if values.enableConnectivityLink and values.authModel === "apikey" %}
   providesApis:
     - ${{values.uniqueName}}-api
@@ -60,7 +60,7 @@ spec:
   type: openapi
   lifecycle: production
   owner: ${{values.owner}}
-  system: ${{values.owner}}-vms
+  system: ${{values.owner}}-neuralbank
   definition: |
     openapi: "3.0.3"
     info:

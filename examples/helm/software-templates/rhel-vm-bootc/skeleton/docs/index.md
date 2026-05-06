@@ -99,4 +99,4 @@ Changes pushed to the repo are automatically synced by ArgoCD to the cluster.
 
 - **User:** ${{ values.owner }}
 - **Namespace:** ${{ values.namespace }}
-- **System:** ${{ values.owner }}-vms
+- **System:** ${{ values.owner }}-neuralbank

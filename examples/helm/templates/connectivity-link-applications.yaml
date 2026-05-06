@@ -194,10 +194,14 @@ spec:
         channel: {{ $.Values.connectivityLink.operators.channel | quote }}
         version: {{ $.Values.connectivityLink.operators.version | quote }}
         subscriptions: {{ $.Values.connectivityLink.operators.subscriptions | toJson }}
+    {{- else if eq .path "llm-serving" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
     {{- else if eq .path "openshift-lightspeed" }}
     {{- $llmKey := $.Values.lightspeed.llmApiKey }}
     {{- $llmEndpoint := $.Values.lightspeed.llmEndpoint }}
-    {{- $llmModel := $.Values.maas.model | default "deepseek-r1-distill-qwen-14b" }}
+    {{- $llmModel := $.Values.maas.model | default "granite-3.1-8b-instruct" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
@@ -235,7 +239,7 @@ spec:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
-        litellmModel: {{ $.Values.maas.model | default "deepseek-r1-distill-qwen-14b" | quote }}
+        litellmModel: {{ $.Values.maas.model | default "granite-3.1-8b-instruct" | quote }}
         threescaleAccessToken: {{ $.Values.connectivityLink.threescaleAccessToken | default "placeholder-set-in-argocd" | quote }}
     {{- else if eq .path "workshop-registration" }}
     helm:

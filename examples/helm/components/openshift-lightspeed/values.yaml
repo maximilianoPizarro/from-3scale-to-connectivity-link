@@ -1,4 +1,4 @@
 clusterDomain: ""
 llmApiKey: "sk-openshift-mcp-1234"
 llmEndpoint: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
-llmModel: "deepseek-r1-distill-qwen-14b"
+llmModel: "granite-3.1-8b-instruct"

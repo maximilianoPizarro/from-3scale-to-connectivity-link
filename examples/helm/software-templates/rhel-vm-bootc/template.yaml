@@ -50,7 +50,7 @@ spec:
           type: string
           description: "Kubernetes namespace for the VM resources"
           default: ""
-          ui:help: "Leave empty to use <owner>-vms"
+          ui:help: "Leave empty to use <owner>-neuralbank"
 
     # ── Page 2: Compute Resources ────────────────────────────────
     - title: Compute Resources
@@ -282,7 +282,7 @@ spec:
           uniqueName: "${{ parameters.owner }}-${{ parameters.vmName }}"
           description: ${{ parameters.description }}
           owner: ${{ parameters.owner }}
-          namespace: "${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}"
+          namespace: "${{ parameters.namespace if parameters.namespace else parameters.owner + '-neuralbank' }}"
           cpuCores: ${{ parameters.cpuCores }}
           cpuSockets: ${{ parameters.cpuSockets }}
           cpuThreads: ${{ parameters.cpuThreads }}
@@ -349,7 +349,7 @@ spec:
               path: manifests
             destination:
               server: https://kubernetes.default.svc
-              namespace: "${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}"
+              namespace: "${{ parameters.namespace if parameters.namespace else parameters.owner + '-neuralbank' }}"
             syncPolicy:
               automated:
                 prune: true
@@ -375,8 +375,8 @@ spec:
             - Email: "${{ parameters.owner }}@redhat.local"
               Name: "${{ parameters.owner }}"
           Subject: "VM Provisioned — ${{ parameters.vmName }}"
-          Text: "Your RHEL virtual machine '${{ parameters.vmName }}' has been provisioned in namespace ${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}. Boot source: ${{ parameters.bootSource }}. ArgoCD will sync the resources automatically."
-          HTML: "<div style='font-family:Red Hat Text,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden'><div style='background:#0066CC;padding:24px 32px;text-align:center'><h1 style='color:#fff;margin:0;font-size:22px'>VM Provisioned</h1><p style='color:#d2d2d2;margin:4px 0 0;font-size:12px'>OpenShift Virtualization + bootc</p></div><div style='padding:32px'><h2 style='color:#151515;margin:0 0 16px;font-size:18px'>${{ parameters.vmName }}</h2><table style='width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px'><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73;width:160px'>Namespace</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}</td></tr><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73'>Compute</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.cpuCores }} cores / ${{ parameters.memory }}</td></tr><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73'>Root Disk</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.rootDiskSize }}</td></tr><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73'>Boot Source</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.bootSource }}</td></tr><tr><td style='padding:10px 0;color:#6a6e73'>Connectivity Link</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ 'Enabled' if parameters.enableConnectivityLink else 'Disabled' }}</td></tr></table></div><div style='background:#f0f0f0;padding:16px 32px;text-align:center;font-size:11px;color:#6a6e73'>Powered by Red Hat Developer Hub &bull; OpenShift Virtualization &bull; bootc</div></div>"
+          Text: "Your RHEL virtual machine '${{ parameters.vmName }}' has been provisioned in namespace ${{ parameters.namespace if parameters.namespace else parameters.owner + '-neuralbank' }}. Boot source: ${{ parameters.bootSource }}. ArgoCD will sync the resources automatically."
+          HTML: "<div style='font-family:Red Hat Text,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden'><div style='background:#0066CC;padding:24px 32px;text-align:center'><h1 style='color:#fff;margin:0;font-size:22px'>VM Provisioned</h1><p style='color:#d2d2d2;margin:4px 0 0;font-size:12px'>OpenShift Virtualization + bootc</p></div><div style='padding:32px'><h2 style='color:#151515;margin:0 0 16px;font-size:18px'>${{ parameters.vmName }}</h2><table style='width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px'><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73;width:160px'>Namespace</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.namespace if parameters.namespace else parameters.owner + '-neuralbank' }}</td></tr><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73'>Compute</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.cpuCores }} cores / ${{ parameters.memory }}</td></tr><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73'>Root Disk</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.rootDiskSize }}</td></tr><tr style='border-bottom:1px solid #f0f0f0'><td style='padding:10px 0;color:#6a6e73'>Boot Source</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ parameters.bootSource }}</td></tr><tr><td style='padding:10px 0;color:#6a6e73'>Connectivity Link</td><td style='padding:10px 0;color:#151515;font-weight:500'>${{ 'Enabled' if parameters.enableConnectivityLink else 'Disabled' }}</td></tr></table></div><div style='background:#f0f0f0;padding:16px 32px;text-align:center;font-size:11px;color:#6a6e73'>Powered by Red Hat Developer Hub &bull; OpenShift Virtualization &bull; bootc</div></div>"
 
   output:
     links:
@@ -389,7 +389,7 @@ spec:
       - title: VM Provisioned
         content: |
           **${{ parameters.vmName }}** has been provisioned:
-          - Namespace: `${{ parameters.namespace if parameters.namespace else parameters.owner + '-vms' }}`
+          - Namespace: `${{ parameters.namespace if parameters.namespace else parameters.owner + '-neuralbank' }}`
           - Compute: ${{ parameters.cpuCores }} cores, ${{ parameters.memory }} RAM
           - Disk: ${{ parameters.rootDiskSize }} (${{ parameters.bootSource }})
           - Run strategy: `${{ parameters.runStrategy }}`

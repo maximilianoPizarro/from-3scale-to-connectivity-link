@@ -1,0 +1,20 @@
+clusterDomain: ""
+
+model:
+  name: granite-3.1-8b-instruct
+  displayName: "Granite 3.1 8B Instruct (GGUF Q4_K_M)"
+  filename: "granite-3.1-8b-instruct-Q4_K_M.gguf"
+  downloadUrl: "https://huggingface.co/ibm-granite/granite-3.1-8b-instruct-GGUF/resolve/main/granite-3.1-8b-instruct-Q4_K_M.gguf"
+  storageSize: "10Gi"
+
+runtime:
+  image: "ghcr.io/ggerganov/llama.cpp:server"
+  ctxSize: 4096
+
+resources:
+  requests:
+    cpu: "4"
+    memory: "8Gi"
+  limits:
+    cpu: "8"
+    memory: "12Gi"

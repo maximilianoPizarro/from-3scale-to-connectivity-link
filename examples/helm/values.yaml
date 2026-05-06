@@ -184,6 +184,14 @@ connectivityLink:
       prune: false
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: llm-serving
+      enabled: true
+      path: llm-serving
+      destinationNamespace: openshift-ai-models
+      syncWave: "7"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: connectivity-link-neuralbank-stack
       enabled: true
       path: neuralbank-stack
@@ -464,8 +472,8 @@ connectivityLink:
 # ============================================================
 maas:
   apiKey: "sk-placeholder-set-in-argocd"
-  endpoint: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
-  model: "deepseek-r1-distill-qwen-14b"
+  endpoint: "http://granite-3-1-8b-instruct-api.openshift-ai-models.svc.cluster.local:8080/v1"
+  model: "granite-3.1-8b-instruct"
 
 # ============================================================
 # Lightspeed / MCP — LLM proxy config for OLS component
