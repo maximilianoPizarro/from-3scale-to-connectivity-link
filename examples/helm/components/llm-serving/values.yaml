@@ -9,12 +9,12 @@ model:
 
 runtime:
   image: "ghcr.io/ggml-org/llama.cpp:server-b9038"
-  ctxSize: 4096
+  ctxSize: 32768
 
 resources:
   requests:
     cpu: "4"
-    memory: "8Gi"
+    memory: "12Gi"
   limits:
     cpu: "8"
-    memory: "12Gi"
+    memory: "16Gi"
