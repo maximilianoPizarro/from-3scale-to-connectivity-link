@@ -8,7 +8,7 @@ model:
   storageSize: "10Gi"
 
 runtime:
-  image: "ghcr.io/ggerganov/llama.cpp:server"
+  image: "ghcr.io/ggml-org/llama.cpp:server-b9038"
   ctxSize: 4096
 
 resources:
