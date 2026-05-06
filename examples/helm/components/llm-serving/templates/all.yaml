@@ -101,12 +101,16 @@ spec:
       command:
         - /app/llama-server
       args:
-        - --host=0.0.0.0
-        - --port=8080
-        - "--model=/mnt/models/{{ .Values.model.filename }}"
-        - "--ctx-size={{ .Values.runtime.ctxSize | default 4096 }}"
-        - --n-gpu-layers=0
-        - --jinja
+        - --host
+        - "0.0.0.0"
+        - --port
+        - "8080"
+        - --model
+        - "/mnt/models/{{ .Values.model.filename }}"
+        - --ctx-size
+        - "{{ .Values.runtime.ctxSize | default 4096 }}"
+        - --n-gpu-layers
+        - "0"
       ports:
         - containerPort: 8080
           protocol: TCP
