@@ -22,7 +22,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: download-granite-model
+  name: granite-model-downloader
   namespace: openshift-ai-models
   annotations:
     argocd.argoproj.io/sync-wave: "1"
