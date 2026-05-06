@@ -125,7 +125,7 @@ spec:
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
-  name: granite-3-1-8b-instruct
+  name: granite-3-2-8b-instruct
   namespace: openshift-ai-models
   labels:
     opendatahub.io/dashboard: "true"
@@ -163,7 +163,7 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: granite-3-1-8b-instruct
+  name: granite-3-2-8b-instruct
   namespace: openshift-ai-models
   annotations:
     argocd.argoproj.io/sync-wave: "4"
@@ -171,7 +171,7 @@ metadata:
 spec:
   to:
     kind: Service
-    name: granite-3-1-8b-instruct-api
+    name: granite-3-2-8b-instruct-api
     weight: 100
   port:
     targetPort: 8080

@@ -134,7 +134,7 @@ type: Opaque
 stringData:
   CONTINUE_API_KEY: "sk-openshift-mcp-1234"
   CONTINUE_API_BASE: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc.cluster.local:4000/v1"
-  CONTINUE_MODEL: "granite-3.1-8b-instruct"
+  CONTINUE_MODEL: "granite-3.2-8b-instruct"
 ---
 apiVersion: v1
 kind: ServiceAccount

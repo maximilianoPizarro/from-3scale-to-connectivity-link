@@ -201,7 +201,7 @@ spec:
     {{- else if eq .path "openshift-lightspeed" }}
     {{- $llmKey := $.Values.lightspeed.llmApiKey }}
     {{- $llmEndpoint := $.Values.lightspeed.llmEndpoint }}
-    {{- $llmModel := $.Values.maas.model | default "granite-3.1-8b-instruct" }}
+    {{- $llmModel := $.Values.maas.model | default "granite-3.2-8b-instruct" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
@@ -239,7 +239,7 @@ spec:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
-        litellmModel: {{ $.Values.maas.model | default "granite-3.1-8b-instruct" | quote }}
+        litellmModel: {{ $.Values.maas.model | default "granite-3.2-8b-instruct" | quote }}
         threescaleAccessToken: {{ $.Values.connectivityLink.threescaleAccessToken | default "placeholder-set-in-argocd" | quote }}
     {{- else if eq .path "workshop-registration" }}
     helm:
