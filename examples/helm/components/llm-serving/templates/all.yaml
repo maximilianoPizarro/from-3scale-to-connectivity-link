@@ -108,9 +108,20 @@ spec:
         - --model
         - "/mnt/models/{{ .Values.model.filename }}"
         - --ctx-size
-        - "{{ .Values.runtime.ctxSize | default 4096 }}"
+        - "{{ .Values.runtime.ctxSize | default 32768 }}"
         - --n-gpu-layers
         - "0"
+        - --threads
+        - "{{ .Values.resources.limits.cpu | default 8 }}"
+        - --threads-batch
+        - "{{ .Values.resources.limits.cpu | default 8 }}"
+        - --batch-size
+        - "4096"
+        - --ubatch-size
+        - "2048"
+        - --parallel
+        - "1"
+        - --cont-batching
       ports:
         - containerPort: 8080
           protocol: TCP

@@ -1,10 +1,10 @@
 clusterDomain: ""
 
 model:
-  name: granite-3.2-8b-instruct
-  displayName: "Granite 3.2 8B Instruct (GGUF Q4_K_M)"
-  filename: "granite-3.2-8b-instruct-Q4_K_M.gguf"
-  downloadUrl: "https://huggingface.co/ibm-research/granite-3.2-8b-instruct-GGUF/resolve/main/granite-3.2-8b-instruct-Q4_K_M.gguf"
+  name: granite-3.2-2b-instruct
+  displayName: "Granite 3.2 2B Instruct (GGUF Q4_K_M)"
+  filename: "granite-3.2-2b-instruct-Q4_K_M.gguf"
+  downloadUrl: "https://huggingface.co/ibm-research/granite-3.2-2b-instruct-GGUF/resolve/main/granite-3.2-2b-instruct-Q4_K_M.gguf"
   storageSize: "10Gi"
 
 runtime:
@@ -14,7 +14,7 @@ runtime:
 resources:
   requests:
     cpu: "4"
-    memory: "12Gi"
+    memory: "6Gi"
   limits:
     cpu: "8"
-    memory: "16Gi"
+    memory: "8Gi"
