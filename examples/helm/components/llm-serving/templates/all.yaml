@@ -56,7 +56,6 @@ spec:
               fi
 
               echo "[DOWNLOAD] Fetching {{ .Values.model.filename }} from HuggingFace..."
-              dnf install -y -q curl
               curl -L --progress-bar -o "$MODEL_FILE" \
                 "{{ .Values.model.downloadUrl }}"
 
