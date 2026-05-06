@@ -472,7 +472,7 @@ connectivityLink:
 # ============================================================
 maas:
   apiKey: "sk-placeholder-set-in-argocd"
-  endpoint: "http://granite-3-2-8b-instruct-api.openshift-ai-models.svc.cluster.local:8080/v1"
+  endpoint: "http://granite-3-2-8b-instruct-metrics.openshift-ai-models.svc.cluster.local:8080/v1"
   model: "granite-3.2-8b-instruct"
 
 # ============================================================
