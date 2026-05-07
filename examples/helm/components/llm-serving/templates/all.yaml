@@ -121,6 +121,7 @@ spec:
         - "2048"
         - --parallel
         - "1"
+        - --jinja
         - --cont-batching
       ports:
         - containerPort: 8080
