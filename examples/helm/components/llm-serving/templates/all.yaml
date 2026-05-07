@@ -97,7 +97,7 @@ spec:
     prometheus.io/port: "8080"
   containers:
     - name: kserve-container
-      image: {{ .Values.runtime.image | default "ghcr.io/ggml-org/llama.cpp:server-b9038" }}
+      image: {{ .Values.runtime.image | default "ghcr.io/ggml-org/llama.cpp:server-b9049" }}
       command:
         - /app/llama-server
       args:
