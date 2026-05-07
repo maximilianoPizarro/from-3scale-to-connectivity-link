@@ -94,6 +94,8 @@ spec:
               value: "mockapis123!"
             - name: QUARKUS_SMALLRYE_OPENAPI_SERVERS
               value: "https://{{ .name }}-mock.{{ $.Values.clusterDomain }}"
+            - name: QUARKUS_HTTP_CORS_ORIGINS
+              value: "*"
           readinessProbe:
             httpGet:
               path: /q/health/ready

@@ -27,7 +27,7 @@ stringData:
   header: "Bearer {{ .Values.rhdhBackendSecret | default "a01bb6ee68d5afbd9e82402b1a37a73d900bc653d6dc2375dec06bce6d62f34d" }}"
 ---
 ##
-## OLSConfig — LiteLLM + MCP servers for tool calling
+## OLSConfig — Granite (direct) + MCP servers for tool calling
 ##
 apiVersion: ols.openshift.io/v1alpha1
 kind: OLSConfig
@@ -42,16 +42,16 @@ spec:
     - MCPServer
   llm:
     providers:
-      - name: litellm
+      - name: granite-local
         type: openai
-        url: {{ .Values.llmEndpoint | default "https://litellm-prod.apps.maas.redhatworkshops.io/v1" | quote }}
+        url: {{ .Values.llmEndpoint | default "http://granite-3-2-8b-instruct-metrics.openshift-ai-models.svc.cluster.local:8080/v1" | quote }}
         credentialsSecretRef:
           name: llm-credentials
         models:
-          - name: {{ .Values.llmModel | default "granite-3-2-8b-instruct" }}
+          - name: {{ .Values.llmModel | default "granite-3.2-8b-instruct" }}
   ols:
-    defaultProvider: litellm
-    defaultModel: {{ .Values.llmModel | default "granite-3-2-8b-instruct" }}
+    defaultProvider: granite-local
+    defaultModel: {{ .Values.llmModel | default "granite-3.2-8b-instruct" }}
     logLevel: INFO
     querySystemPrompt: |
       You are an OpenShift cluster assistant with MCP tools.

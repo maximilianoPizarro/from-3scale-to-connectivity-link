@@ -476,12 +476,11 @@ maas:
   model: "granite-3.2-8b-instruct"
 
 # ============================================================
-# Lightspeed / MCP — LLM proxy config for OLS component
-# llmApiKey is the LiteLLM internal master key (fixed)
+# Lightspeed / MCP — LLM config for OLS component (direct to granite)
 # ============================================================
 lightspeed:
-  llmApiKey: "sk-openshift-mcp-1234"
-  llmEndpoint: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
+  llmApiKey: "sk-no-key"
+  llmEndpoint: "http://granite-3-2-8b-instruct-metrics.openshift-ai-models.svc.cluster.local:8080/v1"
 
 # ============================================================
 # User Scaling — single parameter controls all user provisioning
