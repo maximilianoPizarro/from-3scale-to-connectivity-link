@@ -238,14 +238,16 @@ spec:
           name: showroom-files
           subPath: www
       # Antora still emits src="_images/…" (relative). At URL / that resolves to /_images (404). Rewrite to root-relative /modules/_images/…
+      # Full UBI image includes `find` (ubi-minimal does not — first attempt exited 0 without rewriting).
       - name: rewrite-img-src
-        image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+        image: registry.access.redhat.com/ubi9/ubi:latest
         command:
-          - /bin/sh
+          - /bin/bash
           - -c
           - |
-            set -e
-            find /showroom/www -type f -name '*.html' | while read -r f; do
+            set -euo pipefail
+            mapfile -d '' -t files < <(find /showroom/www -type f -name '*.html' -print0)
+            for f in "${files[@]}"; do
               sed -i 's|src="_images/|src="/modules/_images/|g' "$f"
               sed -i "s|src='_images/|src='/modules/_images/|g" "$f"
             done
