@@ -422,6 +422,7 @@ data:
         frame-ancestors:
           - "'self'"
           - "https://*.{{ .Values.clusterDomain }}"
+          - "https://showroom-showroom.{{ .Values.clusterDomain }}"
         img-src:
           - "'self'"
           - "data:"

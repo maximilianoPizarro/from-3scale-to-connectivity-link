@@ -9,8 +9,12 @@ view_switcher:
   default_mode: split
 
 tabs:
+  # Backstage OIDC often fails inside an iframe (redirect chain / Keycloak framing). Open from Workshop links if needed.
   - name: Developer Hub
     url: 'https://backstage-developer-hub-developer-hub.{cluster_domain}'
 
+  # RHDP nookbag: path+port loads the in-cluster terminal (same pattern as openshift-days-ops-showroom).
+  # Our nginx maps /terminal/ -> tty. Do not use #terminal — it breaks navigation.
   - name: Terminal
-    url: '#terminal'
+    path: /terminal/
+    port: 443

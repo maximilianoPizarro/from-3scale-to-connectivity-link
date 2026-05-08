@@ -74,7 +74,7 @@ Your credentials:
 | https://console-openshift-console.{cluster_domain}
 |===
 
-TIP: Use the *Developer Hub* and *Terminal* tabs on the right: open the portal in one tab and run `oc`, `curl`, and other commands in the other.
+TIP: Use the *Terminal* tab for `oc` / `curl` in this showroom (it loads the embedded terminal at `/terminal/`). The *Developer Hub* tab loads Backstage in a panel; if you see a blank or broken page (OIDC redirects often block iframe login), open Developer Hub in a new browser tab from *Workshop platform links* below instead.
 
 == Workshop flow
 
