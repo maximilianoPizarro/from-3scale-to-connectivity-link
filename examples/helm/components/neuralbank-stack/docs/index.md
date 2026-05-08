@@ -6,10 +6,10 @@ Plataforma financiera de demostración pre-desplegada en el clúster OpenShift. 
 
 | Recurso | URL |
 |---------|-----|
-| **Frontend** | [neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io](https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io) |
-| **Swagger UI** | [neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/q/swagger-ui](https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/q/swagger-ui) |
-| **API Base** | `https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers` |
-| **Grafana** | [grafana-observability.apps.cluster-lfm7v.dynamic2.redhatworkshops.io](https://grafana-observability.apps.cluster-lfm7v.dynamic2.redhatworkshops.io) |
+| **Frontend** | [neuralbank.apps.cluster.example.com](https://neuralbank.apps.cluster.example.com) |
+| **Swagger UI** | [neuralbank.apps.cluster.example.com/q/swagger-ui](https://neuralbank.apps.cluster.example.com/q/swagger-ui) |
+| **API Base** | `https://neuralbank.apps.cluster.example.com/api/v1/customers` |
+| **Grafana** | [grafana-observability.apps.cluster.example.com](https://grafana-observability.apps.cluster.example.com) |
 
 ## Credenciales
 
@@ -19,7 +19,7 @@ Plataforma financiera de demostración pre-desplegada en el clúster OpenShift. 
 |-------|-------|
 | **Realm** | `neuralbank` |
 | **Client ID** | `neuralbank-frontend` |
-| **URL del realm** | `https://rhbk.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/realms/neuralbank` |
+| **URL del realm** | `https://rhbk.apps.cluster.example.com/realms/neuralbank` |
 | **Usuarios** | `user1` … `user200` |
 | **Contraseña** | `Welcome123!` |
 
@@ -57,7 +57,7 @@ Todos los componentes se despliegan en el namespace **`neuralbank-stack`**.
 ```bash
 # Obtener token de Keycloak
 TOKEN=$(curl -s -X POST \
-  "https://rhbk.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/realms/neuralbank/protocol/openid-connect/token" \
+  "https://rhbk.apps.cluster.example.com/realms/neuralbank/protocol/openid-connect/token" \
   -d "grant_type=password" \
   -d "client_id=neuralbank-frontend" \
   -d "username=user1" \
@@ -65,15 +65,15 @@ TOKEN=$(curl -s -X POST \
 
 # Listar clientes
 curl -s -H "Authorization: Bearer $TOKEN" \
-  https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers | python3 -m json.tool
+  https://neuralbank.apps.cluster.example.com/api/v1/customers | python3 -m json.tool
 
 # Obtener cliente por ID
 curl -s -H "Authorization: Bearer $TOKEN" \
-  https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers/1 | python3 -m json.tool
+  https://neuralbank.apps.cluster.example.com/api/v1/customers/1 | python3 -m json.tool
 
 # Resumen del cliente
 curl -s -H "Authorization: Bearer $TOKEN" \
-  https://neuralbank.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/api/v1/customers/1/summary | python3 -m json.tool
+  https://neuralbank.apps.cluster.example.com/api/v1/customers/1/summary | python3 -m json.tool
 ```
 
 ## Connectivity Link
