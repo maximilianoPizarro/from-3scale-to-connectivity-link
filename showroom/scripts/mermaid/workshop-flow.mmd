@@ -1,0 +1,6 @@
+flowchart LR
+  DH["Developer Hub"] -->|"migration template"| GT["Gitea"]
+  GT -->|"GitOps"| AG["ArgoCD"]
+  AG -->|"sync"| OS["OpenShift"]
+  OS --> GW["Gateway API"]
+  GW --> KQ["Kuadrant policies"]

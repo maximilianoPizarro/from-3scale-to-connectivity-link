@@ -1,0 +1,19 @@
+flowchart TB
+  subgraph cluster["OpenShift Cluster"]
+    subgraph src["3scale — Source"]
+      direction TB
+      NB3["neuralbank-3scale<br/>OIDC · APIcast → Backend"]
+      NFL3["nfl-wallet-3scale<br/>API Key · APIcast → Backend"]
+      OP3["3scale Operator · APIManager"]
+    end
+    subgraph tgt["Connectivity Link — Target"]
+      direction TB
+      NBS["neuralbank-stack<br/>OIDC · Gateway → Backend"]
+      NFLP["nfl-wallet-prod<br/>API Key · Gateway → Backend"]
+      KU["Kuadrant Operator · Istio / Service Mesh"]
+    end
+    subgraph dh["Developer Hub"]
+      MT["Migration Software Template<br/>Gateway · HTTPRoute · AuthPolicy · …"]
+      PLAT["Keycloak · Gitea · ArgoCD · Tekton · Grafana · Kiali"]
+    end
+  end

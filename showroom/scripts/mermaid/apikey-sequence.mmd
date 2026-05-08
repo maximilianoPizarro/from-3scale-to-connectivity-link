@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant C as Client
+  participant G as Istio Gateway
+  participant A as Kuadrant Authorino
+  participant B as Backend API
+  C->>G: GET /api/v1/customers with X-API-Key
+  G->>A: Validate API Key
+  A->>A: Match Secret labels
+  A-->>G: Key valid
+  Note over G: PlanPolicy · Rate limit
+  G->>B: Forward request
+  B-->>C: 200 OK data

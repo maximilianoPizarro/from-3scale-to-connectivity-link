@@ -1,0 +1,5 @@
+flowchart LR
+  C["Client"] --> R["OpenShift Route"]
+  R --> IG["Istio Gateway"]
+  IG -->|"Authorino + Limitador"| BE["Backend Service"]
+  IG -.-> POL["HTTPRoute · AuthPolicy<br/>RateLimitPolicy"]

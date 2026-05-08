@@ -1,0 +1,7 @@
+flowchart TB
+  S1["Step 1: fetch:template — generates manifests + catalog-info.yaml"]
+  S2["Step 2: publish:gitea — push to user repo"]
+  S3["Step 3: catalog:register — Developer Hub catalog"]
+  S4["Step 4: Argo CD Application — automated sync to namespace"]
+  S5["Step 5: notification — Mailpit email"]
+  S1 --> S2 --> S3 --> S4 --> S5

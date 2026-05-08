@@ -202,30 +202,7 @@ Expected: `HTTP Status: 302` or `401`.
 
 == OIDC flow diagram
 
-....
-User             Keycloak            Istio Gateway        Kuadrant          Backend
- │                  │                     │                  │                 │
- │ GET /api/customers                     │                  │                 │
- │───────────────────────────────────────▶│                  │                 │
- │                  │                     │ Validate JWT     │                 │
- │                  │                     │─────────────────▶│                 │
- │                  │                     │                  │ No token → 302  │
- │ 302 → Login      │                     │◀─────────────────│                 │
- │◀──────────────────────────────────────│                  │                 │
- │                  │                     │                  │                 │
- │ Login + creds    │                     │                  │                 │
- │─────────────────▶│                     │                  │                 │
- │ Token            │                     │                  │                 │
- │◀─────────────────│                     │                  │                 │
- │                  │                     │                  │                 │
- │ GET /api + Bearer                      │ Validate JWT ✓   │                 │
- │───────────────────────────────────────▶│─────────────────▶│                 │
- │                  │                     │ Rate limit check │                 │
- │                  │                     │ (60/min per user)│                 │
- │                  │                     │ Forward ─────────────────────────▶│
- │ 200 OK (data)    │                     │◀─────────────────────────────────│
- │◀──────────────────────────────────────│                  │                 │
-....
+image::oidc-sequence.svg[OIDC sequence: login with Keycloak, JWT validation and rate limits at the gateway, backend response]
 
 == Summary
 

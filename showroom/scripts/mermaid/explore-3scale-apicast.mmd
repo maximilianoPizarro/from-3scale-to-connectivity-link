@@ -1,0 +1,6 @@
+flowchart TB
+  C["Client"] --> RT["OpenShift Route"]
+  RT --> AC["APIcast Gateway"]
+  AC --> PC["Product Config: OIDC · Keycloak · Application Plan"]
+  AC --> BC["Backend Config: MappingRules · privateBaseURL"]
+  BC --> SVC["neuralbank-backend-svc:8080 (neuralbank-3scale)"]

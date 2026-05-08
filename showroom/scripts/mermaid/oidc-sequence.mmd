@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant U as User
+  participant K as Keycloak
+  participant G as Istio Gateway
+  participant Q as Kuadrant
+  participant B as Backend
+  U->>G: GET /api/customers
+  G->>Q: Validate JWT
+  Q-->>U: 302 Login if no token
+  U->>K: Login + credentials
+  K-->>U: Token
+  U->>G: GET /api with Bearer token
+  G->>Q: Validate JWT OK
+  Note over G,Q: Rate limit per user
+  G->>B: Forward
+  B-->>U: 200 OK data

@@ -1,0 +1,10 @@
+flowchart TB
+  subgraph map["3scale → Connectivity Link mapping"]
+    M1["3scale Product → AuthPolicy + RateLimitPolicy + PlanPolicy"]
+    M2["3scale Backend → HTTPRoute (path matching replaces MappingRules)"]
+    M3["3scale ActiveDoc → APIProduct"]
+    M4["3scale Application Plan → PlanPolicy (CEL on Secret annotations)"]
+    M5["3scale Developer Portal → Kuadrant Backstage plugin"]
+    M6["APIcast Gateway → Istio Gateway (Gateway API)"]
+    M7["3scale Admin UI → Git + ArgoCD (GitOps)"]
+  end

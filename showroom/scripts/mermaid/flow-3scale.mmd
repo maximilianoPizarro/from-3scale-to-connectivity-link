@@ -1,0 +1,4 @@
+flowchart LR
+  C["Client"] --> R["OpenShift Route"]
+  R --> AP["APIcast"]
+  AP -->|"auth + rate limit"| BE["Backend Service"]

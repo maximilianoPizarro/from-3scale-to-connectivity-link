@@ -3,8 +3,9 @@ title: "From 3scale to Connectivity Link"
 version: ~
 asciidoc:
   attributes:
-    cluster_domain: apps.cluster.example.com
-    user_name: user1
-    user_password: Welcome123!
+    imagesdir: images@
+    cluster_domain: apps.cluster.example.com@
+    user_name: user1@
+    user_password: Welcome123!@
 nav:
   - modules/ROOT/nav.adoc

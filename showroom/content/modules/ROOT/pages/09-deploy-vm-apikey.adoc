@@ -1,0 +1,134 @@
+= Deploy a RHEL VM with Connectivity Link (API Key)
+
+In this module you will use the *"RHEL Virtual Machine (bootc / OpenShift Virtualization)"* Software Template in Red Hat Developer Hub to provision a RHEL guest on OpenShift Virtualization and expose it through *Connectivity Link* with *API key* authentication.
+
+This activity complements the migration flow: you practice the scaffolder with a different workload (VM) while using the same policy model (AuthPolicy with API keys, rate limits, GitOps).
+
+== Prerequisites
+
+* Your workshop user is *{user_name}* (set automatically when you open the showroom from workshop registration).
+* *OpenShift Virtualization* is installed on the cluster (the template creates a `VirtualMachine` CR).
+* You can open *Developer Hub* and the *Terminal* tab in this showroom.
+
+== What the template does
+
+The `rhel-vm-bootc` template:
+
+. Collects VM identity, compute, storage, network, and optional Connectivity Link settings
+. Resolves the cluster domain from the workshop `ConfigMap`
+. Generates manifests (VirtualMachine, optional Gateway, HTTPRoute, AuthPolicy, RateLimitPolicy, Secrets)
+. Publishes to *Gitea* under `ws-{user_name}/`
+. Registers the repo in the Developer Hub catalog
+. Creates an *Argo CD Application* to sync manifests into your namespace
+
+When you enable *Expose via Connectivity Link* and choose *API Key*, Kuadrant validates the `X-API-Key` header against labeled Secrets — the same pattern as the NFL Wallet API Key scenario.
+
+== Step 1: Open Developer Hub
+
+Navigate to:
+
+----
+https://backstage-developer-hub-developer-hub.{cluster_domain}
+----
+
+Sign in with your workshop identity if prompted.
+
+== Step 2: Start the template
+
+. Click *Create* (or *Self-service* → *Catalog* → *Templates*).
+. Find *RHEL Virtual Machine (bootc / OpenShift Virtualization)* and select it.
+
+== Step 3: VM Identity
+
+Fill in *VM Identity*:
+
+[cols="1,2",options="header"]
+|===
+| Field | Value
+
+| *VM Name*
+| A DNS-compatible name, e.g. `demo-vm`
+
+| *Owner*
+| `{user_name}` (must match your workshop user; the form defaults from your Dev Hub identity)
+
+| *Target Namespace*
+| Leave empty to use `{user_name}-neuralbank`, or set another namespace your user can deploy to
+|===
+
+TIP: The owner field must satisfy `user` followed by digits (`user[0-9]+`), matching workshop users such as `user2`, `user15`, etc.
+
+== Step 4: Compute and storage
+
+Accept defaults or adjust CPU, memory, root disk, and boot source (registry vs bootc image) as allowed by your cluster quotas.
+
+== Step 5: Network and Connectivity Link
+
+On *Network & Access*, provide:
+
+* *SSH public key* — your public key for `cloud-user`
+* *VM password* — console login if needed
+
+Enable:
+
+* *Expose via Connectivity Link* — checked
+
+Then open *Connectivity Link Configuration*:
+
+* *Authentication Model*: *API Key (X-API-Key header)*
+* *Route Path Prefix*: `/` or a prefix such as `/vm` if you expose only part of the service
+* *Rate Limit*: e.g. `120` requests per minute
+
+Run Strategy *Manual* or *Halted* can reduce resource use while you inspect YAML before the VM boots.
+
+== Step 6: Review and run
+
+Click *Create* and watch the scaffolder steps complete (fetch template, publish to Gitea, register catalog, create Argo CD app, notification).
+
+== Step 7: Verify Argo CD
+
+Open Argo CD and confirm an Application named like `{user_name}-<vmName>-vm` is *Synced* and *Healthy*:
+
+----
+https://openshift-gitops-server-openshift-gitops.{cluster_domain}
+----
+
+== Step 8: Inspect resources
+
+In the *Terminal* tab (or your local `oc` with the correct context):
+
+[source,bash]
+----
+oc get virtualmachine -n {user_name}-neuralbank
+oc get gateway,httproute,authpolicy,ratelimitpolicy -n {user_name}-neuralbank
+----
+
+Adjust the namespace if you chose a custom target namespace.
+
+== Step 9: Test API key access
+
+When the HTTPRoute and AuthPolicy are ready and the VM workload exposes HTTP (for example Apache from cloud-init), call the route with the API key Secret referenced by the policy.
+
+Use the key material from the generated Secret in your namespace (name varies by template output). Example pattern:
+
+[source,bash]
+----
+export ROUTE_HOST="<extract-from-httproute-or-route>"
+curl -sk -H "X-API-Key: <your-api-key>" "https://${ROUTE_HOST}/"
+----
+
+Replace placeholders with values from your generated manifests (`manifests/` in the Gitea repo).
+
+== Step 10: OpenShift Console
+
+Use *Virtualization* → *VirtualMachines* in the OpenShift Console to confirm the VM phase is running (if you chose an automatic run strategy).
+
+----
+https://console-openshift-console.{cluster_domain}
+----
+
+== Summary
+
+You used Developer Hub to scaffold a *RHEL VM* with *Connectivity Link* exposure and *API key* authentication, aligned with the workshop user `{user_name}` and GitOps via Gitea and Argo CD.
+
+Continue to *xref:10-summary.adoc[Summary and Next Steps]* for references and wrap-up.

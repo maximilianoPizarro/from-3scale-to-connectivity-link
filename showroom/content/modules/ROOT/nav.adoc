@@ -7,4 +7,5 @@
 * xref:06-comparison.adoc[6. Side-by-Side Comparison]
 * xref:07-run-migration.adoc[7. Run the Migration]
 * xref:08-verify-test.adoc[8. Verify and Test]
-* xref:09-summary.adoc[9. Summary]
+* xref:09-deploy-vm-apikey.adoc[9. Deploy VM (API Key)]
+* xref:10-summary.adoc[10. Summary]

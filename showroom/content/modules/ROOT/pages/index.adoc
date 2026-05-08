@@ -16,6 +16,7 @@ The cluster has two sets of pre-deployed applications — one secured by 3scale 
 * Inspect the equivalent Connectivity Link applications
 * Compare authentication, rate limiting, GitOps, and developer experience side by side
 * *Run the migration* using a generic Developer Hub Software Template
+* *(Optional)* provision a RHEL VM behind Connectivity Link using API key auth via another Software Template
 * Verify the migrated application and test both environments
 
 == Pre-deployed scenarios
@@ -73,19 +74,10 @@ Your credentials:
 | https://console-openshift-console.{cluster_domain}
 |===
 
-TIP: The *Terminal* tab on the right panel of this showroom lets you run `oc`, `curl`, and other commands directly.
+TIP: Use the *Developer Hub* and *Terminal* tabs on the right: open the portal in one tab and run `oc`, `curl`, and other commands in the other.
 
 == Workshop flow
 
-....
-Developer Hub ──(migration template)──▶ Gitea ──(GitOps)──▶ ArgoCD ──(sync)──▶ OpenShift
-                                                                                    │
-                                                                              Gateway API
-                                                                                    │
-                                                                          Kuadrant Policies
-                                                                         (AuthPolicy / OIDC
-                                                                          RateLimitPolicy
-                                                                          PlanPolicy)
-....
+image::workshop-flow.svg[Workshop flow from Developer Hub through Gitea and Argo CD to OpenShift and Kuadrant policies]
 
 Click *Next* to begin with the migration overview.

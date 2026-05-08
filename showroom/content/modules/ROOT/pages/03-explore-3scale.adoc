@@ -166,26 +166,7 @@ spec:
 
 === 1.5 How it all fits together (Neuralbank OIDC)
 
-....
-Client → OpenShift Route → APIcast Gateway
-                              │
-                    ┌─────────┴──────────┐
-                    │  Product Config:    │
-                    │  - OIDC auth        │
-                    │  - Keycloak issuer  │
-                    │  - Application Plan │
-                    │    (60 or 300/min)  │
-                    └─────────┬──────────┘
-                              │
-                    ┌─────────┴──────────┐
-                    │  Backend Config:    │
-                    │  - MappingRules     │
-                    │  - privateBaseURL   │
-                    └─────────┬──────────┘
-                              │
-                    neuralbank-backend-svc:8080
-                    (neuralbank-3scale namespace)
-....
+image::explore-3scale-apicast.svg[Neuralbank on 3scale: Route to APIcast, Product and Backend configuration to backend service]
 
 == Part 2 — NFL Wallet on 3scale (API Key Authentication)
 

@@ -4,40 +4,7 @@ This module presents the side-by-side architecture of the migration environment.
 
 == Cluster layout
 
-....
-┌──────────────────────────────────────────────────────────────────────┐
-│                         OpenShift Cluster                            │
-│                                                                      │
-│  ┌─────────────────────────┐    ┌─────────────────────────┐         │
-│  │   3scale (Source)        │    │  Connectivity Link       │         │
-│  │                         │    │  (Target)                │         │
-│  │  ┌───────────────────┐  │    │  ┌───────────────────┐   │         │
-│  │  │ neuralbank-3scale │  │    │  │ neuralbank-stack  │   │         │
-│  │  │ OIDC via Product  │  │    │  │ OIDC via OIDCPolicy│  │         │
-│  │  │ APIcast → Backend │  │    │  │ Gateway → Backend │   │         │
-│  │  └───────────────────┘  │    │  └───────────────────┘   │         │
-│  │                         │    │                          │         │
-│  │  ┌───────────────────┐  │    │  ┌───────────────────┐   │         │
-│  │  │ nfl-wallet-3scale │  │    │  │ nfl-wallet-prod   │   │         │
-│  │  │ API Key via Prod  │  │    │  │ API Key via AuthPol│  │         │
-│  │  │ APIcast → Backend │  │    │  │ Gateway → Backend │   │         │
-│  │  └───────────────────┘  │    │  └───────────────────┘   │         │
-│  │                         │    │                          │         │
-│  │  3scale Operator        │    │  Kuadrant Operator       │         │
-│  │  APIManager             │    │  Istio / Service Mesh    │         │
-│  └─────────────────────────┘    └─────────────────────────┘         │
-│                                                                      │
-│  ┌──────────────────────────────────────────────────────────┐       │
-│  │  Developer Hub (Backstage)                                │       │
-│  │  ┌─────────────────────────────────────────────────────┐ │       │
-│  │  │ Migration Software Template                          │ │       │
-│  │  │ (generates Gateway + HTTPRoute + AuthPolicy + ...)   │ │       │
-│  │  └─────────────────────────────────────────────────────┘ │       │
-│  │                                                          │       │
-│  │  Keycloak · Gitea · ArgoCD · Tekton · Grafana · Kiali   │       │
-│  └──────────────────────────────────────────────────────────┘       │
-└──────────────────────────────────────────────────────────────────────┘
-....
+image::cluster-layout.svg[3scale source workloads and Connectivity Link target workloads in the same OpenShift cluster, plus Developer Hub]
 
 == Platform components
 
@@ -74,19 +41,13 @@ This module presents the side-by-side architecture of the migration environment.
 
 === 3scale flow (APIcast)
 
-....
-Client → OpenShift Route → APIcast → [auth check + rate limit] → Backend Service
-....
+image::flow-3scale.svg[Request path: Client, OpenShift Route, APIcast, Backend Service]
 
 APIcast validates credentials against the 3scale backend (Redis). MappingRules determine which metric to increment. Application Plans enforce rate limits.
 
 === Connectivity Link flow (Kuadrant)
 
-....
-Client → OpenShift Route → Istio Gateway → [Authorino auth + Limitador rate limit] → Backend Service
-                                 ↑
-                          HTTPRoute + AuthPolicy + RateLimitPolicy
-....
+image::flow-connectivity-link.svg[Request path: Client, OpenShift Route, Istio Gateway, Backend Service, with policies]
 
 The Istio Gateway delegates authentication to Authorino and rate limiting to Limitador. Policies are attached directly to the Gateway or HTTPRoute as Kubernetes CRDs.
 
