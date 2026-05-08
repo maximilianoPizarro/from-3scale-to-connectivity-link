@@ -30,7 +30,7 @@
     } catch (e) {}
     return '';
   }
-  /** Antora emits img src="_images/foo.svg" relative to /modules/*.html. If the shell keeps the URL at /, the browser resolves to /_images/ (404). Force paths under /modules/_images/. */
+  /** Fallback if HTML still has relative _images/… (older builds). Playbook now sets imagesdir: /modules/_images for root-relative SVG URLs. */
   function moduleStaticBaseDir() {
     var path = location.pathname || '/';
     var dir = path.endsWith('/') ? path : path.replace(/[^/]+$/, '');

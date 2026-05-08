@@ -32,8 +32,12 @@ jobs:
         run: npm i -g @antora/cli@3.1 @antora/site-generator@3.1
 
       - name: Build Antora site
-        run: antora --stacktrace site.yml
         working-directory: showroom
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          sed -i.bak "s|^    imagesdir: /modules/_images|    imagesdir: /${REPO_NAME}/modules/_images|" site.yml
+          antora --stacktrace site.yml
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

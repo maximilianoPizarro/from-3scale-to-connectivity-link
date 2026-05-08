@@ -3,7 +3,6 @@ title: "From 3scale to Connectivity Link"
 version: ~
 asciidoc:
   attributes:
-    imagesdir: images@
     cluster_domain: apps.cluster.example.com@
     user_name: user1@
     user_password: Welcome123!@
