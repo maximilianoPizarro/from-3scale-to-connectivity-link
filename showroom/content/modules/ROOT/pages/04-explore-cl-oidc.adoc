@@ -202,7 +202,7 @@ Expected: `HTTP Status: 302` or `401`.
 
 == OIDC flow diagram
 
-image::oidc-sequence.svg["OIDC sequence — login with Keycloak; JWT validation and rate limits at the gateway",opts=inline]
+image::oidc-sequence.svg["OIDC sequence — login with Keycloak; JWT validation and rate limits at the gateway"]
 
 == Summary
 

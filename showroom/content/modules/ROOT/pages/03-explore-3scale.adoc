@@ -166,7 +166,7 @@ spec:
 
 === 1.5 How it all fits together (Neuralbank OIDC)
 
-image::explore-3scale-apicast.svg["Neuralbank on 3scale — Route to APIcast; Product and Backend configuration",opts=inline]
+image::explore-3scale-apicast.svg["Neuralbank on 3scale — Route to APIcast; Product and Backend configuration"]
 
 == Part 2 — NFL Wallet on 3scale (API Key Authentication)
 

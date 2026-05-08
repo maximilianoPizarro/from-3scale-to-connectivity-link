@@ -208,7 +208,7 @@ Click *Authorize*, enter `nfl-wallet-demo-key-2024`, and test the endpoints dire
 
 == API Key flow diagram
 
-image::apikey-sequence.svg[API key validation at Istio Gateway with Kuadrant Authorino and backend,opts=inline]
+image::apikey-sequence.svg[API key validation at Istio Gateway with Kuadrant Authorino and backend]
 
 == Summary
 
