@@ -36,7 +36,7 @@ jobs:
         env:
           REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          sed -i.bak "s|^    imagesdir: /www/modules/_images|    imagesdir: /${REPO_NAME}/modules/_images|" site.yml
+          sed -i.bak "s|^    imagesdir: /modules/_images|    imagesdir: /${REPO_NAME}/modules/_images|" content/antora.yml
           antora --stacktrace site.yml
 
       - name: Publish nookbag config at site root (zero-touch-config.yml)

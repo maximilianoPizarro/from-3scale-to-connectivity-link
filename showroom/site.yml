@@ -16,9 +16,6 @@ ui:
     snapshot: true
   supplemental_files: ./content/supplemental-ui
 asciidoc:
-  attributes:
-    # RHDP content server maps URLs under /www/ to /showroom/www on disk (see working URL …/www/modules/_images/…).
-    # GitHub Actions rewrites to /<repo>/modules/_images (artifact root IS www/, no /www prefix in URLs).
-    imagesdir: /www/modules/_images
+  attributes: {}
 output:
   dir: ./www

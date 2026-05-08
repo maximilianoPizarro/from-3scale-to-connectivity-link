@@ -3,6 +3,8 @@ title: "From 3scale to Connectivity Link"
 version: ~
 asciidoc:
   attributes:
+    # Must live here so generated <img> uses absolute paths (playbook-only imagesdir was ignored → relative _images/ broke at URL /).
+    imagesdir: /modules/_images
     cluster_domain: apps.cluster.example.com@
     user_name: user1@
     user_password: Welcome123!@
