@@ -237,6 +237,22 @@ spec:
         - mountPath: /showroom/www
           name: showroom-files
           subPath: www
+      # Antora still emits src="_images/…" (relative). At URL / that resolves to /_images (404). Rewrite to root-relative /modules/_images/…
+      - name: rewrite-img-src
+        image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+            find /showroom/www -type f -name '*.html' | while read -r f; do
+              sed -i 's|src="_images/|src="/modules/_images/|g' "$f"
+              sed -i "s|src='_images/|src='/modules/_images/|g" "$f"
+            done
+        volumeMounts:
+        - mountPath: /showroom/www
+          name: showroom-files
+          subPath: www
       # Nookbag fetches /zero-touch-config.yml from the lab guide origin (same as Antora output root).
       # Repo keeps ui-config.yml at git root; copy into www after Antora so ZT bundle + tabs resolve ${DOMAIN}.
       - name: zero-touch-config

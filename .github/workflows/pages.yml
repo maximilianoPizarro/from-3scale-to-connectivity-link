@@ -39,6 +39,14 @@ jobs:
           sed -i.bak "s|^    imagesdir: /modules/_images|    imagesdir: /${REPO_NAME}/modules/_images|" content/antora.yml
           antora --stacktrace site.yml
 
+      - name: Rewrite relative _images in HTML (same as cluster init rewrite-img-src)
+        working-directory: showroom
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          find www -type f -name '*.html' -exec sed -i "s|src=\"_images/|src=\"/${REPO_NAME}/modules/_images/|g" {} \;
+          find www -type f -name '*.html' -exec sed -i "s|src='_images/|src='/${REPO_NAME}/modules/_images/|g" {} \;
+
       - name: Publish nookbag config at site root (zero-touch-config.yml)
         run: |
           cp ui-config.yml showroom/www/zero-touch-config.yml
