@@ -39,6 +39,11 @@ jobs:
           sed -i.bak "s|^    imagesdir: /modules/_images|    imagesdir: /${REPO_NAME}/modules/_images|" site.yml
           antora --stacktrace site.yml
 
+      - name: Publish nookbag config at site root (zero-touch-config.yml)
+        run: |
+          cp ui-config.yml showroom/www/zero-touch-config.yml
+          cp ui-config.yml showroom/www/ui-config.yml
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

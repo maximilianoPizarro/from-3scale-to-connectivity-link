@@ -237,6 +237,25 @@ spec:
         - mountPath: /showroom/www
           name: showroom-files
           subPath: www
+      # Nookbag fetches /zero-touch-config.yml from the lab guide origin (same as Antora output root).
+      # Repo keeps ui-config.yml at git root; copy into www after Antora so ZT bundle + tabs resolve ${DOMAIN}.
+      - name: zero-touch-config
+        image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+            test -f /showroom/repo/ui-config.yml
+            cp /showroom/repo/ui-config.yml /showroom/www/zero-touch-config.yml
+            cp /showroom/repo/ui-config.yml /showroom/www/ui-config.yml
+        volumeMounts:
+        - mountPath: /showroom/repo
+          name: showroom-files
+          subPath: repo
+        - mountPath: /showroom/www
+          name: showroom-files
+          subPath: www
       containers:
       - name: nginx
         image: "quay.io/rhpds/nginx:1.25"
