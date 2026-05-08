@@ -10,8 +10,9 @@ view_switcher:
 
 tabs:
   # Backstage OIDC often fails inside an iframe (redirect chain / Keycloak framing). Open from Workshop links if needed.
+  # RHDP nookbag substitutes ${DOMAIN} from the content container DOMAIN env (apps subdomain), not AsciiDoc-style {cluster_domain}.
   - name: Developer Hub
-    url: 'https://backstage-developer-hub-developer-hub.{cluster_domain}'
+    url: 'https://backstage-developer-hub-developer-hub.${DOMAIN}'
 
   # RHDP nookbag: path+port loads the in-cluster terminal (same pattern as openshift-days-ops-showroom).
   # Our nginx maps /terminal/ -> tty. Do not use #terminal — it breaks navigation.
