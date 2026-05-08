@@ -12,6 +12,8 @@
 <script>
 (function () {
   var PLACEHOLDER = 'apps.cluster.example.com';
+  var ATTR_CLUSTER = '{cluster_domain}';
+  var ATTR_USER = '{user_name}';
   function resolveClusterDomain() {
     try {
       var q = new URLSearchParams(window.location.search || '').get('CLUSTER_DOMAIN');
@@ -21,22 +23,58 @@
     var m = /^showroom-showroom\.(apps\..+)$/i.exec(h);
     return m ? m[1] : '';
   }
+  function resolveUserName() {
+    try {
+      var u = new URLSearchParams(window.location.search || '').get('USER_NAME');
+      if (u) return decodeURIComponent(u);
+    } catch (e) {}
+    return '';
+  }
+  function rewriteAttrs(s, domain, userName) {
+    if (!s) return s;
+    var out = s;
+    if (domain && out.indexOf(ATTR_CLUSTER) !== -1)
+      out = out.split(ATTR_CLUSTER).join(domain);
+    if (userName && out.indexOf(ATTR_USER) !== -1)
+      out = out.split(ATTR_USER).join(userName);
+    if (domain && out.indexOf(PLACEHOLDER) !== -1 && domain !== PLACEHOLDER)
+      out = out.split(PLACEHOLDER).join(domain);
+    return out;
+  }
   function apply() {
+    if (!document.body) return;
     var domain = resolveClusterDomain();
-    if (!domain || domain === PLACEHOLDER || !document.body) return;
+    var userName = resolveUserName();
+    if (!domain && !userName) return;
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     var textNodes = [];
     var node;
     while ((node = walker.nextNode())) textNodes.push(node);
     textNodes.forEach(function (n) {
-      if (n.nodeValue && n.nodeValue.indexOf(PLACEHOLDER) !== -1)
-        n.nodeValue = n.nodeValue.split(PLACEHOLDER).join(domain);
+      var v = n.nodeValue;
+      var next = rewriteAttrs(v, domain, userName);
+      if (next !== v) n.nodeValue = next;
     });
-    document.querySelectorAll('a[href*="' + PLACEHOLDER + '"]').forEach(function (a) {
-      a.href = a.href.split(PLACEHOLDER).join(domain);
+    document.querySelectorAll('a[href]').forEach(function (a) {
+      var h = a.getAttribute('href');
+      if (!h || (h.indexOf(ATTR_CLUSTER) < 0 && h.indexOf(ATTR_USER) < 0 && h.indexOf(PLACEHOLDER) < 0))
+        return;
+      var nh = rewriteAttrs(h, domain, userName);
+      if (nh !== h) a.setAttribute('href', nh);
     });
-    document.querySelectorAll('iframe[src*="' + PLACEHOLDER + '"]').forEach(function (f) {
-      f.src = f.src.split(PLACEHOLDER).join(domain);
+    document.querySelectorAll('iframe[src]').forEach(function (f) {
+      var s = f.getAttribute('src');
+      if (!s || (s.indexOf(ATTR_CLUSTER) < 0 && s.indexOf(ATTR_USER) < 0 && s.indexOf(PLACEHOLDER) < 0))
+        return;
+      var ns = rewriteAttrs(s, domain, userName);
+      if (ns !== s) f.setAttribute('src', ns);
+    });
+    document.querySelectorAll('img[src]').forEach(function (img) {
+      var s = img.getAttribute('src');
+      if (!s || (s.indexOf(ATTR_CLUSTER) < 0 && s.indexOf(ATTR_USER) < 0 && s.indexOf(PLACEHOLDER) < 0))
+        return;
+      var ns = rewriteAttrs(s, domain, userName);
+      if (ns !== s) img.setAttribute('src', ns);
     });
   }
   function kick() {

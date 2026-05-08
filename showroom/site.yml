@@ -4,7 +4,9 @@ site:
   start_page: modules::index.adoc
 content:
   sources:
-    - url: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link.git
+    # Parent of this folder = git repo root. Local `antora site.yml` then matches the
+    # working tree (images, pages). A remote URL always clones HEAD and ignores edits.
+    - url: ..
       branches: HEAD
       start_path: showroom/content
 ui:
