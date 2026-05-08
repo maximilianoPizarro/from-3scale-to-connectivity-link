@@ -58,10 +58,10 @@
   function fixModuleImages() {
     if (!document.body) return;
     var baseDir = moduleStaticBaseDir();
-    document.querySelectorAll('img[src^="_images/"], img[src^="./_images/"]').forEach(function (img) {
+    document.querySelectorAll('img[src^="_images/"], img[src^="./_images/"], img[src*="/../_images/"]').forEach(function (img) {
       var s = img.getAttribute('src');
       if (!s || s.indexOf('://') !== -1) return;
-      var rel = s.replace(/^\.\//, '');
+      var rel = s.replace(/^(?:\.\/|(?:\.\.\/)+)/, '');
       img.src = location.origin + baseDir + rel;
     });
     document.querySelectorAll('img[src]').forEach(function (img) {
@@ -71,6 +71,12 @@
         img.src = location.origin + '/modules' + s;
       else if (s.indexOf('/www/modules/_images/') === 0)
         img.src = location.origin + s.replace(/^\/www/, '');
+    });
+    document.querySelectorAll('img').forEach(function (img) {
+      if (img.complete && img.naturalWidth === 0 && img.src) {
+        var m = img.src.match(/_images\/(.+)$/);
+        if (m) img.src = location.origin + '/modules/_images/' + m[1];
+      }
     });
   }
   function rewriteAttrs(s, domain, userName) {

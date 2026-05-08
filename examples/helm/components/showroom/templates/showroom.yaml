@@ -116,6 +116,16 @@ data:
       server {
         listen 8080;
         absolute_redirect off;
+        location /modules/_images/ {
+          alias /showroom/www/modules/_images/;
+          expires 1h;
+          add_header Cache-Control "public";
+        }
+        location /_images/ {
+          alias /showroom/www/modules/_images/;
+          expires 1h;
+          add_header Cache-Control "public";
+        }
         location / {
           proxy_pass http://127.0.0.1:8000;
           expires off;
@@ -286,6 +296,9 @@ spec:
           name: nginx-cache
         - mountPath: /var/run
           name: nginx-pid
+        - mountPath: /showroom/www
+          name: showroom-files
+          subPath: www
         ports:
         - name: web
           containerPort: 8080
