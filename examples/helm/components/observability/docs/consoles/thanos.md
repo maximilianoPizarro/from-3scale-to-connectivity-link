@@ -2,9 +2,9 @@
 
 Interfaz de consulta Thanos para explorar métricas federadas de Prometheus. Permite ejecutar queries PromQL directamente contra el store de métricas.
 
-<iframe src="https://thanos-querier.apps.cluster.example.com/" width="100%" height="900" frameborder="0" style="border:1px solid #ddd; border-radius:8px;"></iframe>
+<iframe src="https://thanos-querier.apps.cluster-lfm7v.dynamic2.redhatworkshops.io/" width="100%" height="900" frameborder="0" style="border:1px solid #ddd; border-radius:8px;"></iframe>
 
-[Abrir Thanos Querier :material-open-in-new:](https://thanos-querier.apps.cluster.example.com){ .md-button }
+[Abrir Thanos Querier :material-open-in-new:](https://thanos-querier.apps.cluster-lfm7v.dynamic2.redhatworkshops.io){ .md-button }
 
 ## Queries útiles
 
