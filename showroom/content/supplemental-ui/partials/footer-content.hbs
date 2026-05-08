@@ -48,12 +48,12 @@
     } catch (e) {}
     return '';
   }
-  /** Fallback if HTML still has relative _images/… (older builds). Playbook now sets imagesdir: /modules/_images for root-relative SVG URLs. */
+  /** Fallback for relative _images/… and legacy /modules/_images (RHDP serves real files under /www/modules/_images). */
   function moduleStaticBaseDir() {
     var path = location.pathname || '/';
     var dir = path.endsWith('/') ? path : path.replace(/[^/]+$/, '');
     if (dir.indexOf('/modules') !== -1) return dir.replace(/\/?$/, '/');
-    return '/modules/';
+    return '/www/modules/';
   }
   function fixModuleImages() {
     if (!document.body) return;
@@ -68,8 +68,10 @@
       var s = img.getAttribute('src');
       if (!s || s.indexOf('://') !== -1) return;
       if (s.indexOf('/_images/') === 0)
-        img.src = location.origin + '/modules' + s;
-      else if (s.charAt(0) === '/' && s.indexOf('/modules/_images/') === 0 && img.src.indexOf(location.origin) !== 0)
+        img.src = location.origin + '/www/modules' + s;
+      else if (s.indexOf('/modules/_images/') === 0)
+        img.src = location.origin + '/www' + s;
+      else if (s.charAt(0) === '/' && s.indexOf('/www/modules/_images/') === 0 && img.src.indexOf(location.origin) !== 0)
         img.src = location.origin + s;
     });
   }

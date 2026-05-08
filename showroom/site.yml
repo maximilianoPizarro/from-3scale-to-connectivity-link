@@ -17,8 +17,8 @@ ui:
   supplemental_files: ./content/supplemental-ui
 asciidoc:
   attributes:
-    # Root-relative so diagrams load on OpenShift showroom regardless of nookbag URL shell.
-    # GitHub Actions patches this line before build to /<repo>/modules/_images for Pages project sites.
-    imagesdir: /modules/_images
+    # RHDP content server maps URLs under /www/ to /showroom/www on disk (see working URL …/www/modules/_images/…).
+    # GitHub Actions rewrites to /<repo>/modules/_images (artifact root IS www/, no /www prefix in URLs).
+    imagesdir: /www/modules/_images
 output:
   dir: ./www
