@@ -21,12 +21,30 @@
     } catch (e) {}
     var h = location.hostname || '';
     var m = /^showroom-showroom\.(apps\..+)$/i.exec(h);
-    return m ? m[1] : '';
+    if (m) return m[1];
+    var parts = h.split('.');
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (parts[i] === 'apps') return parts.slice(i).join('.');
+    }
+    return '';
   }
   function resolveUserName() {
     try {
-      var u = new URLSearchParams(window.location.search || '').get('USER_NAME');
+      var q = new URLSearchParams(location.search || '');
+      var u = q.get('USER_NAME') || q.get('user');
       if (u) return decodeURIComponent(u);
+      var hash = location.hash || '';
+      if (hash.indexOf('USER_NAME=') >= 0 || hash.indexOf('user=') >= 0) {
+        var hp = new URLSearchParams(hash.replace(/^#/, '?'));
+        u = hp.get('USER_NAME') || hp.get('user');
+        if (u) return decodeURIComponent(u);
+      }
+      try {
+        u = sessionStorage.getItem('USER_NAME') || localStorage.getItem('USER_NAME');
+        if (u) return u;
+      } catch (e2) {}
+      var ck = document.cookie.match(/(?:^|;\s*)USER_NAME=([^;]+)/);
+      if (ck) return decodeURIComponent(ck[1]);
     } catch (e) {}
     return '';
   }
@@ -46,6 +64,14 @@
       var rel = s.replace(/^\.\//, '');
       img.src = location.origin + baseDir + rel;
     });
+    document.querySelectorAll('img[src]').forEach(function (img) {
+      var s = img.getAttribute('src');
+      if (!s || s.indexOf('://') !== -1) return;
+      if (s.indexOf('/_images/') === 0)
+        img.src = location.origin + '/modules' + s;
+      else if (s.charAt(0) === '/' && s.indexOf('/modules/_images/') === 0 && img.src.indexOf(location.origin) !== 0)
+        img.src = location.origin + s;
+    });
   }
   function rewriteAttrs(s, domain, userName) {
     if (!s) return s;
@@ -63,7 +89,6 @@
     fixModuleImages();
     var domain = resolveClusterDomain();
     var userName = resolveUserName();
-    if (!domain && !userName) return;
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
     var textNodes = [];
     var node;

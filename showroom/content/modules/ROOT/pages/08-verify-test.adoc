@@ -4,7 +4,7 @@ After running the migration template, both the 3scale and Connectivity Link vers
 
 == Step 1: Verify the Gateway is programmed
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 oc get gateway -n {user_name}-neuralbank-cl
 ----
@@ -13,7 +13,7 @@ Expected: `PROGRAMMED: True`
 
 == Step 2: Verify policies are enforced
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 oc get authpolicy -n {user_name}-neuralbank-cl -o wide
 oc get ratelimitpolicy -n {user_name}-neuralbank-cl -o wide
@@ -25,9 +25,9 @@ The AuthPolicy should show `ACCEPTED: True` and `ENFORCED: True`.
 
 === 3.1 — Without token (expect redirect)
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
-curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+curl -s -o /dev/null -w "HTTP Status: %\{http_code}\n" \
   https://neuralbank-backend-{user_name}-neuralbank-cl.{cluster_domain}/api/v1/customers
 ----
 
@@ -35,7 +35,7 @@ Expected: `HTTP Status: 302`
 
 === 3.2 — Get a Bearer Token
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 TOKEN=$(curl -s -X POST \
   "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
@@ -44,14 +44,14 @@ TOKEN=$(curl -s -X POST \
   -d "client_id=neuralbank-frontend" \
   -d "username={user_name}" \
   -d "password={user_password}" \
-  | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
 
-echo "Token: ${TOKEN:0:50}..."
+echo "Token (first 50 chars):" && echo "$TOKEN" | head -c 50 && echo "..."
 ----
 
 === 3.3 — List customers on the *migrated* endpoint
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://neuralbank-backend-{user_name}-neuralbank-cl.{cluster_domain}/api/v1/customers" \
@@ -60,7 +60,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 === 3.4 — List customers on the *3scale* endpoint (for comparison)
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://neuralbank.{cluster_domain}/api/v1/customers" \
@@ -73,7 +73,7 @@ Both should return the same data — they use the same backend Service and datab
 
 === Authentication resources
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 echo "=== 3scale Product ===" && \
 oc get product -n 3scale-system | grep neuralbank && echo && \
@@ -83,7 +83,7 @@ oc get authpolicy -n {user_name}-neuralbank-cl -o wide
 
 === Rate limiting
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 echo "=== Connectivity Link RateLimitPolicy ===" && \
 oc get ratelimitpolicy -n {user_name}-neuralbank-cl -o yaml | grep -A5 "limits:"
@@ -95,15 +95,15 @@ If you migrated NFL Wallet instead of Neuralbank:
 
 === Without API Key (expect 401)
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
-curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
+curl -s -o /dev/null -w "HTTP Status: %\{http_code}\n" \
   https://nfl-wallet-{user_name}-nfl-wallet-cl.{cluster_domain}/api/v1/customers
 ----
 
 === With API Key
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
   "https://nfl-wallet-{user_name}-nfl-wallet-cl.{cluster_domain}/api/v1/customers" \
@@ -121,7 +121,7 @@ curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
 
 Run this comprehensive check:
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 echo "=== Gateway ===" && \
 oc get gateway -n {user_name}-neuralbank-cl && echo && \
