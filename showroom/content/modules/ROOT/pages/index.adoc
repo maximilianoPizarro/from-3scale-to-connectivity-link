@@ -78,6 +78,6 @@ TIP: Use the *Terminal* tab for `oc` / `curl` in this showroom (it loads the emb
 
 == Workshop flow
 
-image::workshop-flow.svg[Workshop flow from Developer Hub through Gitea and Argo CD to OpenShift and Kuadrant policies]
+image::workshop-flow.svg[Workshop flow from Developer Hub through Gitea and Argo CD to OpenShift and Kuadrant policies,opts=inline]
 
 Click *Next* to begin with the migration overview.

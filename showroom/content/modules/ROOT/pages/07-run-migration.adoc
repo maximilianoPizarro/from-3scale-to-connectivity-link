@@ -274,7 +274,7 @@ spec:
 
 After the manifests are generated, the template executes these steps:
 
-image::scaffolder-steps.svg["Scaffolder pipeline — template; Gitea; catalog; Argo CD; Mailpit"]
+image::scaffolder-steps.svg["Scaffolder pipeline — template; Gitea; catalog; Argo CD; Mailpit",opts=inline]
 
 The Gitea repository path follows `gitea-gitea.{cluster_domain}/ws-{user_name}/...`. The Argo CD Application name follows `{user_name}-<app>-cl-migration` and syncs into `{user_name}-neuralbank-cl` (or your chosen target namespace).
 
@@ -353,6 +353,6 @@ All resources should exist and show healthy status.
 
 == 3scale → Connectivity Link resource mapping summary
 
-image::resource-mapping.svg[Mapping from 3scale concepts to Connectivity Link resources]
+image::resource-mapping.svg[Mapping from 3scale concepts to Connectivity Link resources,opts=inline]
 
 In the next module you will verify the migrated application and compare it with the 3scale original.
