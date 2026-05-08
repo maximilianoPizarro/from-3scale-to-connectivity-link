@@ -30,6 +30,23 @@
     } catch (e) {}
     return '';
   }
+  /** Antora emits img src="_images/foo.svg" relative to /modules/*.html. If the shell keeps the URL at /, the browser resolves to /_images/ (404). Force paths under /modules/_images/. */
+  function moduleStaticBaseDir() {
+    var path = location.pathname || '/';
+    var dir = path.endsWith('/') ? path : path.replace(/[^/]+$/, '');
+    if (dir.indexOf('/modules') !== -1) return dir.replace(/\/?$/, '/');
+    return '/modules/';
+  }
+  function fixModuleImages() {
+    if (!document.body) return;
+    var baseDir = moduleStaticBaseDir();
+    document.querySelectorAll('img[src^="_images/"], img[src^="./_images/"]').forEach(function (img) {
+      var s = img.getAttribute('src');
+      if (!s || s.indexOf('://') !== -1) return;
+      var rel = s.replace(/^\.\//, '');
+      img.src = location.origin + baseDir + rel;
+    });
+  }
   function rewriteAttrs(s, domain, userName) {
     if (!s) return s;
     var out = s;
@@ -43,6 +60,7 @@
   }
   function apply() {
     if (!document.body) return;
+    fixModuleImages();
     var domain = resolveClusterDomain();
     var userName = resolveUserName();
     if (!domain && !userName) return;
