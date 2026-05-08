@@ -71,6 +71,13 @@ data:
             print(f'Keycloak token error: {e}')
             return None
 
+    def showroom_redirect_url(username):
+        """Redirect to showroom with USER_NAME and optional CLUSTER_DOMAIN (for static Antora HTML)."""
+        q = {'USER_NAME': username}
+        if CLUSTER_DOMAIN and CLUSTER_DOMAIN.strip() and CLUSTER_DOMAIN != 'apps.cluster.example.com':
+            q['CLUSTER_DOMAIN'] = CLUSTER_DOMAIN
+        return SHOWROOM_URL.rstrip('/') + '/?' + urllib.parse.urlencode(q)
+
     def keycloak_update_email(username, email):
         token = keycloak_token()
         if not token:
@@ -179,7 +186,7 @@ data:
                     users = load_users()
                     for u in users:
                         if u['email'] == email:
-                            redirect = f'{SHOWROOM_URL}/?USER_NAME={u["username"]}'
+                            redirect = showroom_redirect_url(u['username'])
                             self.send_json({'username': u['username'], 'redirect': redirect, 'existing': True})
                             return
                     assigned = set(u['username'] for u in users)
@@ -200,7 +207,7 @@ data:
                     users.append(entry)
                     save_users(users)
                 threading.Thread(target=keycloak_update_email, args=(username, email), daemon=True).start()
-                redirect = f'{SHOWROOM_URL}/?USER_NAME={username}'
+                redirect = showroom_redirect_url(username)
                 self.send_json({'username': username, 'redirect': redirect, 'existing': False})
 
             elif path == '/api/reset':

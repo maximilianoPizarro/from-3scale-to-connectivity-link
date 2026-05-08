@@ -9,3 +9,66 @@
     <span style="font-size:0.85rem;line-height:1.3;"><strong>From 3scale to Connectivity Link</strong><br>Powered by Kuadrant &middot; Red Hat Developer Hub &middot; <a href="https://maximilianopizarro.github.io/" target="_blank" rel="noopener" style="color:#0066CC;text-decoration:none;">maximilianoPizarro</a></span>
   </a>
 </footer>
+<script>
+(function () {
+  var PLACEHOLDER = 'apps.cluster.example.com';
+  function resolveClusterDomain() {
+    try {
+      var q = new URLSearchParams(window.location.search || '').get('CLUSTER_DOMAIN');
+      if (q && q.indexOf('apps.') === 0) return q;
+    } catch (e) {}
+    var h = location.hostname || '';
+    var m = /^showroom-showroom\.(apps\..+)$/i.exec(h);
+    return m ? m[1] : '';
+  }
+  function apply() {
+    var domain = resolveClusterDomain();
+    if (!domain || domain === PLACEHOLDER || !document.body) return;
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    var textNodes = [];
+    var node;
+    while ((node = walker.nextNode())) textNodes.push(node);
+    textNodes.forEach(function (n) {
+      if (n.nodeValue && n.nodeValue.indexOf(PLACEHOLDER) !== -1)
+        n.nodeValue = n.nodeValue.split(PLACEHOLDER).join(domain);
+    });
+    document.querySelectorAll('a[href*="' + PLACEHOLDER + '"]').forEach(function (a) {
+      a.href = a.href.split(PLACEHOLDER).join(domain);
+    });
+    document.querySelectorAll('iframe[src*="' + PLACEHOLDER + '"]').forEach(function (f) {
+      f.src = f.src.split(PLACEHOLDER).join(domain);
+    });
+  }
+  function kick() {
+    apply();
+  }
+  function init() {
+    kick();
+    window.addEventListener('load', kick);
+    var n = 0;
+    var timer = setInterval(function () {
+      kick();
+      if (++n >= 30) clearInterval(timer);
+    }, 400);
+    var debounce;
+    function schedule() {
+      clearTimeout(debounce);
+      debounce = setTimeout(kick, 100);
+    }
+    if (document.body) {
+      try {
+        new MutationObserver(schedule).observe(document.body, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          attributeFilter: ['src', 'href']
+        });
+      } catch (e) {}
+    }
+  }
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', init);
+  else
+    init();
+})();
+</script>
