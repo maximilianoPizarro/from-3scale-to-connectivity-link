@@ -1,1 +1,28 @@
 ---
+type: showroom
+
+default_width: 30
+persist_url_state: true
+
+view_switcher:
+  enabled: true
+  default_mode: split
+
+tabs:
+  - name: OpenShift Console
+    url: 'https://console-openshift-console.{cluster_domain}'
+
+  - name: Developer Hub
+    url: 'https://backstage-developer-hub-developer-hub.{cluster_domain}'
+
+  - name: ArgoCD
+    url: 'https://openshift-gitops-server-openshift-gitops.{cluster_domain}'
+
+  - name: Keycloak
+    url: 'https://rhbk.{cluster_domain}/admin/master/console'
+
+  - name: Grafana
+    url: 'https://grafana-observability.{cluster_domain}'
+
+  - name: Gitea
+    url: 'https://gitea-gitea.{cluster_domain}'
