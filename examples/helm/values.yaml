@@ -400,13 +400,16 @@ connectivityLink:
           enabled: true
           route:
             enabled: true
-    # https://artifacthub.io/packages/helm/apishift/apishift
+    # Artifact Hub lists apishift 0.3.0 (https://artifacthub.io/packages/helm/apishift/apishift)
+    # but the published tarball still packs Chart.yaml name/dir as "gateforge", which
+    # breaks Argo CD (looks for apishift/Chart.yaml). Use Git until the chart is
+    # republished with name+archive root "apishift".
     - id: apishift
       enabled: true
       autoSync: false
-      repoURL: "https://everything-is-code.github.io/apishift/"
-      chart: apishift
-      targetRevision: "0.3.0"
+      repoURL: "https://github.com/Everything-is-Code/apishift"
+      path: helm/gateforge
+      targetRevision: "v0.3.0"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
