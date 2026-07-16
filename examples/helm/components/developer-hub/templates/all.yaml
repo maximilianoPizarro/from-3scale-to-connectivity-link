@@ -667,7 +667,8 @@ data:
                           - hasAnnotation: backstage.io/kubernetes-namespace
       - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
         disabled: false
-      - package: ./dynamic-plugins/dist/roadiehq-backstage-plugin-argo-cd-backend-dynamic
+      # RHDH 1.10 image no longer ships the local roadiehq argo-cd-backend path; use OCI overlay
+      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd-backend:bs_1.45.3__2.4.3!backstage-community-plugin-argocd-backend
         disabled: false
       - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-argocd:bs_1.45.3__2.4.3!backstage-community-plugin-argocd
         disabled: false
