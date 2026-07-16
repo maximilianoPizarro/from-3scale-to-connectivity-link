@@ -1,7 +1,7 @@
 # Design: Microcks via OLM Operator (replace Helm chart)
 
 **Date:** 2026-07-16  
-**Status:** Approved for implementation  
+**Status:** Implemented (pivoted to Quarkus operator — see Amendment)  
 **Cluster pattern:** `examples/helm` (field-content / Connectivity Link workshop)
 
 ## Problem
@@ -134,9 +134,14 @@ Sync notes:
 | CR applied before CRD | sync-wave + skipDryRun; retry sync |
 | Operator recreates grpc Route/Ingress issues | Prefer operator OpenShift Routes; if grpc still noisy, leave async off and ignore grpc host |
 
-## Implementation outline (next: writing-plans)
+## Amendment (implemented)
 
-1. Update `examples/helm/values.yaml`: remove/disable `helmApps.microcks`.
-2. Rewrite `examples/helm/components/microcks/templates/` (operator + CR + keep ConsoleLink).
-3. Confirm Application entry for `path: microcks` sync flags.
-4. Cutover on workshop cluster; verify success criteria.
+OperatorHub Ansible package (`MicrocksInstall`) **fails** on this workshop cluster: `ValueError: too many values to unpack` in `k8s_facts` when OpenShift Virtualization CRDs are present (known python-openshift bug).
+
+**Shipped instead:**
+
+- `helmApps.microcks-operator`: Git Helm chart `microcks/microcks-operator` `@0.0.10` → Quarkus operator
+- `components/microcks`: `kind: Microcks` (`microcks.io/v1alpha1`) + ConsoleLink
+- CR must set `keycloak.openshift.route.enabled: true` (and microcks) to avoid NPE in operator 0.0.10
+
+Verified on cluster: Microcks status `READY`, UI HTTP 200, Service `microcks:8080`, no `field-content-helm-microcks`.
