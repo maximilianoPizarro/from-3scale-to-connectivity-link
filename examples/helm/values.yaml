@@ -239,6 +239,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: true
+    - id: apishift-secrets
+      enabled: true
+      path: apishift-secrets
+      destinationNamespace: gateforge
+      syncWave: "8"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
     - id: connectivity-link-nfl-wallet
       enabled: true
       path: nfl-wallet

@@ -247,6 +247,12 @@ spec:
         litellmModel: {{ $llmModel | quote }}
         litellmApiKey: {{ $llmKey | quote }}
         threescaleAccessToken: {{ $.Values.connectivityLink.threescaleAccessToken | default "placeholder-set-in-argocd" | quote }}
+    {{- else if eq .path "apishift-secrets" }}
+    helm:
+      valuesObject:
+        destinationNamespace: gateforge
+        secretName: gateforge-ai-secret
+        aiApiKey: {{ $llmKey | quote }}
     {{- else if eq .path "workshop-registration" }}
     helm:
       valuesObject:

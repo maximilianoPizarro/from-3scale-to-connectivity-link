@@ -1,0 +1,4 @@
+# Populated by parent Application from litemaas / maas (RHDP injects apiKey)
+aiApiKey: ""
+destinationNamespace: gateforge
+secretName: gateforge-ai-secret
