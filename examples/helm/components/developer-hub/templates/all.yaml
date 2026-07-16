@@ -600,29 +600,8 @@ data:
     includes:
       - dynamic-plugins.default.yaml
     plugins:
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed:bs_1.42.5__1.0.3!red-hat-developer-hub-backstage-plugin-lightspeed
-        disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              red-hat-developer-hub.backstage-plugin-lightspeed:
-                appIcons:
-                  - name: LightspeedIcon
-                    module: LightspeedPlugin
-                    importName: LightspeedIcon
-                dynamicRoutes:
-                  - importName: LightspeedPage
-                    menuItem:
-                      icon: LightspeedIcon
-                      text: Lightspeed
-                    module: LightspeedPlugin
-                    path: /lightspeed
-                translationResources:
-                  - importName: lightspeedTranslations
-                    module: Alpha
-                    ref: lightspeedTranslationRef
-      - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-lightspeed-backend:bs_1.42.5__1.0.3!red-hat-developer-hub-backstage-plugin-lightspeed-backend
-        disabled: false
+      # Lightspeed comes from dynamic-plugins.default.yaml; custom OCI+pluginConfig
+      # conflicts on dynamicRoutes with the included default (RHDH 1.10).
       - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
