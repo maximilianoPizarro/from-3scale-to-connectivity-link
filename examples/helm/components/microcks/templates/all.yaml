@@ -21,10 +21,19 @@ spec:
   version: "1.14.0"
   microcks:
     url: "microcks.{{ .Values.clusterDomain }}"
+    openshift:
+      route:
+        enabled: true
   keycloak:
     install: true
+    persistent: true
+    volumeSize: 1Gi
     url: "microcks-keycloak.{{ .Values.clusterDomain }}"
     privateUrl: "http://microcks-keycloak.microcks.svc.cluster.local:8080"
+    # Required on OpenShift: reconciler NPEs if openshift.route is unset (0.0.10)
+    openshift:
+      route:
+        enabled: true
   mongodb:
     install: true
     persistent: true
