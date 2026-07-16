@@ -1,5 +1,13 @@
 # Connectivity-link stack — local Helm charts (vendored from connectivity-link)
 # Sync-wave on Application metadata is advisory; manifests use argocd.argoproj.io/sync-wave.
+#
+# Single LLM source: RHDP-injected litemaas.* → maas.* → lightspeed.* fallbacks.
+{{- $litemaas := .Values.litemaas | default dict }}
+{{- $maas := .Values.maas | default dict }}
+{{- $lightspeed := .Values.lightspeed | default dict }}
+{{- $llmEndpoint := $litemaas.apiUrl | default $maas.endpoint | default $lightspeed.llmEndpoint }}
+{{- $llmKey := $litemaas.apiKey | default $maas.apiKey | default $lightspeed.llmApiKey }}
+{{- $llmModel := $litemaas.model | default $maas.model | default "llama-scout-17b" }}
 {{- range .Values.connectivityLink.apps }}
 {{- if and . .enabled }}
 ---
@@ -199,9 +207,6 @@ spec:
       valuesObject:
         clusterDomain: {{ $domain }}
     {{- else if eq .path "openshift-lightspeed" }}
-    {{- $llmKey := $.Values.lightspeed.llmApiKey }}
-    {{- $llmEndpoint := $.Values.lightspeed.llmEndpoint }}
-    {{- $llmModel := $.Values.maas.model | default "granite-3.2-8b-instruct" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
@@ -239,7 +244,8 @@ spec:
         clusterDomain: {{ $domain }}
         userCount: {{ $.Values.userCount | default 200 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
-        litellmModel: {{ $.Values.maas.model | default "granite-3.2-8b-instruct" | quote }}
+        litellmModel: {{ $llmModel | quote }}
+        litellmApiKey: {{ $llmKey | quote }}
         threescaleAccessToken: {{ $.Values.connectivityLink.threescaleAccessToken | default "placeholder-set-in-argocd" | quote }}
     {{- else if eq .path "workshop-registration" }}
     helm:
@@ -343,7 +349,7 @@ spec:
 {{- end }}
 {{- end }}
 # ============================================================
-# Helm Chart Applications — third-party charts from external repos
+# Helm Chart Applications — third-party charts (Helm repo or Git path)
 # ============================================================
 {{- if .Values.connectivityLink.helmApps }}
 {{- range .Values.connectivityLink.helmApps }}
@@ -389,12 +395,20 @@ spec:
         - /data
   source:
     repoURL: {{ .repoURL }}
-    chart: {{ .chart }}
     targetRevision: {{ .targetRevision }}
+    {{- if .path }}
+    path: {{ .path }}
+    helm:
+      releaseName: {{ .id }}
+      valuesObject:
+        {{- tpl (toYaml .values) $ | nindent 8 }}
+    {{- else }}
+    chart: {{ .chart }}
     helm:
       releaseName: {{ .chart }}
       valuesObject:
         {{- tpl (toYaml .values) $ | nindent 8 }}
+    {{- end }}
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ .destinationNamespace }}

@@ -129,7 +129,6 @@ connectivityLink:
       skipDryRunOnMissingResource: true
     - id: connectivity-link-developer-hub
       enabled: true
-      autoSync: false
       path: developer-hub
       destinationNamespace: developer-hub
       syncWave: "3"
@@ -362,10 +361,10 @@ connectivityLink:
         namespace: openshift-lightspeed
         litellm:
           model:
-            name: "{{ .Values.maas.model }}"
-            modelId: "{{ .Values.maas.model }}"
-            apiBase: "{{ .Values.maas.endpoint }}"
-            apiKey: "{{ .Values.maas.apiKey }}"
+            name: "{{ .Values.litemaas.model | default .Values.maas.model }}"
+            modelId: "{{ .Values.litemaas.model | default .Values.maas.model }}"
+            apiBase: "{{ .Values.litemaas.apiUrl | default .Values.maas.endpoint }}"
+            apiKey: "{{ .Values.litemaas.apiKey | default .Values.maas.apiKey }}"
     - id: microcks
       enabled: true
       repoURL: "https://microcks.io/helm"
@@ -377,6 +376,7 @@ connectivityLink:
         microcks:
           url: "microcks.{{ .Values.deployer.domain }}"
           openshift: true
+          grpcEnableTLS: false
           resources:
             requests:
               cpu: 200m
@@ -405,30 +405,29 @@ connectivityLink:
           enabled: true
           route:
             enabled: true
-    - id: gateforge
+    - id: apishift
       enabled: true
       autoSync: false
-      repoURL: "https://maximilianopizarro.github.io/gateforge/"
-      chart: gateforge
-      targetRevision: "0.1.9"
+      repoURL: "https://github.com/Everything-is-Code/apishift"
+      path: helm/apishift
+      targetRevision: "v0.3.0"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
-        global:
-          clusterDomain: "{{ .Values.deployer.domain }}"
+        clusterDomain: "{{ .Values.deployer.domain }}"
         backend:
           image:
             repository: quay.io/maximilianopizarro/gateforge-backend
-            tag: v0.1.9
+            tag: v0.3.0
         frontend:
           image:
             repository: quay.io/maximilianopizarro/gateforge-frontend
-            tag: v0.1.9
+            tag: v0.3.0
         ai:
           enabled: true
-          endpoint: "{{ .Values.maas.endpoint }}"
-          model: "{{ .Values.maas.model }}"
-          apiKey: "{{ .Values.maas.apiKey }}"
+          endpoint: "{{ .Values.litemaas.apiUrl | default .Values.maas.endpoint }}"
+          model: "{{ .Values.litemaas.model | default .Values.maas.model }}"
+          apiKey: "{{ .Values.litemaas.apiKey | default .Values.maas.apiKey }}"
         threescale:
           adminApi:
             enabled: true
@@ -467,20 +466,25 @@ connectivityLink:
             termination: edge
 
 # ============================================================
-# MaaS — Model-as-a-Service provider (RHDP)
-# apiKey rotates every 7 days; set real value in ArgoCD UI
+# LiteMaaS / MaaS — single LLM source (RHDP injects apiKey; never commit real keys)
+# Consumers: OLS, Developer Hub Lightspeed, openshift-mcp-server, ApiShift
 # ============================================================
-maas:
-  apiKey: "sk-placeholder-set-in-argocd"
-  endpoint: "http://granite-3-2-8b-instruct-metrics.openshift-ai-models.svc.cluster.local:8080/v1"
-  model: "granite-3.2-8b-instruct"
+litemaas:
+  enabled: true
+  apiKey: ""
+  apiUrl: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
+  model: "llama-scout-17b"
 
-# ============================================================
-# Lightspeed / MCP — LLM config for OLS component (direct to granite)
-# ============================================================
+# Legacy aliases — prefer litemaas.*; kept as fallbacks for older overlays
+maas:
+  apiKey: ""
+  endpoint: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
+  model: "llama-scout-17b"
+
+# Lightspeed OLS — derived from litemaas when present (see connectivity-link-applications.yaml)
 lightspeed:
-  llmApiKey: "sk-no-key"
-  llmEndpoint: "http://granite-3-2-8b-instruct-metrics.openshift-ai-models.svc.cluster.local:8080/v1"
+  llmApiKey: ""
+  llmEndpoint: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
 
 # ============================================================
 # User Scaling — single parameter controls all user provisioning

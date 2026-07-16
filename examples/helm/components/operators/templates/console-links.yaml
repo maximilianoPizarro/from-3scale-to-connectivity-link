@@ -129,13 +129,13 @@ spec:
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
 metadata:
-  name: gateforge-link
+  name: apishift-link
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:
-  href: https://gateforge-gateforge.{{ $domain }}
+  href: https://apishift-gateforge.{{ $domain }}
   location: ApplicationMenu
-  text: GateForge
+  text: ApiShift
   applicationMenu:
     section: API Management
-    imageURL: https://maximilianopizarro.github.io/gateforge/assets/logo.svg
+    imageURL: https://everything-is-code.github.io/apishift/assets/logo.svg

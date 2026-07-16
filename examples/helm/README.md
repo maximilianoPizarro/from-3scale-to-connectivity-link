@@ -42,8 +42,11 @@ Connectivity-link manifests are **vendored** from [connectivity-link](https://gi
 | `connectivityLink.apps[]` | Toggle each connectivity-link app, destination namespace, prune, sync-wave |
 | `connectivityLink.operators` | `channel`, `version`, `subscriptions` passed to `connectivity-link-operators` |
 | `connectivityLink.neuralbank` | Values merged into `connectivity-link-neuralbank-stack`; Keycloak URLs are overridden from `deployer.domain` |
-| `litemaas.*` | Optional RHDP injection; when `litemaas.apiUrl` is set, neuralbank `api.baseUrl` can follow it |
+| `litemaas.*` | Single LLM source (RHDP injects `apiKey`). Propagated to OLS, Developer Hub Lightspeed, openshift-mcp-server LiteLLM, and ApiShift `ai.*`. Defaults: MaaS RHDP endpoint + `llama-scout-17b`. Never commit real API keys. |
+| `maas.*` / `lightspeed.*` | Legacy fallbacks if `litemaas.*` is empty |
 | `components.showroom` | Showroom content repo, nookbag, terminal (default: from-3scale-to-connectivity-link) |
+
+**ApiShift:** Deployed as a Git-sourced Helm app (`connectivityLink.helmApps` with `path: helm/apishift`) from [Everything-is-Code/apishift](https://github.com/Everything-is-Code/apishift) `@v0.3.0`, namespace `gateforge`, images `quay.io/maximilianopizarro/gateforge-*:v0.3.0` until the public Helm chart index ships matching `apishift-*.tgz` packages.
 
 **Note:** LiteMaaS-related YAML in `connectivity-link-litemaas` still contains cluster-specific URLs from the upstream snapshot. For a new cluster, adjust `cluster-config` / domain handling in that chart or maintain a fork.
 
