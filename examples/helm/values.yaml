@@ -373,34 +373,8 @@ connectivityLink:
             modelId: "{{ .Values.litemaas.model | default .Values.maas.model }}"
             apiBase: "{{ .Values.litemaas.apiUrl | default .Values.maas.endpoint }}"
             apiKey: "{{ .Values.litemaas.apiKey | default .Values.maas.apiKey }}"
-    - id: microcks
-      enabled: true
-      repoURL: "https://microcks.io/helm"
-      chart: microcks
-      targetRevision: "1.14.0"
-      destinationNamespace: microcks
-      syncWave: "8"
-      values:
-        microcks:
-          url: "microcks.{{ .Values.deployer.domain }}"
-          openshift: true
-          grpcEnableTLS: false
-          resources:
-            requests:
-              cpu: 200m
-              memory: 512Mi
-            limits:
-              cpu: 500m
-              memory: 1Gi
-        keycloak:
-          install: true
-          persistent: true
-          url: "microcks-keycloak.{{ .Values.deployer.domain }}"
-          volumeSize: 1Gi
-        mongodb:
-          install: true
-          persistent: true
-          volumeSize: 2Gi
+    # Microcks: installed via OLM Operator + MicrocksInstall in components/microcks
+    # (helm chart removed — secrets/PVC drift and grpc ingress health noise)
     - id: n8n
       enabled: true
       repoURL: "https://maximilianopizarro.github.io/n8n-helm-chart/"

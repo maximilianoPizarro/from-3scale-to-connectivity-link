@@ -7,6 +7,99 @@ metadata:
   labels:
     kubernetes.io/metadata.name: microcks
 ---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: microcks-operator-group
+  namespace: microcks
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  targetNamespaces:
+    - microcks
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: microcks
+  namespace: microcks
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: microcks
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: microcks-argocd-role
+  namespace: microcks
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups: [""]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["apps"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["route.openshift.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  - apiGroups: ["microcks.github.io"]
+    resources: ["*"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: microcks-argocd-binding
+  namespace: microcks
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: microcks-argocd-role
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
+---
+apiVersion: microcks.github.io/v1alpha1
+kind: MicrocksInstall
+metadata:
+  name: microcks
+  namespace: microcks
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  name: microcks
+  version: "latest"
+  microcks:
+    replicas: 1
+    url: "microcks.{{ .Values.clusterDomain }}"
+  postman:
+    replicas: 1
+  keycloak:
+    install: true
+    persistent: true
+    volumeSize: 1Gi
+    replicas: 1
+    url: "microcks-keycloak.{{ .Values.clusterDomain }}"
+  mongodb:
+    install: true
+    persistent: true
+    volumeSize: 2Gi
+    replicas: 1
+---
 apiVersion: console.openshift.io/v1
 kind: ConsoleLink
 metadata:
