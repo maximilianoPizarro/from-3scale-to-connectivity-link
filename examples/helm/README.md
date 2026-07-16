@@ -46,7 +46,7 @@ Connectivity-link manifests are **vendored** from [connectivity-link](https://gi
 | `maas.*` / `lightspeed.*` | Legacy fallbacks if `litemaas.*` is empty |
 | `components.showroom` | Showroom content repo, nookbag, terminal (default: from-3scale-to-connectivity-link) |
 
-**ApiShift:** Deployed as a Git-sourced Helm app (`connectivityLink.helmApps` with `path: helm/gateforge`) from [Everything-is-Code/apishift](https://github.com/Everything-is-Code/apishift) `@v0.3.0` (chart directory still named `gateforge` at that tag; `main` uses `helm/apishift`), namespace `gateforge`, images `quay.io/maximilianopizarro/gateforge-*:v0.3.0`. The upstream chart expects Secret `gateforge-ai-secret` (key `AI_API_KEY`); this pattern creates it via `components/apishift-secrets` from `litemaas.apiKey`.
+**ApiShift:** Deployed as a Git-sourced Helm app (`connectivityLink.helmApps` with `path: helm/apishift`) from [Everything-is-Code/apishift](https://github.com/Everything-is-Code/apishift) `@main`, namespace `gateforge`. Backend image: `quay.io/everythingascode/apishift-backend:latest`. Frontend: built in-cluster to `image-registry.../gateforge/apishift-frontend:latest` because `quay.io/everythingascode/apishift-frontend` is private. Route host kept as `gateforge-gateforge.<domain>`. AI secret: `gateforge-ai-secret` via `ai.existingSecret` (`components/apishift-secrets` from `litemaas.apiKey`).
 
 **Note:** LiteMaaS-related YAML in `connectivity-link-litemaas` still contains cluster-specific URLs from the upstream snapshot. For a new cluster, adjust `cluster-config` / domain handling in that chart or maintain a fork.
 

@@ -400,33 +400,38 @@ connectivityLink:
           enabled: true
           route:
             enabled: true
-    # Artifact Hub lists apishift 0.3.0 (https://artifacthub.io/packages/helm/apishift/apishift)
-    # but the published tarball still packs Chart.yaml name/dir as "gateforge", which
-    # breaks Argo CD (looks for apishift/Chart.yaml). Use Git until the chart is
-    # republished with name+archive root "apishift".
+    # Chart on main is helm/apishift (name: apishift). Quay everythingascode/apishift-frontend
+    # is private; workshop builds frontend into the internal registry (ImageStream).
+    # Backend image is public on everythingascode.
     - id: apishift
       enabled: true
       autoSync: false
       repoURL: "https://github.com/Everything-is-Code/apishift"
-      path: helm/gateforge
-      targetRevision: "v0.3.0"
+      path: helm/apishift
+      targetRevision: "main"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
         clusterDomain: "{{ .Values.deployer.domain }}"
+        route:
+          enabled: true
+          host: "gateforge-gateforge.{{ .Values.deployer.domain }}"
         backend:
           image:
-            repository: quay.io/maximilianopizarro/gateforge-backend
-            tag: v0.3.0
+            repository: quay.io/everythingascode/apishift-backend
+            tag: latest
+            pullPolicy: Always
         frontend:
           image:
-            repository: quay.io/maximilianopizarro/gateforge-frontend
-            tag: v0.3.0
+            repository: image-registry.openshift-image-registry.svc:5000/gateforge/apishift-frontend
+            tag: latest
+            pullPolicy: Always
         ai:
           enabled: true
           endpoint: "{{ .Values.litemaas.apiUrl | default .Values.maas.endpoint }}"
           model: "{{ .Values.litemaas.model | default .Values.maas.model }}"
           apiKey: "{{ .Values.litemaas.apiKey | default .Values.maas.apiKey }}"
+          existingSecret: gateforge-ai-secret
         threescale:
           adminApi:
             enabled: true
@@ -458,11 +463,6 @@ connectivityLink:
           scaffolderUrl: "https://backstage-developer-hub-developer-hub.{{ .Values.deployer.domain }}/api/scaffolder/v2/tasks"
           scaffolderToken: "placeholder-set-in-argocd"
           componentSuffix: "-product"
-        route:
-          enabled: true
-          host: ""
-          tls:
-            termination: edge
 
 # ============================================================
 # LiteMaaS / MaaS — single LLM source (RHDP injects apiKey; never commit real keys)
