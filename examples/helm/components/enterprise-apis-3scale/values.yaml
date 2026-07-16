@@ -1,6 +1,8 @@
 clusterDomain: "apps.cluster.example.com"
 userCount: 50
 microcksBaseUrl: "http://microcks.microcks.svc.cluster.local:8080"
+# Used by APISource raw.githubusercontent.com URLs (must match Argo targetRevision)
+gitopsRevision: "main"
 
 apis:
   - name: account-mgmt
