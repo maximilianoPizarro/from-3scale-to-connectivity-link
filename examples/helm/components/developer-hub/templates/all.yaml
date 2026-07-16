@@ -600,8 +600,15 @@ data:
     includes:
       - dynamic-plugins.default.yaml
     plugins:
-      # Lightspeed comes from dynamic-plugins.default.yaml; custom OCI+pluginConfig
-      # conflicts on dynamicRoutes with the included default (RHDH 1.10).
+      # Disable bundled Lightspeed from includes — conflicts when multiple variants merge.
+      - package: oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-lightspeed
+        disabled: true
+      - package: oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-lightspeed-backend
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-lightspeed
+        disabled: true
+      - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-lightspeed-backend
+        disabled: true
       - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
@@ -1207,18 +1214,25 @@ metadata:
   namespace: developer-hub
 data:
   lightspeed-stack.yaml: |
+    # Compatible with lightspeed-stack image schema (no authorization_headers).
+    # RHDH flavour may still mount backstage-files-*-lightspeed-stack-config; keep both clean.
     name: lightspeed-stack
     service:
       host: "0.0.0.0"
       port: 8080
+      auth_enabled: false
+      workers: 1
     llama_stack:
       url: "http://localhost:8321"
     inference:
       default_provider: vllm
       default_model: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" }}
     user_data_collection:
+      feedback_enabled: true
       feedback_storage: "/tmp/data/feedback"
       transcripts_storage: "/tmp/data/transcripts"
+    authentication:
+      module: "noop"
     conversation_cache:
       type: postgres
       postgres:
@@ -1227,6 +1241,10 @@ data:
         db: lightspeed_conversations
         user: lightspeed_user
         password: lightspeed_password_123
+    mcp_servers:
+      - name: mcp-integration-tools
+        provider_id: "model-context-protocol"
+        url: "http://localhost:7007/api/mcp-actions/v1"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -1516,6 +1534,12 @@ metadata:
   name: developer-hub
   namespace: developer-hub
 spec:
+  # RHDH 1.10 enables lightspeed flavour by default; its bundled stack config
+  # injects mcp_servers.authorization_headers which current lightspeed-stack
+  # images reject (pydantic extra_forbidden). Keep our custom sidecars below.
+  flavours:
+    - name: lightspeed
+      enabled: false
   application:
     appConfig:
       configMaps:
