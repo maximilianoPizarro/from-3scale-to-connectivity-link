@@ -46,7 +46,7 @@ Connectivity-link manifests are **vendored** from [connectivity-link](https://gi
 | `maas.*` / `lightspeed.*` | Legacy fallbacks if `litemaas.*` is empty |
 | `components.showroom` | Showroom content repo, nookbag, terminal (default: from-3scale-to-connectivity-link) |
 
-**ApiShift:** Deployed as a Git-sourced Helm app (`connectivityLink.helmApps` with `path: helm/apishift`) from [Everything-is-Code/apishift](https://github.com/Everything-is-Code/apishift) `@v0.3.0`, namespace `gateforge`, images `quay.io/maximilianopizarro/gateforge-*:v0.3.0` until the public Helm chart index ships matching `apishift-*.tgz` packages.
+**ApiShift:** Deployed as a Git-sourced Helm app (`connectivityLink.helmApps` with `path: helm/gateforge`) from [Everything-is-Code/apishift](https://github.com/Everything-is-Code/apishift) `@v0.3.0` (chart directory still named `gateforge` at that tag; `main` uses `helm/apishift`), namespace `gateforge`, images `quay.io/maximilianopizarro/gateforge-*:v0.3.0` until the public Helm chart index ships matching `apishift-*.tgz` packages.
 
 **Note:** LiteMaaS-related YAML in `connectivity-link-litemaas` still contains cluster-specific URLs from the upstream snapshot. For a new cluster, adjust `cluster-config` / domain handling in that chart or maintain a fork.
 

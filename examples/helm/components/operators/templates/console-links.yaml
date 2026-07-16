@@ -133,7 +133,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:
-  href: https://apishift-gateforge.{{ $domain }}
+  href: https://gateforge-gateforge.{{ $domain }}
   location: ApplicationMenu
   text: ApiShift
   applicationMenu:

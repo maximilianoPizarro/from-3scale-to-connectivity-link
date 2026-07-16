@@ -409,7 +409,7 @@ connectivityLink:
       enabled: true
       autoSync: false
       repoURL: "https://github.com/Everything-is-Code/apishift"
-      path: helm/apishift
+      path: helm/gateforge
       targetRevision: "v0.3.0"
       destinationNamespace: gateforge
       syncWave: "9"
