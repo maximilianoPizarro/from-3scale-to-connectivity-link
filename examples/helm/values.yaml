@@ -400,9 +400,8 @@ connectivityLink:
           enabled: true
           route:
             enabled: true
-    # Chart on main is helm/apishift (name: apishift). Quay everythingascode/apishift-frontend
-    # is private; workshop builds frontend into the internal registry (ImageStream).
-    # Backend image is public on everythingascode.
+    # Chart on main: helm/apishift. Images retagged to maximilianopizarro/gateforge-*
+    # (upstream CI publishes everythingascode/apishift-*; frontend there is private).
     - id: apishift
       enabled: true
       autoSync: false
@@ -418,12 +417,12 @@ connectivityLink:
           host: "gateforge-gateforge.{{ .Values.deployer.domain }}"
         backend:
           image:
-            repository: quay.io/everythingascode/apishift-backend
+            repository: quay.io/maximilianopizarro/gateforge-backend
             tag: latest
             pullPolicy: Always
         frontend:
           image:
-            repository: image-registry.openshift-image-registry.svc:5000/gateforge/apishift-frontend
+            repository: quay.io/maximilianopizarro/gateforge-frontend
             tag: latest
             pullPolicy: Always
         ai:
