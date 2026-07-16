@@ -439,4 +439,10 @@ spec:
                   --from-literal=THREESCALE_ACCESS_TOKEN="${TOKEN}" \
                   --from-literal=AI_API_KEY=""
               fi
+              # ApiShift Helm release uses apishift-config (THREESCALE_ACCESS_TOKEN)
+              if oc get secret apishift-config -n gateforge >/dev/null 2>&1; then
+                echo "Patching apishift-config THREESCALE_ACCESS_TOKEN..."
+                oc patch secret apishift-config -n gateforge \
+                  -p "{\"stringData\":{\"THREESCALE_ACCESS_TOKEN\":\"${TOKEN}\"}}"
+              fi
               echo "3scale admin token synced to gateforge namespace"
