@@ -1,6 +1,6 @@
 apiVersion: v2
 name: microcks
-description: Microcks via OLM Operator (Subscription + MicrocksInstall) and ConsoleLink
+description: Microcks instance CR (microcks.io) + ConsoleLink; operator via helmApps.microcks-operator
 type: application
-version: 0.2.0
-appVersion: "latest"
+version: 0.3.0
+appVersion: "1.14.0"

@@ -104,3 +104,7 @@ git commit -m "Install Microcks via OLM Subscription and MicrocksInstall CR."
 | OG + Subscription + MicrocksInstall + ConsoleLink | Task 2 |
 | Wipe + sync + verify | Task 3 |
 | Consumers unchanged | Task 3 verify Service name |
+
+## Amendment (cluster cutover)
+
+Ansible OLM OperatorHub package (`microcks` / `MicrocksInstall`) fails on this workshop cluster: `ValueError: too many values to unpack` in `k8s_facts` when OpenShift Virtualization CRDs are present. Switched to **Quarkus** [microcks/microcks-operator](https://github.com/microcks/microcks-operator) `0.0.10` via Git Helm chart + `kind: Microcks` (`microcks.io/v1alpha1`).
