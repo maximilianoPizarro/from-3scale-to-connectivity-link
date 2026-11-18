@@ -356,7 +356,7 @@ spec:
     team: Platform Engineering
     email: platform@redhat.local
   documentation:
-    openAPISpecURL: "https://nfl-wallet.{{ .Values.clusterDomain }}/q/openapi"
+    openAPISpecURL: "https://nfl-wallet.{{ .Values.clusterDomain }}/q/openapi?format=json"
     swaggerUI: "https://nfl-wallet.{{ .Values.clusterDomain }}/q/swagger-ui"
     docsURL: "https://backstage-developer-hub-developer-hub.{{ .Values.clusterDomain }}/catalog/default/api/nfl-wallet-api/definition"
     gitRepository: "https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link"
