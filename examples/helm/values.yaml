@@ -499,8 +499,8 @@ connectivityLink:
         backend:
           image:
             repository: quay.io/maximilianopizarro/migration-toolkit-rhcl-backend
-            # Immutable tag of the OpenShift-ready generator (Gateway 8080, edge Route, Bearer).
-            tag: 6bb9d91d801ec0ac79c759e805b846e72bf41c8b
+            # Immutable tag of the generator that reads the 3scale issuer, proxy paths, and plan limits.
+            tag: 2bf6a093863e908e72638e5d534e378ad8843884
             pullPolicy: Always
           # URL is not a secret. The token is a placeholder so the chart
           # mounts THREESCALE_DEFAULT_TOKEN from the config secret; the
