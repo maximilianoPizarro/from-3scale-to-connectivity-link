@@ -33,7 +33,7 @@ spec:
             - name: QUARKUS_HTTP_CORS_ORIGINS
               value: "*"
             - name: QUARKUS_SMALLRYE_OPENAPI_SERVERS
-              value: "https://neuralbank.{{ .Values.global.clusterDomain | default \"apps.cluster.example.com\" }}"
+              value: {{ printf "https://neuralbank.%s" (.Values.global.clusterDomain | default "apps.cluster.example.com") | quote }}
 ---
 apiVersion: v1
 kind: Service

@@ -332,7 +332,7 @@ spec:
   system:
     fileStorage:
       persistentVolumeClaim:
-        storageClassName: "ocs-external-storagecluster-cephfs"
+        storageClassName: "gp3-csi"
   zync:
     appSpec:
       replicas: 1

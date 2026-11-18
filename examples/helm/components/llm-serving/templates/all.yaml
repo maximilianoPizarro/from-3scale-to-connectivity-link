@@ -9,9 +9,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  storageClassName: ocs-external-storagecluster-cephfs
+  storageClassName: gp3-csi
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: {{ .Values.model.storageSize | default "10Gi" }}

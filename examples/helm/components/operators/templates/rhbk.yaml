@@ -17,7 +17,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
-  channel: stable-v26.4
+  channel: stable-v26.6
   installPlanApproval: Automatic
   name: rhbk-operator
   source: redhat-operators

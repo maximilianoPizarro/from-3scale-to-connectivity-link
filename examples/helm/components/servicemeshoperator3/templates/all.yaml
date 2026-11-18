@@ -254,7 +254,7 @@ spec:
       trustDomain: cluster.local
     pilot:
       trustedZtunnelNamespace: ztunnel
-  version: v1.27.3
+  version: v1.31.1
 ---
 apiVersion: sailoperator.io/v1
 kind: IstioCNI
@@ -270,7 +270,7 @@ spec:
     cni:
       ambient:
         reconcileIptablesOnStartup: true
-  version: v1.27.3
+  version: v1.31.1
 ---
 apiVersion: sailoperator.io/v1alpha1
 kind: ZTunnel
@@ -281,7 +281,7 @@ metadata:
   namespace: istio-system
 spec:
   namespace: ztunnel
-  version: v1.27.3
+  version: v1.31.1
 ---
 apiVersion: telemetry.istio.io/v1
 kind: Telemetry
