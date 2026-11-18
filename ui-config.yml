@@ -9,13 +9,27 @@ view_switcher:
   default_mode: split
 
 tabs:
-  # Backstage OIDC often fails inside an iframe (redirect chain / Keycloak framing). Open from Workshop links if needed.
-  # RHDP nookbag substitutes ${DOMAIN} from the content container DOMAIN env (apps subdomain), not AsciiDoc-style {cluster_domain}.
+  # RHDP nookbag: path+port loads the in-cluster terminal.
+  # Traefik maps /terminal (no arg) -> workshop-terminal.html, then ?arg=<user> -> ttyd.
+  - name: Terminal
+    path: /terminal
+    port: 443
+
+  - name: OCP Console
+    url: 'https://console-openshift-console.${DOMAIN}'
+
+  - name: 3scale Admin
+    url: 'https://3scale-admin.${DOMAIN}'
+
+  - name: Migration Toolkit
+    url: 'https://migration-toolkit.${DOMAIN}'
+
+  - name: APIShift
+    url: 'https://gateforge-gateforge.${DOMAIN}'
+
+  # Backstage OIDC often fails inside an iframe (redirect chain / Keycloak framing).
   - name: Developer Hub
     url: 'https://backstage-developer-hub-developer-hub.${DOMAIN}'
 
-  # RHDP nookbag: path+port loads the in-cluster terminal (same pattern as openshift-days-ops-showroom).
-  # Our nginx maps /terminal/ -> tty. Do not use #terminal — it breaks navigation.
-  - name: Terminal
-    path: /terminal/
-    port: 443
+  - name: Keycloak
+    url: 'https://rhbk.${DOMAIN}'

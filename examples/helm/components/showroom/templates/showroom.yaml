@@ -1,55 +1,69 @@
 {{- if .Values.showroom.enabled }}
+{{- $name := .Values.showroom.name | default "showroom" }}
+{{- $ns := .Values.showroom.namespace | default "showroom" }}
+{{- $domain := .Values.deployer.domain | default "apps.cluster.example.com" }}
+{{- $clusterBase := $domain | replace "apps." "" }}
 ---
 # Showroom Namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{ .Values.showroom.namespace | default "showroom" }}
+  name: {{ $ns }}
   labels:
     demo.redhat.com/application: "showroom"
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 ---
 # Showroom ServiceAccount
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 ---
 # Showroom RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: edit-{{ .Values.showroom.name }}-sa
-  namespace: {{ .Values.showroom.namespace }}
+  name: edit-{{ $name }}-sa
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: edit
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}
+  namespace: {{ $ns }}
 ---
 # Showroom ClusterRoleBinding — read-only access across all namespaces
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.showroom.name }}-cluster-reader
+  name: {{ $name }}-cluster-reader
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-reader
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}
+  namespace: {{ $ns }}
 ---
-# Showroom secret-reader Role — scoped to nfl-wallet-prod and neuralbank-stack only
+# Showroom secret-reader Role — nfl-wallet-prod, neuralbank-stack, business-apis
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: showroom-secret-reader
   namespace: nfl-wallet-prod
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
@@ -60,20 +74,24 @@ kind: RoleBinding
 metadata:
   name: showroom-secret-reader
   namespace: nfl-wallet-prod
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: showroom-secret-reader
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}
+  namespace: {{ $ns }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: showroom-secret-reader
   namespace: neuralbank-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
@@ -84,87 +102,174 @@ kind: RoleBinding
 metadata:
   name: showroom-secret-reader
   namespace: neuralbank-stack
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: showroom-secret-reader
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}
+  namespace: {{ $ns }}
 ---
-# Showroom Nginx ConfigMap
+# Target namespace for the two-product migration arcade (module 15).
+# Created early so the secret-reader Role can sync before Toolkit/APIShift apply.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: business-apis
+  labels:
+    demo.redhat.com/application: "business-apis"
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: showroom-secret-reader
+  namespace: business-apis
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: showroom-secret-reader
+  namespace: business-apis
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: showroom-secret-reader
+subjects:
+- kind: ServiceAccount
+  name: {{ $name }}
+  namespace: {{ $ns }}
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.showroom.name }}-proxy-config
-  namespace: {{ .Values.showroom.namespace }}
-apiVersion: v1
+  name: {{ $name }}-traefik-static
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 data:
-  nginx.conf: |
-    events {
-    }
-    error_log /dev/stdout info;
-    http {
-      include /etc/nginx/mime.types;
-      proxy_cache off;
-      expires -1;
-      proxy_cache_path /dev/null keys_zone=mycache:10m;
-      map $http_upgrade $connection_upgrade {
-          default upgrade;
-          '' close;
-      }
-      server {
-        listen 8080;
-        absolute_redirect off;
-        location /modules/_images/ {
-          alias /showroom/www/modules/_images/;
-          expires 1h;
-          add_header Cache-Control "public";
-        }
-        location /_images/ {
-          alias /showroom/www/modules/_images/;
-          expires 1h;
-          add_header Cache-Control "public";
-        }
-        location / {
-          proxy_pass http://127.0.0.1:8000;
-          expires off;
-          proxy_cache off;
-          proxy_pass_request_headers on;
-          proxy_set_header Accept-Encoding "";
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-        }
-        {{- if .Values.showroom.terminal.enabled }}
-        location /terminal/ {
-          proxy_pass http://127.0.0.1:7681;
-          rewrite ^/terminal/(.*)$ /$1 break;
-          proxy_http_version 1.1;
-          proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection "upgrade";
-          proxy_read_timeout 43200000;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header Host $http_host;
-          proxy_set_header X-NginX-Proxy true;
-        }
-        {{- end }}
-      }
-    }
+  traefik.yml: |
+    api:
+      dashboard: false
+      insecure: false
+    entryPoints:
+      web:
+        address: ":8080"
+    ping:
+      entryPoint: web
+    providers:
+      file:
+        filename: /etc/traefik/dynamic.yml
+        watch: false
+    log:
+      level: INFO
+    accessLog: {}
+    global:
+      checkNewVersion: false
+      sendAnonymousUsage: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}-traefik-dynamic
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  dynamic.yml: |
+    http:
+      routers:
+        showroom:
+          rule: "PathPrefix(`/`)"
+          entryPoints:
+            - web
+          service: showroom
+          priority: 1
+        terminal-boot:
+          rule: "(Path(`/terminal`) || Path(`/terminal/`)) && !QueryRegexp(`arg`, `.+`)"
+          entryPoints:
+            - web
+          service: showroom
+          middlewares:
+            - terminal-boot-rewrite
+          priority: 20
+        terminal:
+          rule: "PathPrefix(`/terminal`)"
+          entryPoints:
+            - web
+          service: terminal
+          middlewares:
+            - terminal-stripprefix
+          priority: 10
+      services:
+        showroom:
+          loadBalancer:
+            servers:
+              - url: "http://127.0.0.1:8000"
+        terminal:
+          loadBalancer:
+            servers:
+              - url: "http://127.0.0.1:7681"
+      middlewares:
+        terminal-boot-rewrite:
+          replacePath:
+            path: /workshop-terminal.html
+        terminal-stripprefix:
+          stripPrefix:
+            prefixes:
+              - "/terminal"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}-terminal-scripts
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  start-terminal.sh: |
+{{ .Files.Get "files/start-terminal.sh" | indent 4 }}
+  workshop-shell.sh: |
+{{ .Files.Get "files/workshop-shell.sh" | indent 4 }}
+  workshop-terminal.html: |
+{{ .Files.Get "files/workshop-terminal.html" | indent 4 }}
 ---
 # Showroom User Data ConfigMap
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.showroom.name }}-userdata
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}-userdata
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 data:
   user_data.yml: |
-    cluster_domain: {{ .Values.deployer.domain }}
+    lab_name: From 3scale to Connectivity Link
+    user_count: {{ .Values.userCount | default 30 }}
+    cluster_domain: {{ $domain }}
+    cluster_base: {{ $clusterBase }}
     user_name: '%USER_NAME%'
     user_password: '%USER_PASSWORD%'
     neuralbank_user: robert.anderson@email.com
     neuralbank_password: Welcome123
+    openshift_cluster_console_url: "https://console-openshift-console.{{ $domain }}"
+    threescale_admin_url: "https://3scale-admin.{{ $domain }}"
+    migration_toolkit_url: "https://migration-toolkit.{{ $domain }}"
+    apishift_url: "https://gateforge-gateforge.{{ $domain }}"
+    developer_hub_url: "https://backstage-developer-hub-developer-hub.{{ $domain }}"
+    keycloak_url: "https://rhbk.{{ $domain }}"
     demo_namespace: {{ .Values.demo.namespace }}
     demo_app: {{ .Values.demo.appName }}
 ---
@@ -172,8 +277,10 @@ data:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Values.showroom.name }}-terminal-lab-user-home
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}-terminal-lab-user-home
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   accessModes:
   - ReadWriteOnce
@@ -181,45 +288,32 @@ spec:
     requests:
       storage: "5Gi"
 ---
-# Showroom Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
-spec:
-  type: ClusterIP
-  ports:
-  - port: 8080
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    app.kubernetes.io/name: {{ .Values.showroom.name }}
----
 # Showroom Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
   labels:
     demo.redhat.com/application: "showroom"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Values.showroom.name }}
+      app.kubernetes.io/name: {{ $name }}
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ .Values.showroom.name }}
+        app.kubernetes.io/name: {{ $name }}
     spec:
-      serviceAccountName: {{ .Values.showroom.name }}
+      serviceAccountName: {{ $name }}
       initContainers:
       - name: git-cloner
-        image: "quay.io/rhpds/git-cloner:v1.1.2"
+        image: {{ .Values.showroom.gitCloner.image | default "quay.io/rhpds/git-cloner:v1.1.5" | quote }}
         env:
         - name: GIT_REPO_URL
           value: {{ .Values.showroom.content.repoUrl | quote }}
@@ -232,7 +326,7 @@ spec:
           name: showroom-files
           subPath: repo
       - name: antora-builder
-        image: "quay.io/rhpds/antora:v1.0.1"
+        image: {{ .Values.showroom.antora.image | default "quay.io/rhpds/antora:v1.3.0" | quote }}
         env:
         - name: FILES_DIR
           value: "/showroom/repo"
@@ -249,8 +343,7 @@ spec:
         - mountPath: /showroom/www
           name: showroom-files
           subPath: www
-      # Antora still emits src="_images/…" (relative). At URL / that resolves to /_images (404). Rewrite to root-relative /modules/_images/…
-      # Full UBI image includes `find` (ubi-minimal does not — first attempt exited 0 without rewriting).
+      # Antora still emits src="_images/…" (relative). At URL / that resolves to /_images (404).
       - name: rewrite-img-src
         image: registry.access.redhat.com/ubi9/ubi:latest
         command:
@@ -267,8 +360,7 @@ spec:
         - mountPath: /showroom/www
           name: showroom-files
           subPath: www
-      # Nookbag fetches /zero-touch-config.yml from the lab guide origin (same as Antora output root).
-      # Repo keeps ui-config.yml at git root; copy into www after Antora so ZT bundle + tabs resolve ${DOMAIN}.
+      # Nookbag fetches /zero-touch-config.yml from the lab guide origin.
       - name: zero-touch-config
         image: registry.access.redhat.com/ubi9/ubi-minimal:latest
         command:
@@ -287,23 +379,42 @@ spec:
           name: showroom-files
           subPath: www
       containers:
-      - name: nginx
-        image: "quay.io/rhpds/nginx:1.25"
-        imagePullPolicy: "IfNotPresent"
+      - name: traefik
+        image: {{ .Values.showroom.proxy.image | default "quay.io/rhpds/traefik:v3.7.9" | quote }}
+        imagePullPolicy: IfNotPresent
+        args:
+        - --configFile=/etc/traefik/traefik.yml
         volumeMounts:
-        - mountPath: /etc/nginx/nginx.conf
-          name: nginx-config
-          subPath: nginx.conf
-        - mountPath: /var/cache/nginx
-          name: nginx-cache
-        - mountPath: /var/run
-          name: nginx-pid
-        - mountPath: /showroom/www
-          name: showroom-files
-          subPath: www
+        - mountPath: /etc/traefik/traefik.yml
+          name: traefik-static
+          subPath: traefik.yml
+          readOnly: true
+        - mountPath: /etc/traefik/dynamic.yml
+          name: traefik-dynamic
+          subPath: dynamic.yml
+          readOnly: true
         ports:
         - name: web
           containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 5m
+            memory: 16Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
       - name: content
         image: {{ .Values.showroom.content.image | quote }}
         imagePullPolicy: "IfNotPresent"
@@ -315,14 +426,14 @@ spec:
         - name: ANTORA_PLAYBOOK
           value: {{ .Values.showroom.content.antoraPlaybook | quote }}
         - name: DOMAIN
-          value: {{ .Values.deployer.domain | quote }}
+          value: {{ $domain | quote }}
         {{- if .Values.showroom.nookbag.enabled }}
         - name: ZT_BUNDLE
           value: {{ .Values.showroom.nookbag.bundleUrl | quote }}
         - name: ZT_UI_ENABLED
           value: "true"
         - name: GUID
-          value: {{ .Values.showroom.namespace | quote }}
+          value: {{ $ns | quote }}
         {{- end }}
         volumeMounts:
         - name: user-data
@@ -333,6 +444,10 @@ spec:
         - mountPath: /showroom/www
           name: showroom-files
           subPath: www
+        - name: terminal-scripts
+          mountPath: /showroom/www/workshop-terminal.html
+          subPath: workshop-terminal.html
+          readOnly: true
         ports:
         - containerPort: 8000
           protocol: TCP
@@ -340,22 +455,41 @@ spec:
           httpGet:
             path: /
             port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
             port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
       {{- if .Values.showroom.terminal.enabled }}
       - name: terminal
         image: {{ .Values.showroom.terminal.image | quote }}
         imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "/opt/workshop/start-terminal.sh"]
         env:
         - name: NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: WORKSHOP_HOME_ROOT
+          value: /home/lab-user/homes
         volumeMounts:
+        - name: terminal-scripts
+          mountPath: /opt/workshop
+          readOnly: true
         - name: terminal-lab-user-home
           mountPath: /home/lab-user
+        - name: terminal-data-ssh
+          mountPath: /data/.ssh
         ports:
         - containerPort: 7681
           protocol: TCP
@@ -372,32 +506,55 @@ spec:
         emptyDir: {}
       - name: user-data
         configMap:
-          name: {{ .Values.showroom.name }}-userdata
-      - name: nginx-config
+          name: {{ $name }}-userdata
+      - name: traefik-static
         configMap:
-          defaultMode: 420
-          name: {{ .Values.showroom.name }}-proxy-config
-      - name: nginx-pid
-        emptyDir: {}
-      - name: nginx-cache
+          name: {{ $name }}-traefik-static
+      - name: traefik-dynamic
+        configMap:
+          name: {{ $name }}-traefik-dynamic
+      - name: terminal-scripts
+        configMap:
+          name: {{ $name }}-terminal-scripts
+          defaultMode: 0755
+      - name: terminal-data-ssh
         emptyDir: {}
       - name: terminal-lab-user-home
         persistentVolumeClaim:
-          claimName: {{ .Values.showroom.name }}-terminal-lab-user-home
+          claimName: {{ $name }}-terminal-lab-user-home
+---
+# Showroom Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $ns }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: {{ $name }}
 ---
 # Showroom Route
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: {{ .Values.showroom.name }}
-  namespace: {{ .Values.showroom.namespace }}
+  name: {{ $name }}
+  namespace: {{ $ns }}
   annotations:
+    argocd.argoproj.io/sync-wave: "2"
     haproxy.router.openshift.io/timeout: 1h
     haproxy.router.openshift.io/timeout-tunnel: 1h
 spec:
   to:
     kind: Service
-    name: {{ .Values.showroom.name }}
+    name: {{ $name }}
   port:
     targetPort: 8080
   tls:

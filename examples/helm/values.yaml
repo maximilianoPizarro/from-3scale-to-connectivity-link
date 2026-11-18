@@ -419,9 +419,7 @@ connectivityLink:
             enabled: true
     # Chart: helm/apishift. Images retagged to maximilianopizarro/gateforge-*
     # (upstream CI publishes everythingascode/apishift-*; frontend there is private).
-    # Pinned past main until code owners merge
-    # https://github.com/Everything-is-Code/apishift/pull/201
-    # (scaffolder token is read from the config secret).
+    # DEVHUB_SCAFFOLDER_TOKEN is read from the config secret (PR 201 on main).
     - id: apishift
       enabled: true
       # Keep autoSync on so fresh clusters get GateForge without a manual Argo sync
@@ -429,7 +427,7 @@ connectivityLink:
       autoSync: true
       repoURL: "https://github.com/Everything-is-Code/apishift"
       path: helm/apishift
-      targetRevision: "921f1fb11017234114e634ed9169d9a1dba26294"
+      targetRevision: "main"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
@@ -613,7 +611,7 @@ components:
       title: "Web Terminal Demo"
       instructions: "Access the Showroom lab guide, then click the terminal icon (>_) in the OpenShift console."
 
-  # --- Showroom Lab Guide ---
+  # --- Showroom Lab Guide (terminal template from openshift-kafka-day-roadshow) ---
   showroom:
     enabled: true
     namespace: showroom
@@ -622,10 +620,16 @@ components:
       repoUrl: "https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link.git"
       repoRef: "main"
       antoraPlaybook: "showroom/site.yml"
-      image: "quay.io/rhpds/showroom-content:v1.3.1"
+      image: "quay.io/rhpds/showroom-content:v1.4.3"
     nookbag:
       enabled: true
-      bundleUrl: "https://github.com/rhpds/nookbag/releases/download/nookbag-v0.2.1/nookbag-v0.2.1.zip"
+      bundleUrl: "https://github.com/rhpds/nookbag/releases/download/nookbag-v0.5.1/nookbag-v0.5.1.zip"
+    proxy:
+      image: "quay.io/rhpds/traefik:v3.7.9"
+    gitCloner:
+      image: "quay.io/rhpds/git-cloner:v1.1.5"
+    antora:
+      image: "quay.io/rhpds/antora:v1.3.0"
     terminal:
       enabled: true
       image: "quay.io/rhpds/openshift-showroom-terminal-ocp:latest"

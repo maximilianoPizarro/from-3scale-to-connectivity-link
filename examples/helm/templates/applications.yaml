@@ -80,6 +80,12 @@ spec:
           nookbag:
             enabled: {{ .Values.components.showroom.nookbag.enabled }}
             bundleUrl: {{ .Values.components.showroom.nookbag.bundleUrl | quote }}
+          proxy:
+            image: {{ .Values.components.showroom.proxy.image | default "quay.io/rhpds/traefik:v3.7.9" | quote }}
+          gitCloner:
+            image: {{ .Values.components.showroom.gitCloner.image | default "quay.io/rhpds/git-cloner:v1.1.5" | quote }}
+          antora:
+            image: {{ .Values.components.showroom.antora.image | default "quay.io/rhpds/antora:v1.3.0" | quote }}
           terminal:
             enabled: {{ .Values.components.showroom.terminal.enabled }}
             image: {{ .Values.components.showroom.terminal.image | quote }}
@@ -92,6 +98,7 @@ spec:
                 memory: {{ .Values.components.showroom.terminal.resources.limits.memory | quote }}
         deployer:
           domain: {{ .Values.deployer.domain | quote }}
+        userCount: {{ .Values.userCount | default 30 }}
         demo:
           namespace: {{ .Values.components.helloWorld.namespace }}
           appName: {{ .Values.components.helloWorld.appName }}
