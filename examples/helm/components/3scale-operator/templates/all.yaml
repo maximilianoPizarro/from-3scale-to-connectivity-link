@@ -333,6 +333,29 @@ spec:
     fileStorage:
       persistentVolumeClaim:
         storageClassName: "gp3-csi"
+        resources:
+          requests: 1Gi
+    # AWS EBS (gp3-csi) is ReadWriteOnce. The operator requests ReadWriteMany
+    # and the volume then fails to provision. sidekiq stays pending until
+    # system-app exists, so both pods share one node and one RWO volume.
+    appSpec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    deployment: system-sidekiq
+                topologyKey: kubernetes.io/hostname
+    sidekiqSpec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  deployment: system-app
+              topologyKey: kubernetes.io/hostname
   zync:
     appSpec:
       replicas: 1
