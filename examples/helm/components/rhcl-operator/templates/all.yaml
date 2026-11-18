@@ -371,6 +371,7 @@ spec:
   documentation:
     openAPISpecURL: "https://neuralbank.{{ .Values.clusterDomain }}/q/openapi"
     swaggerUI: "https://neuralbank.{{ .Values.clusterDomain }}/q/swagger-ui"
+    docsURL: "https://backstage-developer-hub-developer-hub.{{ .Values.clusterDomain }}/catalog/default/api/neuralbank-api/definition"
     gitRepository: "https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link"
   targetRef:
     group: gateway.networking.k8s.io
