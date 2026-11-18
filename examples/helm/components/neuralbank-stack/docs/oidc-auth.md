@@ -124,7 +124,7 @@ Resultado esperado: `302` redirect a la URL de login de Keycloak.
 
 ## RateLimitPolicy
 
-Además de la autenticación, Neuralbank aplica un rate limit por usuario:
+Además de la autenticación, Neuralbank aplica un rate limit corto a la lista de clientes. Este flujo OIDC no publica `auth.identity` en el WASM de rate limit, así que el cupo es del path, no de un usuario:
 
 ```yaml
 apiVersion: kuadrant.io/v1
@@ -135,20 +135,19 @@ spec:
   targetRef:
     kind: HTTPRoute
     name: neuralbank-api-route
-  limits:
-    customers-api-per-user:
-      counters:
-        - expression: auth.identity.username
-      rates:
-        - limit: 10
-          window: 1m
-      when:
-        - predicate: request.path.matches('/api/customers')
+  overrides:
+    limits:
+      customers-page:
+        rates:
+          - limit: 2
+            window: 30s
+        when:
+          - predicate: request.url_path.startsWith('/api/v1/customers')
 ```
 
-- **10 requests por minuto** por usuario autenticado
-- El counter usa `auth.identity.username` del JWT
-- Solo aplica al path `/api/customers`
+- **2 requests cada 30 segundos** a `/api/v1/customers`
+- La tercera llamada responde `429`
+- `overrides` gana sobre el RateLimitPolicy que genera `PlanPolicy`
 
 ## Inspeccionar en OpenShift
 

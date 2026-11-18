@@ -250,16 +250,17 @@ metadata:
   name: neuralbank-customers-ratelimit
   namespace: neuralbank-stack
 spec:
-  limits:
-    customers-api-per-user:
-      when:
-      - predicate: "request.path.matches('/api/customers')"
-      - predicate: "auth.identity.username == 'Javier Rodríguez Torres'"
-      counters:
-      - expression: auth.identity.username
-      rates:
-      - limit: 10
-        window: 1m
+  # overrides is enforced ahead of the PlanPolicy RateLimitPolicy.
+  # This OIDC flow does not expose auth.identity to the rate-limit WASM,
+  # so the counter is the path itself: two list calls, then 429.
+  overrides:
+    limits:
+      customers-page:
+        rates:
+          - limit: 2
+            window: 30s
+        when:
+          - predicate: request.url_path.startsWith('/api/v1/customers')
   targetRef:
     group: gateway.networking.k8s.io
     kind: HTTPRoute

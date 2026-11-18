@@ -107,8 +107,9 @@ oc get ratelimitpolicy neuralbank-customers-ratelimit -n neuralbank-stack -o yam
 ```
 
 Configuración:
-- **60 requests por minuto** por usuario autenticado
-- El counter usa `auth.identity.username` para aislar el rate limit por usuario OIDC
+- **2 requests cada 30 segundos** a `/api/v1/customers`
+- La tercera llamada en esa ventana responde `429`
+- El cupo es del path: este flujo OIDC no publica `auth.identity` en el WASM de rate limit
 
 ## Paso 5: Probar el flujo OIDC desde el navegador
 

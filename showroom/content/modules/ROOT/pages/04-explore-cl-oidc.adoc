@@ -112,7 +112,7 @@ oc get ratelimitpolicy -n neuralbank-stack
 oc get ratelimitpolicy neuralbank-customers-ratelimit -n neuralbank-stack -o yaml
 ----
 
-The deployed `RateLimitPolicy` is a narrow demo rule: *10 requests per minute* when the path matches `/api/customers` *and* the identity is `Javier Rodríguez Torres`. Plan tiers (60/min basic, 300/min premium) come from `PlanPolicy`, not from that RateLimitPolicy.
+The enforced `RateLimitPolicy` `neuralbank-customers-ratelimit` allows *2 calls per 30 seconds* to `/api/v1/customers`. It is an override, so it wins over `neuralbank-plans`. Reload the customers page while logged in: the HTML stays 200, and the third reload within 30 seconds shows *Error loading customers (429)*. Other API paths are not counted.
 
 == Step 5: Test the OIDC flow from the browser
 

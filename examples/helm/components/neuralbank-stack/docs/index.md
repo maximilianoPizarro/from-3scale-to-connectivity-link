@@ -85,6 +85,6 @@ Neuralbank utiliza el stack completo de Red Hat Connectivity Link:
 | **Gateway** (Istio) | `neuralbank-gateway` | Punto de entrada HTTP/HTTPS |
 | **HTTPRoute** | `neuralbank-api-route` | Enruta `/api` y `/q` al backend |
 | **OIDCPolicy** | `neuralbank-oidc` | Autenticación OIDC con Keycloak |
-| **RateLimitPolicy** | `neuralbank-customers-ratelimit` | 10 req/min por usuario en `/api/customers` |
+| **RateLimitPolicy** | `neuralbank-customers-ratelimit` | 2 req / 30s en `/api/v1/customers` |
 
 Ver secciones de [Arquitectura](architecture.md) y [Autenticación OIDC](oidc-auth.md) para más detalles.
