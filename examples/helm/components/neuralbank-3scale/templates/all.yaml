@@ -220,7 +220,7 @@ spec:
   systemName: neuralbank-oidc
   backendUsages:
     neuralbank-accounts-backend:
-      path: /api/v1/customers
+      path: /
     neuralbank-transactions-backend:
       path: /api/v1/transactions
     neuralbank-lending-backend:
