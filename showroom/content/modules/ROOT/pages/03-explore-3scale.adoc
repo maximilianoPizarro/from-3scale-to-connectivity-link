@@ -19,7 +19,7 @@ The Neuralbank *workloads* run in `neuralbank-stack`. The 3scale Product, Backen
 
 === 1.1 Inspect the running pods
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get pods -n neuralbank-stack
 ----
@@ -36,7 +36,7 @@ oc get pods -n neuralbank-stack
 
 The *Product* is the central 3scale resource. It defines the public API endpoint, authentication method, backend references, and application plans.
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get product -n 3scale-system | grep neuralbank
 oc get product neuralbank-oidc-product -n 3scale-system -o yaml
@@ -104,7 +104,7 @@ Key configuration points:
 
 The *Backend* resource defines the private base URL (the internal Kubernetes Service) and the *MappingRules* that map URL patterns to metrics:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get backend -n 3scale-system | grep neuralbank
 oc get backend neuralbank-accounts-backend -n 3scale-system -o yaml
@@ -161,7 +161,7 @@ Key configuration points:
 
 The *ActiveDoc* attaches an OpenAPI specification to the Product:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get activedoc -n 3scale-system | grep neuralbank
 ----
@@ -191,14 +191,14 @@ NFL Wallet *workloads* run in `nfl-wallet-prod` (Service `nfl-wallet-api`). The 
 
 === 2.1 Inspect the running pods
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get pods -n nfl-wallet-prod
 ----
 
 === 2.2 Inspect the 3scale Product (API Key)
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get product -n 3scale-system | grep nfl-wallet
 oc get product nfl-wallet-apikey-product -n 3scale-system -o yaml
@@ -251,7 +251,7 @@ Key differences from the Neuralbank Product:
 
 === 2.3 Inspect the Backend (MappingRules)
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get backend -n 3scale-system | grep nfl-wallet
 oc get backend nfl-wallet-payments-backend -n 3scale-system -o yaml

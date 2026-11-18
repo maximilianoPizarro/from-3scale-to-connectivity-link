@@ -13,28 +13,22 @@ home="${root}/${session}"
 mkdir -p "${home}/.kube"
 chmod 700 "${home}" "${home}/.kube" || true
 
-if [ ! -f "${home}/.kube/config" ]; then
-  # A current context stops oc from falling back to the pod service account,
-  # which every terminal would otherwise share until someone logs in.
-  cat > "${home}/.kube/config" <<'EOF'
-apiVersion: v1
-kind: Config
-clusters:
-- name: workshop
-  cluster:
-    server: https://127.0.0.1:1
-contexts:
-- name: workshop
-  context:
-    cluster: workshop
-    user: none
-current-context: workshop
-users:
-- name: none
-  user: {}
-EOF
-  chmod 600 "${home}/.kube/config" || true
+export KUBECONFIG="${home}/.kube/config"
+token_file=/var/run/secrets/kubernetes.io/serviceaccount/token
+ca_file=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+# Log this session in with the showroom ServiceAccount (cluster-reader) so
+# "Run in terminal" works before anyone types oc login. A later oc login
+# replaces this kubeconfig; we do not overwrite a real one.
+if [ ! -s "${home}/.kube/config" ] || grep -q '127.0.0.1:1' "${home}/.kube/config"; then
+  if [ -f "$token_file" ] && [ -f "$ca_file" ]; then
+    oc login \
+      --token="$(cat "$token_file")" \
+      --server=https://kubernetes.default.svc \
+      --certificate-authority="$ca_file" \
+      --kubeconfig="${home}/.kube/config" >/dev/null || true
+  fi
 fi
+chmod 600 "${home}/.kube/config" || true
 
 if [ ! -f "${home}/.bashrc" ]; then
   if [ -f /var/lab-user/bashrc.base ]; then

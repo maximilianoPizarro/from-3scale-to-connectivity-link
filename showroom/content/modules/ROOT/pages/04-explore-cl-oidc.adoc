@@ -26,7 +26,7 @@ Neuralbank uses the full Connectivity Link pattern:
 
 == Step 1: Inspect the Gateway
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get gateway -n neuralbank-stack
 ----
@@ -40,21 +40,21 @@ neuralbank-gateway   istio   neuralbank-gateway-istio.neuralbank-stack.svc    Tr
 
 Inspect the listeners:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get gateway neuralbank-gateway -n neuralbank-stack -o jsonpath='{.spec.listeners[*].name}' ; echo
 ----
 
 == Step 2: Explore the HTTPRoute
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get httproute -n neuralbank-stack
 ----
 
 The HTTPRoute `neuralbank-api-route` routes requests to `neuralbank-backend-svc:8080` for paths `/api` and `/q`:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get httproute neuralbank-api-route -n neuralbank-stack -o yaml | grep -A5 "matches:" | head -15
 ----
@@ -63,14 +63,14 @@ oc get httproute neuralbank-api-route -n neuralbank-stack -o yaml | grep -A5 "ma
 
 The *OIDCPolicy* is the key Connectivity Link resource that protects the HTTPRoute with OIDC authentication:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get oidcpolicy -n neuralbank-stack
 ----
 
 Inspect the configuration:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get oidcpolicy neuralbank-oidc -n neuralbank-stack -o yaml
 ----
@@ -86,7 +86,7 @@ Key configuration points:
 
 The OIDCPolicy automatically generates an AuthPolicy under the hood:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get authpolicy -n neuralbank-stack
 ----
@@ -102,12 +102,12 @@ You will see two AuthPolicies:
 
 == Step 4: Explore the RateLimitPolicy
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get ratelimitpolicy -n neuralbank-stack
 ----
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get ratelimitpolicy neuralbank-customers-ratelimit -n neuralbank-stack -o yaml
 ----
@@ -128,7 +128,7 @@ You will be automatically redirected to the Keycloak login screen (realm `neural
 
 === 6.1 — Without token (302 redirect)
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
   https://neuralbank.{cluster_domain}/api/v1/customers
@@ -138,7 +138,7 @@ Expected: `HTTP Status: 302` (redirect to Keycloak).
 
 === 6.2 — Get a Bearer Token from Keycloak
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 TOKEN=$(curl -s -X POST \
   "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
@@ -154,7 +154,7 @@ echo "Token (first 50 chars): ${TOKEN:0:50}..."
 
 === 6.3 — List all customers
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://neuralbank.{cluster_domain}/api/v1/customers" \
@@ -163,7 +163,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 === 6.4 — Get a customer by ID
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://neuralbank.{cluster_domain}/api/v1/customers/1" \
@@ -172,7 +172,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 === 6.5 — Get credit score
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://neuralbank.{cluster_domain}/api/v1/customers/1/credit-score" \
@@ -181,7 +181,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 === 6.6 — Create a new customer
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -X POST \
   -H "Authorization: Bearer $TOKEN" \
@@ -200,7 +200,7 @@ curl -s -X POST \
 
 === 6.7 — Invalid token (rejected)
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
   -H "Authorization: Bearer invalid-token-12345" \

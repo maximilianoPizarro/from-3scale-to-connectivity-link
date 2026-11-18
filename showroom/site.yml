@@ -12,7 +12,9 @@ content:
       start_path: showroom/content
 ui:
   bundle:
-    url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/patternfly-6/ui-bundle.zip
+    # Official demo-system theme: demo-platform logo and "Run in terminal"
+    # on listing blocks with role=execute (same bundle as the Kafka day roadshow).
+    url: https://github.com/dialvare/rhdp_showroom_theme/releases/download/v2.0.4-ops/ui-bundle.zip
     snapshot: true
   supplemental_files: ./content/supplemental-ui
 asciidoc:

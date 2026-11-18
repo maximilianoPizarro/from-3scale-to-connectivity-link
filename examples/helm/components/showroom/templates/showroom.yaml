@@ -260,8 +260,8 @@ data:
     user_count: {{ .Values.userCount | default 30 }}
     cluster_domain: {{ $domain }}
     cluster_base: {{ $clusterBase }}
-    user_name: '%USER_NAME%'
-    user_password: '%USER_PASSWORD%'
+    user_name: lab-user
+    user_password: Welcome123!
     neuralbank_user: robert.anderson@email.com
     neuralbank_password: Welcome123
     openshift_cluster_console_url: "https://console-openshift-console.{{ $domain }}"

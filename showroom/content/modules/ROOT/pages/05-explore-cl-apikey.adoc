@@ -26,7 +26,7 @@ In this module you will explore how *Red Hat Connectivity Link* protects the NFL
 
 == Step 1: Inspect resources in OpenShift
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 echo "=== Gateway ===" && \
 oc get gateway -n nfl-wallet-prod && echo && \
@@ -42,7 +42,7 @@ oc get apiproduct -n nfl-wallet-prod
 
 == Step 2: Explore the AuthPolicy
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get authpolicy nfl-wallet-apikey -n nfl-wallet-prod -o yaml
 ----
@@ -57,12 +57,12 @@ Key points:
 
 Keys are Kubernetes Secrets with special labels that Authorino detects automatically:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get secrets -n nfl-wallet-prod -l kuadrant.io/apikey=true
 ----
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get secret nfl-wallet-apikey-admin -n nfl-wallet-prod -o jsonpath='{.data.api_key}' | base64 -d ; echo
 ----
@@ -73,7 +73,7 @@ Output: `nfl-wallet-demo-key-2024`
 
 === 3.1 — Without API Key (401)
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
   https://nfl-wallet.{cluster_domain}/api/v1/customers
@@ -83,7 +83,7 @@ Expected: `HTTP Status: 401`
 
 === 3.2 — With valid API Key
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
   "https://nfl-wallet.{cluster_domain}/api/v1/customers" \
@@ -92,7 +92,7 @@ curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
 
 === 3.3 — Get a customer by ID
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
   "https://nfl-wallet.{cluster_domain}/api/v1/customers/1" \
@@ -101,7 +101,7 @@ curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
 
 === 3.4 — Create a new customer
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -X POST \
   -H "X-API-Key: nfl-wallet-demo-key-2024" \
@@ -120,7 +120,7 @@ curl -s -X POST \
 
 === 3.5 — Invalid API Key (401)
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
   -H "X-API-Key: invalid-key-12345" \
@@ -131,14 +131,14 @@ curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" \
 
 The RateLimitPolicy allows *120 requests per minute*:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get ratelimitpolicy nfl-wallet-ratelimit -n nfl-wallet-prod -o yaml
 ----
 
 Run a burst to test:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 for i in $(seq 1 10); do
   code=$(curl -s -o /dev/null -w '%{http_code}' \
@@ -154,7 +154,7 @@ TIP: A `429` means Limitador is working. For demos that need more headroom, use 
 
 == Step 5: Create your own API Key
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc create secret generic my-apikey-{user_name} \
   --from-literal=api_key=my-custom-key-$(date +%s) \
@@ -169,7 +169,7 @@ oc label secret my-apikey-{user_name} \
 
 Kuadrant detects the new Secret automatically. Test:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 MY_KEY=$(oc get secret my-apikey-{user_name} -n nfl-wallet-prod -o jsonpath='{.data.api_key}' | base64 -d)
 
@@ -182,7 +182,7 @@ curl -s -H "X-API-Key: $MY_KEY" \
 
 Inspect the PlanPolicy:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get planpolicy -n nfl-wallet-prod -o yaml
 ----

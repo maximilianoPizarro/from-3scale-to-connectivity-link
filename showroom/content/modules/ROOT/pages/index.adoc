@@ -15,7 +15,7 @@ Migrate API management from *Red Hat 3scale API Management* to *Red Hat Connecti
 
 The workshop ships *four complementary approaches*. Explore pre-deployed 3scale and Connectivity Link apps side by side, then pick the path that fits the situation in the decision table below.
 
-NOTE: On https://maximilianopizarro.github.io/from-3scale-to-connectivity-link/[GitHub Pages], `\{cluster_domain}` stays a placeholder and `\{user_name}` / `\{user_password}` render as `\{user}` / `\{password}`. On the *deployed showroom* those attributes are filled in for your lab user and cluster. They are disposable accounts for this environment. Do not reuse them elsewhere. For admin console URLs and the remaining secrets, run `./scripts/get-credentials.sh` from a machine with `oc`.
+NOTE: `apps.cluster.example.com` is rewritten to this cluster's ingress domain when you open the deployed showroom. Lab users in the commands are `lab-user` / `Welcome123!` (backstage, Developer Hub) and `robert.anderson@email.com` / `Welcome123` (Neuralbank). They are disposable accounts for this environment. Do not reuse them elsewhere. Bash blocks marked *Run in terminal* paste into the Terminal tab. For admin console URLs and the remaining secrets, run `./scripts/get-credentials.sh` from a machine with `oc`.
 
 == How long
 

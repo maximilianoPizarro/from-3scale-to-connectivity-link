@@ -9,23 +9,28 @@
 * Test OIDC and API Key paths with curl against both 3scale and CL endpoints
 * Validate that behavior matches the source application
 
-After running the migration template, both the 3scale and Connectivity Link versions of the application are running side by side. In this module you will verify the migrated resources and test both environments.
+The workshop already runs both products side by side. This module checks those *preinstalled* Connectivity Link resources (not a per-user `{user_name}-*-cl` namespace, which is only created if you apply the migration template in module 7).
 
-== Step 1: Verify the Gateway is programmed
+* Neuralbank (OIDC) — namespace `neuralbank-stack`, host `https://neuralbank.{cluster_domain}`
+* NFL Wallet (API key) — namespace `nfl-wallet-prod`, host `https://nfl-wallet.{cluster_domain}`
 
-[source,bash,subs=attributes+]
+== Step 1: Verify the Gateways are programmed
+
+[source,bash,role="execute",subs="+attributes"]
 ----
-oc get gateway -n {user_name}-neuralbank-cl
+oc whoami
+oc get gateway -n neuralbank-stack
+oc get gateway -n nfl-wallet-prod
 ----
 
 Expected: `PROGRAMMED: True`
 
 == Step 2: Verify policies are enforced
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
-oc get authpolicy -n {user_name}-neuralbank-cl -o wide
-oc get ratelimitpolicy -n {user_name}-neuralbank-cl -o wide
+oc get authpolicy,ratelimitpolicy,planpolicy,apiproduct -n neuralbank-stack
+oc get authpolicy,ratelimitpolicy,planpolicy,apiproduct -n nfl-wallet-prod
 ----
 
 The AuthPolicy should show `ACCEPTED: True` and `ENFORCED: True`.
@@ -34,17 +39,17 @@ The AuthPolicy should show `ACCEPTED: True` and `ENFORCED: True`.
 
 === 3.1 — Without token (expect redirect)
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -o /dev/null -w "HTTP Status: %\{http_code}\n" \
-  https://neuralbank-backend-{user_name}-neuralbank-cl.{cluster_domain}/api/v1/customers
+  https://neuralbank.{cluster_domain}/api/v1/customers
 ----
 
 Expected: `HTTP Status: 302`
 
 === 3.2 — Get a Bearer Token
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 TOKEN=$(curl -s -X POST \
   "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
@@ -60,62 +65,62 @@ echo "Token (first 50 chars):" && echo "$TOKEN" | head -c 50 && echo "..."
 
 === 3.3 — List customers on the *migrated* endpoint
 
-[source,bash,subs=attributes+]
-----
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "https://neuralbank-backend-{user_name}-neuralbank-cl.{cluster_domain}/api/v1/customers" \
-  | python3 -m json.tool | head -20
-----
-
-=== 3.4 — List customers on the *3scale* endpoint (for comparison)
-
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -H "Authorization: Bearer $TOKEN" \
   "https://neuralbank.{cluster_domain}/api/v1/customers" \
   | python3 -m json.tool | head -20
 ----
 
-Both should return the same data — they use the same backend Service and database.
+=== 3.4 — Same call through 3scale APIcast (for comparison)
+
+[source,bash,role="execute",subs="+attributes"]
+----
+curl -s -o /dev/null -w "3scale HTTP Status: %\{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank-oidc-3scale-apicast-production.{cluster_domain}/api/v1/customers"
+----
+
+Both front doors use the same backend Service. A non-200 from APIcast means that product's Application is not accepting this user token; the Connectivity Link call above is the one that must return customer JSON.
 
 == Step 4: Compare the resources side by side
 
 === Authentication resources
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 echo "=== 3scale Product ===" && \
 oc get product -n 3scale-system | grep neuralbank && echo && \
 echo "=== Connectivity Link AuthPolicy ===" && \
-oc get authpolicy -n {user_name}-neuralbank-cl -o wide
+oc get authpolicy -n neuralbank-stack -o wide
 ----
 
 === Rate limiting
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 echo "=== Connectivity Link RateLimitPolicy ===" && \
-oc get ratelimitpolicy -n {user_name}-neuralbank-cl -o yaml | grep -A5 "limits:"
+oc get ratelimitpolicy -n neuralbank-stack -o yaml | grep -A5 "limits:"
 ----
 
-== Step 5: Test the migrated API (API Key — if you migrated NFL Wallet)
+== Step 5: Test NFL Wallet (API Key)
 
-If you migrated NFL Wallet instead of Neuralbank:
+The wallet Gateway is already on `nfl-wallet-prod`. Call `/api/v1/wallets`.
 
 === Without API Key (expect 401)
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -o /dev/null -w "HTTP Status: %\{http_code}\n" \
-  https://nfl-wallet-{user_name}-nfl-wallet-cl.{cluster_domain}/api/v1/customers
+  https://nfl-wallet.{cluster_domain}/api/v1/wallets
 ----
 
 === With API Key
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
 curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
-  "https://nfl-wallet-{user_name}-nfl-wallet-cl.{cluster_domain}/api/v1/customers" \
+  "https://nfl-wallet.{cluster_domain}/api/v1/wallets" \
   | python3 -m json.tool
 ----
 
@@ -131,20 +136,12 @@ curl -s -H "X-API-Key: nfl-wallet-demo-key-2024" \
 
 Run this comprehensive check:
 
-[source,bash,subs=attributes+]
+[source,bash,role="execute",subs="+attributes"]
 ----
-echo "=== Gateway ===" && \
-oc get gateway -n {user_name}-neuralbank-cl && echo && \
-echo "=== HTTPRoute ===" && \
-oc get httproute -n {user_name}-neuralbank-cl && echo && \
-echo "=== AuthPolicy ===" && \
-oc get authpolicy -n {user_name}-neuralbank-cl -o wide && echo && \
-echo "=== RateLimitPolicy ===" && \
-oc get ratelimitpolicy -n {user_name}-neuralbank-cl -o wide && echo && \
-echo "=== PlanPolicy ===" && \
-oc get planpolicy -n {user_name}-neuralbank-cl && echo && \
-echo "=== APIProduct ===" && \
-oc get apiproduct -n {user_name}-neuralbank-cl
+echo "=== Neuralbank ===" && \
+oc get gateway,httproute,authpolicy,ratelimitpolicy,planpolicy,apiproduct -n neuralbank-stack && echo && \
+echo "=== NFL Wallet ===" && \
+oc get gateway,httproute,authpolicy,ratelimitpolicy,planpolicy,apiproduct -n nfl-wallet-prod
 ----
 
 All resources should exist and show healthy status.

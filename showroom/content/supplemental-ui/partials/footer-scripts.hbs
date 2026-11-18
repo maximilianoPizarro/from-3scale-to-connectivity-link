@@ -1,0 +1,109 @@
+<script defer src="{{uiRootPath}}/js/vendor/clipboard.js"></script>
+<script defer src="{{uiRootPath}}/js/site.js"></script>
+<script defer src="{{uiRootPath}}/js/vendor/highlight.js"></script>
+{{#if env.SITE_SEARCH_PROVIDER}}
+{{> search-scripts}}
+{{/if}}
+<script>
+;(function () {
+  'use strict'
+  function switchToTerminalTab () {
+    var frames = [window.parent]
+    try { if (window.parent !== window.parent.parent) frames.push(window.parent.parent) } catch (e) {}
+    for (var f = 0; f < frames.length; f++) {
+      try {
+        var tabs = frames[f].document.querySelectorAll('.pf-v6-c-tabs__item-text')
+        for (var i = 0; i < tabs.length; i++) {
+          var text = tabs[i].textContent.trim()
+          if (text === 'Terminal' || text === 'Bastion') {
+            var link = tabs[i].closest('.pf-v6-c-tabs__link')
+            if (link) { link.click(); return }
+          }
+        }
+      } catch (e) {}
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.paste-button')) return
+      switchToTerminalTab()
+    }, true)
+  })
+})()
+</script>
+<script>
+(function () {
+  var PLACEHOLDER = 'apps.cluster.example.com';
+  function resolveClusterDomain() {
+    try {
+      var q = new URLSearchParams(window.location.search || '').get('CLUSTER_DOMAIN');
+      if (q && q.indexOf('apps.') === 0) return q;
+    } catch (e) {}
+    var h = location.hostname || '';
+    var m = /^showroom-showroom\.(apps\..+)$/i.exec(h);
+    if (m) return m[1];
+    var parts = h.split('.');
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (parts[i] === 'apps') return parts.slice(i).join('.');
+    }
+    return '';
+  }
+  function moduleStaticBaseDir() {
+    var path = location.pathname || '/';
+    var dir = path.endsWith('/') ? path : path.replace(/[^/]+$/, '');
+    if (dir.indexOf('/modules') !== -1) return dir.replace(/\/?$/, '/');
+    return '/modules/';
+  }
+  function fixModuleImages() {
+    if (!document.body) return;
+    var baseDir = moduleStaticBaseDir();
+    document.querySelectorAll('img[src^="_images/"], img[src^="./_images/"], img[src*="/../_images/"]').forEach(function (img) {
+      var s = img.getAttribute('src');
+      if (!s || s.indexOf('://') !== -1) return;
+      var rel = s.replace(/^(?:\.\/|(?:\.\.\/)+)/, '');
+      img.src = location.origin + baseDir + rel;
+    });
+    document.querySelectorAll('img[src]').forEach(function (img) {
+      var s = img.getAttribute('src');
+      if (!s || s.indexOf('://') !== -1) return;
+      if (s.indexOf('/_images/') === 0)
+        img.src = location.origin + '/modules' + s;
+      else if (s.indexOf('/www/modules/_images/') === 0)
+        img.src = location.origin + s.replace(/^\/www/, '');
+    });
+  }
+  function apply() {
+    if (!document.body) return;
+    fixModuleImages();
+    var domain = resolveClusterDomain();
+    if (!domain || domain === PLACEHOLDER) return;
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    var textNodes = [];
+    var node;
+    while ((node = walker.nextNode())) textNodes.push(node);
+    textNodes.forEach(function (n) {
+      if (n.nodeValue && n.nodeValue.indexOf(PLACEHOLDER) !== -1)
+        n.nodeValue = n.nodeValue.split(PLACEHOLDER).join(domain);
+    });
+    document.querySelectorAll('a[href], iframe[src], img[src]').forEach(function (el) {
+      var attr = el.hasAttribute('href') ? 'href' : 'src';
+      var v = el.getAttribute(attr);
+      if (v && v.indexOf(PLACEHOLDER) !== -1)
+        el.setAttribute(attr, v.split(PLACEHOLDER).join(domain));
+    });
+  }
+  function init() {
+    apply();
+    window.addEventListener('load', apply);
+    var n = 0;
+    var timer = setInterval(function () {
+      apply();
+      if (++n >= 20) clearInterval(timer);
+    }, 400);
+  }
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', init);
+  else
+    init();
+})();
+</script>

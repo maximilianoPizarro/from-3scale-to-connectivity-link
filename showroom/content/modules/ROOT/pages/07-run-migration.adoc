@@ -354,7 +354,7 @@ https://openshift-gitops-server-openshift-gitops.{cluster_domain}
 
 === 6. Verify the generated resources
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get gateway,httproute,authpolicy,ratelimitpolicy,planpolicy,apiproduct \
   -n {user_name}-neuralbank-cl

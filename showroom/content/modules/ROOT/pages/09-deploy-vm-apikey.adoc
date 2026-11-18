@@ -106,7 +106,7 @@ https://openshift-gitops-server-openshift-gitops.{cluster_domain}
 
 In the *Terminal* tab (or your local `oc` with the correct context):
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 oc get virtualmachine -n {user_name}-neuralbank
 oc get gateway,httproute,authpolicy,ratelimitpolicy -n {user_name}-neuralbank
@@ -120,7 +120,7 @@ When the HTTPRoute and AuthPolicy are ready and the VM workload exposes HTTP (fo
 
 Use the key material from the generated Secret in your namespace (name varies by template output). Example pattern:
 
-[source,bash]
+[source,bash,role="execute",subs="+attributes"]
 ----
 export ROUTE_HOST="<extract-from-httproute-or-route>"
 curl -sk -H "X-API-Key: <your-api-key>" "https://${ROUTE_HOST}/"
