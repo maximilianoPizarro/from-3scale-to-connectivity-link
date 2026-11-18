@@ -252,13 +252,14 @@ metadata:
 spec:
   # overrides is enforced ahead of the PlanPolicy RateLimitPolicy.
   # This OIDC flow does not expose auth.identity to the rate-limit WASM,
-  # so the counter is the path itself: two list calls, then 429.
+  # so the counter is the path itself. 30/min lets the page be used;
+  # a sustained refresh still returns 429.
   overrides:
     limits:
       customers-page:
         rates:
-          - limit: 2
-            window: 30s
+          - limit: 30
+            window: 1m
         when:
           - predicate: request.url_path.startsWith('/api/v1/customers')
   targetRef:

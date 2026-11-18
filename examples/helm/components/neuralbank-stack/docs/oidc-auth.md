@@ -139,14 +139,14 @@ spec:
     limits:
       customers-page:
         rates:
-          - limit: 2
-            window: 30s
+          - limit: 30
+            window: 1m
         when:
           - predicate: request.url_path.startsWith('/api/v1/customers')
 ```
 
-- **2 requests cada 30 segundos** a `/api/v1/customers`
-- La tercera llamada responde `429`
+- **30 requests por minuto** a `/api/v1/customers`
+- La llamada 31 responde `429`
 - `overrides` gana sobre el RateLimitPolicy que genera `PlanPolicy`
 
 ## Inspeccionar en OpenShift

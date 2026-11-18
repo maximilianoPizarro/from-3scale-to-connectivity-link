@@ -194,4 +194,4 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 ## Rate Limiting
 
-La API tiene un **RateLimitPolicy** de 2 requests cada 30 segundos en `/api/v1/customers`. Si se excede, responde `429 Too Many Requests`.
+La API tiene un **RateLimitPolicy** de 30 requests por minuto en `/api/v1/customers`. Si se excede, responde `429 Too Many Requests`.
