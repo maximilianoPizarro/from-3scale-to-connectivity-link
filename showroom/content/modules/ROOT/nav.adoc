@@ -1,4 +1,7 @@
 * xref:index.adoc[Home]
+. Executable paths
+* xref:16-path-oidc.adoc[Neuralbank OIDC]
+* xref:17-path-apikey.adoc[NFL Wallet API key]
 . Fundamentals
 * xref:00-prerequisites.adoc[0. Prerequisites & Sizing]
 * xref:01-migration-overview.adoc[1. Migration Overview]

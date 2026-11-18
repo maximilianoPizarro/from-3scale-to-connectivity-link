@@ -81,7 +81,7 @@ curl -s -o /dev/null -w "3scale HTTP Status: %\{http_code}\n" \
   "https://neuralbank-oidc-3scale-apicast-production.{cluster_domain}/api/v1/customers"
 ----
 
-Both front doors use the same backend Service. A non-200 from APIcast means that product's Application is not accepting this user token; the Connectivity Link call above is the one that must return customer JSON.
+Both front doors use the same backend Service, `neuralbank-backend-svc`. On this cluster both return *200*. A 403 from APIcast means the Bearer has no `aud` claim or the Application `client_id` is not `neuralbank-frontend`. The full executable path is xref:16-path-oidc.adoc[Neuralbank OIDC].
 
 == Step 4: Compare the resources side by side
 

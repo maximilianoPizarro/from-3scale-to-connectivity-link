@@ -1,0 +1,115 @@
+= Neuralbank OIDC
+
+[.lead]
+Executable path. Migration Toolkit only. One product, `neuralbank-oidc`, and its own Gateway in `business-apis`.
+
+Do not open APIShift, the wallet, or the shared Gateway in xref:15-two-product-migration.adoc[module 11] during this take.
+
+The Gateway already installed and APIcast production both return *200* for `GET /api/v1/customers` with a Bearer token. Both call `neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080`.
+
+* APIcast production: `\https://neuralbank-oidc-3scale-apicast-production.{cluster_domain}`
+* Gateway already installed: `\https://neuralbank.{cluster_domain}`
+* Host the Toolkit creates: `\https://neuralbank-oidc-business-apis.{cluster_domain}`
+
+In 3scale, show account *Neuralbank*, application `neuralbank-frontend-azp`, `client_id` `neuralbank-frontend`, plan Basic (60/min). Skip the other application: its short `client_id` does not match the token.
+
+== Step 1: Products in 3scale
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get product,backend,activedoc -n 3scale-system | grep -E 'neuralbank|NAME'
+oc get product neuralbank-oidc-product -n 3scale-system -o wide
+----
+
+== Step 2: Call the API on both front doors
+
+The lab shell has `python3`, not `python`. Run the block as a whole. An empty `$TOKEN` makes the Gateway return *302*.
+
+[source,bash,role="execute",subs="+attributes"]
+----
+TOKEN=$(curl -s -X POST \
+  "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" \
+  -d "client_id=neuralbank-frontend" \
+  -d "username={neuralbank_user}" \
+  -d "password={neuralbank_password}" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+
+curl -s -o /dev/null -w "neuralbank RHCL: %\{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank.{cluster_domain}/api/v1/customers"
+
+curl -s -o /dev/null -w "neuralbank 3scale: %\{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  "https://neuralbank-oidc-3scale-apicast-production.{cluster_domain}/api/v1/customers"
+----
+
+Expected:
+
+----
+neuralbank RHCL: 200
+neuralbank 3scale: 200
+----
+
+APIcast returns *403* when the access token has no `aud` claim. Client `neuralbank-frontend` includes an audience mapper, so `aud` and `azp` are both `neuralbank-frontend`.
+
+== Step 3: Workload
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get pods -n neuralbank-stack
+oc get svc neuralbank-backend-svc -n neuralbank-stack
+oc get gateway -n neuralbank-stack
+----
+
+The migration moves policy and the edge. The Deployment stays.
+
+== Step 4: Migration Toolkit
+
+. Open `\https://migration-toolkit.{cluster_domain}`.
+. Confirm the 3scale URL and token, then *Test connection*.
+. New project. Target namespace: `business-apis`.
+. Select only `neuralbank-oidc` and convert it.
+. In the YAML, show without editing: Gateway port *8080*, edge Route to `neuralbank-oidc-gateway-istio`, host `neuralbank-oidc-business-apis.{cluster_domain}`, API paths to `neuralbank-backend-svc`, docs route `/q` with no AuthPolicy, JWT AuthPolicy with the `neuralbank` issuer and prefix `Bearer`, ReferenceGrant in `neuralbank-stack`, RateLimitPolicy *60/min* (Premium 300/min is only in the plans annotation), APIProduct `openAPISpecURL` on `/q/openapi?format=json`.
+. Apply into `business-apis`.
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get gateway,route,httproute,authpolicy,ratelimitpolicy,apiproduct -n business-apis
+oc get referencegrant -n neuralbank-stack
+----
+
+== Step 5: Call the host the Toolkit created
+
+Run this after Apply.
+
+[source,bash,role="execute",subs="+attributes"]
+----
+NB=https://neuralbank-oidc-business-apis.{cluster_domain}
+
+curl -s -o /dev/null -w "openapi: %\{http_code}\n" "$NB/q/openapi?format=json"
+curl -s -o /dev/null -w "sin token: %\{http_code}\n" "$NB/api/v1/customers"
+
+TOKEN=$(curl -s -X POST \
+  "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" \
+  -d "client_id=neuralbank-frontend" \
+  -d "username={neuralbank_user}" \
+  -d "password={neuralbank_password}" \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+
+curl -s -o /dev/null -w "bearer: %\{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  "$NB/api/v1/customers"
+----
+
+Expected: OpenAPI *200* without a token, no token *401*, Bearer *200*. The 61st call in the same minute is *429*.
+
+If the host does not answer:
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get route -n business-apis
+----

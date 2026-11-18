@@ -15,6 +15,8 @@ Migrate API management from *Red Hat 3scale API Management* to *Red Hat Connecti
 
 The workshop ships *four complementary approaches*. Explore pre-deployed 3scale and Connectivity Link apps side by side, then pick the path that fits the situation in the decision table below.
 
+The two recording paths are executable from the Terminal tab: xref:16-path-oidc.adoc[Neuralbank OIDC] and xref:17-path-apikey.adoc[NFL Wallet API key]. Each *Run in terminal* block pastes and runs on its own. Do not mix the two paths in one take.
+
 NOTE: `apps.cluster.example.com` is rewritten to this cluster's ingress domain when you open the deployed showroom. Lab users in the commands are `lab-user` / `Welcome123!` (backstage, Developer Hub) and `robert.anderson@email.com` / `Welcome123` (Neuralbank). They are disposable accounts for this environment. Do not reuse them elsewhere. Bash blocks marked *Run in terminal* paste into the Terminal tab. For admin console URLs and the remaining secrets, run `./scripts/get-credentials.sh` from a machine with `oc`.
 
 == How long

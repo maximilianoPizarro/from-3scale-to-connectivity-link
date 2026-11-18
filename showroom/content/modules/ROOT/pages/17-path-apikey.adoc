@@ -1,0 +1,101 @@
+= NFL Wallet API key
+
+[.lead]
+Executable path. Migration Toolkit only. One product, `nfl-wallet-apikey`, and its own Gateway in `business-apis`.
+
+Do not open APIShift, Neuralbank, or the shared Gateway in xref:15-two-product-migration.adoc[module 11] during this take. The OIDC path is xref:16-path-oidc.adoc[Neuralbank OIDC].
+
+* Gateway already installed: `\https://nfl-wallet.{cluster_domain}` — header `X-API-Key: nfl-wallet-demo-key-2024`
+* APIcast production: `\https://nfl-wallet-apikey-3scale-apicast-production.{cluster_domain}` — `user_key` query parameter. The demo key is not a 3scale `user_key`, and production has no promoted config, so this call is *404*
+* Host the Toolkit creates: `\https://nfl-wallet-apikey-business-apis.{cluster_domain}` — header `Authorization: APIKEY` and the generated Secret. Confirm the host with `oc get route -n business-apis`
+
+The backend does not move: `nfl-wallet-api.nfl-wallet-prod.svc.cluster.local:8080`.
+
+== Step 1: Product in 3scale
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get product,backend,activedoc -n 3scale-system | grep -E 'nfl-wallet|NAME'
+oc get product nfl-wallet-apikey-product -n 3scale-system -o wide
+----
+
+Plans: Basic 120/min and Premium 600/min. The credential in 3scale is `user_key` on the query string.
+
+== Step 2: Call the Gateway already installed and APIcast
+
+[source,bash,role="execute",subs="+attributes"]
+----
+curl -s -o /dev/null -w "wallet RHCL sin key: %\{http_code}\n" \
+  "https://nfl-wallet.{cluster_domain}/api/v1/wallets"
+
+curl -s -o /dev/null -w "wallet RHCL con key: %\{http_code}\n" \
+  -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  "https://nfl-wallet.{cluster_domain}/api/v1/wallets"
+
+curl -s -o /dev/null -w "wallet 3scale: %\{http_code}\n" \
+  "https://nfl-wallet-apikey-3scale-apicast-production.{cluster_domain}/api/v1/wallets?user_key=nfl-wallet-demo-key-2024"
+----
+
+Expected:
+
+----
+wallet RHCL sin key: 401
+wallet RHCL con key: 200
+wallet 3scale: 404
+----
+
+A *429* on the second call means the key is valid. The enforced plan on that Gateway is Basic, *60 calls per minute*. The body is the text `Too Many Requests`. Wait for the minute to pass and run only that curl again.
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get secret nfl-wallet-apikey-admin -n nfl-wallet-prod -o jsonpath='{.data.api_key}' | base64 -d ; echo
+----
+
+Output: `nfl-wallet-demo-key-2024`.
+
+== Step 3: Workload
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get pods -n nfl-wallet-prod
+oc get svc nfl-wallet-api -n nfl-wallet-prod
+oc get gateway -n nfl-wallet-prod
+----
+
+== Step 4: Migration Toolkit
+
+. Open `\https://migration-toolkit.{cluster_domain}`.
+. Confirm the 3scale URL and token, then *Test connection*.
+. New project. Target namespace: `business-apis`.
+. Select only `nfl-wallet-apikey` and convert it.
+. In the YAML, show without editing: Gateway port *8080*, edge Route to `nfl-wallet-apikey-gateway-istio`, no fixed hostname, HTTPRoute to `nfl-wallet-api` in `nfl-wallet-prod`, AuthPolicy `api-key-auth` with header prefix `APIKEY` (not `X-API-Key`), Secret `nfl-wallet-apikey-api-key` with a generated key, ReferenceGrant in `nfl-wallet-prod`, RateLimitPolicy for the lowest plan. The plans annotation lists Basic 120/min and Premium 600/min.
+. Do not replace the generated key with `nfl-wallet-demo-key-2024`.
+. Apply into `business-apis`.
+
+[source,bash,role="execute",subs="+attributes"]
+----
+oc get gateway,route,httproute,authpolicy,ratelimitpolicy,apiproduct -n business-apis
+oc get referencegrant -n nfl-wallet-prod
+oc get route -n business-apis
+----
+
+== Step 5: Call the host the Toolkit created
+
+Run this after Apply. Use the host from `oc get route` if it differs.
+
+[source,bash,role="execute",subs="+attributes"]
+----
+WALLET=https://nfl-wallet-apikey-business-apis.{cluster_domain}
+
+curl -s -o /dev/null -w "openapi: %\{http_code}\n" "$WALLET/q/openapi"
+curl -s -o /dev/null -w "sin key: %\{http_code}\n" "$WALLET/api/v1/wallets"
+
+WALLET_KEY=$(oc get secret nfl-wallet-apikey-api-key -n business-apis -o jsonpath='{.data.api_key}' | base64 -d)
+curl -s -o /dev/null -w "con key: %\{http_code}\n" \
+  -H "Authorization: APIKEY $WALLET_KEY" \
+  "$WALLET/api/v1/wallets"
+----
+
+Expected: OpenAPI *200* without a key, no key *401*, `Authorization: APIKEY` *200*.
+
+`X-API-Key` and `nfl-wallet-demo-key-2024` belong to the Gateway already installed, not to this one.
