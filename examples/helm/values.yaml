@@ -438,12 +438,13 @@ connectivityLink:
         backend:
           image:
             repository: quay.io/maximilianopizarro/gateforge-backend
-            tag: latest
+            # Immutable tag of the OpenShift-ready generator (port 8080, Bearer, public /q).
+            tag: b712f316f29a55852a5c0f7113d9846adca6df9c
             pullPolicy: Always
         frontend:
           image:
             repository: quay.io/maximilianopizarro/gateforge-frontend
-            tag: latest
+            tag: b712f316f29a55852a5c0f7113d9846adca6df9c
             pullPolicy: Always
         ai:
           enabled: true
