@@ -3,7 +3,7 @@
 *Migration Workshop — four strategies to Connectivity Link · Powered by https://kuadrant.io[Kuadrant]*
 
 [.lead]
-*Core session*: about *2 h 50 min* (modules 0–7, then verify and summary). Adding the three strategy consoles is about *+45 min* (*~3 h 35 min*). The two-product example is *+25 min*. The VM lab is *+20 min* and optional. Troubleshooting is a reference, not scheduled time.
+*Core session*: about *2 h 50 min* (modules 0–7, then verify and summary). Adding the three strategy consoles is about *+45 min* (*~3 h 35 min*). The two-product example is *+50 min*. The VM lab is *+20 min* and optional. Troubleshooting is a reference, not scheduled time.
 
 == Welcome
 
@@ -82,7 +82,7 @@ The menu order *is* the reading order. Numbers below match the left navigation. 
 
 | 11
 | xref:15-two-product-migration.adoc[Two-product migration]
-| 25 min
+| 50 min
 | Extra worked example
 
 | 12

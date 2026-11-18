@@ -1,22 +1,26 @@
 = Two-product migration: shared Gateway, path isolation
 
 [.lead]
-*Estimated time*: ~25 minutes · *Strategy*: Migration Toolkit and/or APIShift
+*Estimated time*: ~50 minutes · *Strategy*: Migration Toolkit and/or APIShift
 
 == Learning objectives
 
 * Migrate *two* different 3scale Products (OIDC + API Key) into *one* RHCL namespace
-* Map existing 3scale Applications to RHCL credentials (Kubernetes Secret vs Keycloak OIDC client)
-* Isolate products on a *shared Gateway* with path prefixes and one AuthPolicy / OIDCPolicy per HTTPRoute
-* Register both products in Developer Hub with APIShift (Migration Toolkit produces the same YAML without catalog registration)
+* Map existing 3scale Applications to RHCL credentials (Kubernetes Secret vs Keycloak JWT)
+* Isolate products on a *shared Gateway* with one HTTPRoute rule per path and method, plus one AuthPolicy per product
+* Keep the 3scale rate as a *per-identity* counter, and publish both products with APIShift
 
 NOTE: This layout is *not* pre-installed. Modules xref:04-explore-cl-oidc.adoc[4] and xref:05-explore-cl-apikey.adoc[5] keep *one Gateway per app* (`neuralbank-stack`, `nfl-wallet-prod`) so you can compare 3scale and RHCL side by side. This page is the *target pattern* you produce with Migration Toolkit or APIShift: one Gateway, products and backends divided by path, isolated by RHCL auth policies.
 
-Terminology on this page: *RHCL* means Red Hat Connectivity Link (policies and CRDs). The only product name that keeps “Kuadrant” is xref:11-kuadrant-console.adoc[Kuadrant Console] for day-2 operations. YAML still uses `apiVersion: kuadrant.io/...` because that is the API group.
+Terminology on this page: *RHCL* means Red Hat Connectivity Link (policies and CRDs). The only product name that keeps “Kuadrant” is xref:11-kuadrant-console.adoc[Kuadrant Console] for day-2 operations. YAML still uses `apiVersion: kuadrant.io/...` because that is the API group. `OIDCPolicy` and `PlanPolicy` are `extensions.kuadrant.io/v1alpha1`.
 
 == Source: two products already in 3scale
 
-Both Products, Backends, Application Plans, and consumer Applications are already deployed under `3scale-system` in this workshop.
+The Products, Backends, Application Plans, and consumer Applications live in the *3scale* APIManager, which this workshop installs in namespace `3scale-system`. The workloads they call do *not* live there:
+
+* Neuralbank Service → namespace `neuralbank-stack`
+* NFL Wallet Service → namespace `nfl-wallet-prod`
+* `neuralbank-3scale` and `nfl-wallet-3scale` hold the 3scale RBAC for those Products, not the HTTP services
 
 [cols="2,2,3,2",options="header"]
 |===
@@ -52,101 +56,124 @@ The Products already have Applications with credentials. The migration does *not
 | 3scale identity | RHCL target | How to carry it
 
 | NFL Wallet Application `user_key`
-| Opaque Secret in `business-apis` with labels `app: nfl-wallet`, `kuadrant.io/apikey: "true"`, and plan annotation `secret.kuadrant.io/plan-id`
-| Put the existing `user_key` value in `stringData.api_key`. AuthPolicy selects Secrets by those labels. Callers send `X-API-Key` (header) instead of the 3scale query parameter.
+| Opaque Secret in `business-apis` with labels `app: nfl-wallet`, `kuadrant.io/apikey: "true"`, and annotation `secret.kuadrant.io/plan-id` (`basic` or `premium`)
+| Put the existing `user_key` value in `stringData.api_key`. Do *not* commit that value to Gitea. Use Sealed Secrets or External Secrets, and keep a placeholder in the chart. Callers can keep `?user_key=` during the transition; new clients send `X-API-Key`.
 
 | Neuralbank Application `client_id` / `client_secret`
 | Keycloak client in realm `neuralbank` (same issuer the 3scale Product already uses)
-| Keep the client in Keycloak. RHCL *OIDCPolicy* (or AuthPolicy JWT) points at `issuerURL` for that realm and trusts tokens whose `azp` / `client_id` matches. No new Secret for the consumer key — the token is the credential.
+| Keep the client in Keycloak. An AuthPolicy `jwt` rule checks the Bearer token against `issuerUrl` and then allows only `azp == neuralbank-frontend` (or the 3scale Application `client_id`). The token is the credential. There is no consumer Secret.
 |===
 
-TIP: After migration, a wallet Secret never matches Neuralbank routes (different AuthPolicy selector). A Neuralbank Bearer token never matches wallet routes (different OIDCPolicy target). That is the isolation model.
+TIP: After migration, a wallet Secret never matches Neuralbank routes (different AuthPolicy selector). A Neuralbank Bearer token never matches wallet routes (different AuthPolicy). That is the isolation model.
 
 == Target: one namespace, one Gateway, paths for products and backends
 
-Create namespace `business-apis`. Deploy a single Gateway `business-gw` (GatewayClass `istio`). Cross-namespace `backendRefs` need a Gateway API `ReferenceGrant` in each backend namespace (`neuralbank-stack`, `nfl-wallet-prod`).
+Create namespace `business-apis`. Deploy a single Gateway `business-gw` (GatewayClass `istio`). The public hostname is an OpenShift Route with edge TLS in front of the Istio Service `business-gw-istio`. Cross-namespace `backendRefs` need a Gateway API `ReferenceGrant` in `neuralbank-stack` and in `nfl-wallet-prod`.
 
-Public host example: `business-apis.\{cluster_domain}`
+Public host example: `business-apis.{cluster_domain}`
 
-Path layout (product prefix, then backend prefix):
+Path layout. The public path keeps a product prefix. The backend still sees the path it has today, because each rule rewrites the prefix off.
 
-[cols="3,3",options="header"]
+[cols="3,2,3",options="header"]
 |===
-| Public path prefix | Backend Service
+| Public path | Method | Backend path after rewrite
 
 | `/neuralbank/api/v1/customers`
-| `neuralbank-backend-svc` in `neuralbank-stack`
+| GET, POST
+| `/api/v1/customers`
 
 | `/neuralbank/api/v1/transactions`
-| `neuralbank-backend-svc` in `neuralbank-stack`
+| GET
+| `/api/v1/transactions`
 
 | `/neuralbank/api/v1/loans`
-| `neuralbank-backend-svc` in `neuralbank-stack`
+| GET
+| `/api/v1/loans`
 
 | `/nfl-wallet/api/v1/wallets`
-| `nfl-wallet-api` in `nfl-wallet-prod`
+| GET
+| `/api/v1/wallets`
 
 | `/nfl-wallet/api/v1/cards`
-| `nfl-wallet-api` in `nfl-wallet-prod`
+| GET
+| `/api/v1/cards`
 |===
+
+Any other path or method on this Gateway is not routed. A `PathPrefix` of `/neuralbank` alone would publish URLs that 3scale never mapped.
 
 Text diagram:
 
 ----
 Client
-  │
+  │  HTTPS (OpenShift Route, edge)
   ▼
-business-gw  (one Gateway, HTTPS)
+business-gw-istio :8080   Gateway business-gw (HTTP listener)
   │
-  ├── HTTPRoute neuralbank-route   PathPrefix /neuralbank
-  │     ├── OIDCPolicy             Keycloak realm neuralbank
-  │     ├── RateLimitPolicy / PlanPolicy
-  │     └── → neuralbank-backend (accounts / transactions / loans paths)
+  ├── AuthPolicy business-gw-deny     default deny on the Gateway
   │
-  └── HTTPRoute nfl-wallet-route   PathPrefix /nfl-wallet
-        ├── AuthPolicy (API Key)   Secrets labeled app=nfl-wallet
-        ├── RateLimitPolicy / PlanPolicy
-        └── → nfl-wallet-api (wallets / cards paths)
+  ├── HTTPRoute neuralbank-route      one rule per path + method
+  │     ├── URLRewrite                strip /neuralbank
+  │     ├── AuthPolicy jwt + azp      Keycloak realm neuralbank
+  │     ├── PlanPolicy + RateLimit    counter per token subject
+  │     └── → neuralbank-backend-svc.neuralbank-stack:8080
+  │
+  └── HTTPRoute nfl-wallet-route      one rule per path + method
+        ├── URLRewrite                strip /nfl-wallet
+        ├── AuthPolicy API key        Secrets labeled app=nfl-wallet
+        ├── PlanPolicy + RateLimit    counter per api key
+        └── → nfl-wallet-api.nfl-wallet-prod:8080
 ----
 
-== RHCL policies in scope
+NOTE: A hostname per product on the *same* Gateway (`neuralbank.{cluster_domain}`, `nfl-wallet.{cluster_domain}`) keeps today's public URLs and does not need a rewrite. Path prefixes put both products on one host and force every client to change the URL. This module uses the path layout so isolation is visible in one hostname. Use hostnames when you cannot change clients.
 
-Attach these RHCL resources to each product HTTPRoute:
+== RHCL policies in scope
 
 [cols="1,3",options="header"]
 |===
 | RHCL resource | Role in this example
 
-| *Gateway* + *HTTPRoute*
-| One ingress; routes split by `/neuralbank` and `/nfl-wallet` (and backend path prefixes)
+| *Gateway* + *HTTPRoute* + *Route*
+| HTTP listener on port 8080. Public TLS is the OpenShift Route (edge). One rule per mapped path and method, with `URLRewrite`.
 
-| *AuthPolicy*
-| API Key for NFL Wallet — selector on product-labeled Secrets
+| *ReferenceGrant*
+| Lets the HTTPRoute in `business-apis` select Services in the backend namespaces.
 
-| *OIDCPolicy*
-| OIDC for Neuralbank — issuer = existing Keycloak realm / client
+| *AuthPolicy* (Gateway)
+| Default deny. A new HTTPRoute on this Gateway stays closed until it has its own AuthPolicy.
 
-| *RateLimitPolicy*
-| Enforce plan windows (for example 60/min vs 300/min)
+| *AuthPolicy* (wallet route)
+| API key. Selector on product-labeled Secrets. Header `X-API-Key` and, for the transition, query `user_key`.
 
-| *PlanPolicy*
-| Map Secret / identity annotations to Basic vs Premium tiers
+| *AuthPolicy* (neuralbank route)
+| JWT against the Keycloak issuer, then an allow only when `azp` is the Neuralbank client. This is the check the curl test uses.
+
+| *PlanPolicy* + one *RateLimitPolicy*
+| Tiers Basic and Premium. The counter is the caller, not the route. Two RateLimitPolicies on the same HTTPRoute do not add up: one is `Enforced`, the other is `Overridden`.
 
 | *APIProduct*
-| Publish each product into the RHCL developer portal / Developer Hub catalog
+| Publish each product into Developer Hub.
 
 | *TLSPolicy* / *DNSPolicy*
-| Optional for ACME and DNS; not required for the walkthrough
+| For a certificate on the Gateway listener, or for external DNS. Not used here, because the Route terminates TLS.
 |===
+
+`OIDCPolicy` is the wrong object for this test. It drives a browser login (authorization code, `redirectURI`, cookie). The verify step sends a Bearer token and expects `200`. Use AuthPolicy `jwt` for that. Keep `OIDCPolicy` only if you also move the Neuralbank *web* login onto this host, and mark it `v1alpha1`.
 
 == Example manifests (target shape)
 
-Replace `\{cluster_domain}` with your ingress domain. Review generated YAML from Migration Toolkit or APIShift and fold multiple Gateways into this single Gateway if the tool emits one Gateway per Product.
+Replace `{cluster_domain}` with your ingress domain. Review generated YAML from Migration Toolkit or APIShift before you apply it. If the tool emits one Gateway per Product, merge the listeners onto `business-gw` and keep the rules below. The chart default `connectivityLink.targetNamespace` is `kuadrant-system` on purpose (that is where the operator watches). This example overrides it to `business-apis` for the shared Gateway. That override is the target of this module, not a change to the workshop default.
 
-=== Shared Gateway
+=== Namespace, Gateway, and OpenShift Route
+
+The HTTPS listener without `tls.certificateRefs` is not a valid public endpoint. This cluster's working Gateways listen HTTP on 8080. The Route presents the certificate.
 
 [source,yaml]
 ----
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: business-apis
+---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -158,15 +185,103 @@ metadata:
 spec:
   gatewayClassName: istio
   listeners:
-    - name: https
-      port: 443
-      protocol: HTTPS
+    - name: http
+      port: 8080
+      protocol: HTTP
       allowedRoutes:
         namespaces:
           from: Same
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: business-apis
+  namespace: business-apis
+spec:
+  host: business-apis.{cluster_domain}
+  to:
+    kind: Service
+    name: business-gw-istio
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
 ----
 
-=== Neuralbank HTTPRoute (OIDC product)
+Istio names the Service `<gateway-name>-istio`. Confirm it with `oc get svc -n business-apis` before the Route can be Admitted.
+
+=== ReferenceGrant (one in each backend namespace)
+
+Without these, the HTTPRoute stays `RefNotPermitted` and the call is not forwarded.
+
+[source,yaml]
+----
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-business-apis
+  namespace: neuralbank-stack
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: business-apis
+  to:
+    - group: ""
+      kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-business-apis
+  namespace: nfl-wallet-prod
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: business-apis
+  to:
+    - group: ""
+      kind: Service
+----
+
+=== Default deny on the Gateway
+
+A route AuthPolicy replaces this only for that route. Anything else attached to `business-gw` returns 403.
+
+[source,yaml]
+----
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+metadata:
+  name: business-gw-deny
+  namespace: business-apis
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: business-gw
+  defaults:
+    rules:
+      authorization:
+        deny-all:
+          opa:
+            rego: |
+              allow = false
+      response:
+        unauthorized:
+          code: 403
+          headers:
+            content-type:
+              value: application/json
+          body:
+            value: '{"error":"Forbidden"}'
+----
+
+=== Neuralbank HTTPRoute
+
+`ReplacePrefixMatch` strips the product prefix. The matched prefix `/neuralbank/api/v1/customers` becomes `/api/v1/customers`, which is what the backend already serves. Repeat the same filter on every rule.
 
 [source,yaml]
 ----
@@ -185,14 +300,55 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /neuralbank
+            value: /neuralbank/api/v1/customers
+          method: GET
+        - path:
+            type: PathPrefix
+            value: /neuralbank/api/v1/customers
+          method: POST
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /api/v1/customers
+      backendRefs:
+        - name: neuralbank-backend-svc
+          namespace: neuralbank-stack
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /neuralbank/api/v1/transactions
+          method: GET
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /api/v1/transactions
+      backendRefs:
+        - name: neuralbank-backend-svc
+          namespace: neuralbank-stack
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /neuralbank/api/v1/loans
+          method: GET
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /api/v1/loans
       backendRefs:
         - name: neuralbank-backend-svc
           namespace: neuralbank-stack
           port: 8080
 ----
 
-=== NFL Wallet HTTPRoute (API Key product)
+=== NFL Wallet HTTPRoute
 
 [source,yaml]
 ----
@@ -211,21 +367,86 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /nfl-wallet
+            value: /nfl-wallet/api/v1/wallets
+          method: GET
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /api/v1/wallets
+      backendRefs:
+        - name: nfl-wallet-api
+          namespace: nfl-wallet-prod
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /nfl-wallet/api/v1/cards
+          method: GET
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /api/v1/cards
       backendRefs:
         - name: nfl-wallet-api
           namespace: nfl-wallet-prod
           port: 8080
 ----
 
-=== AuthPolicy — NFL Wallet API Key (existing user_key → Secret)
+=== AuthPolicy — Neuralbank JWT (Bearer, not the browser login)
+
+`overrides` replaces the Gateway deny for this route. Missing or bad tokens are *401*. A valid token whose `azp` is not the Neuralbank client is *403*.
+
+[source,yaml]
+----
+apiVersion: kuadrant.io/v1
+kind: AuthPolicy
+metadata:
+  name: neuralbank-jwt
+  namespace: business-apis
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: neuralbank-route
+  overrides:
+    rules:
+      authentication:
+        oidc:
+          jwt:
+            issuerUrl: https://rhbk.{cluster_domain}/realms/neuralbank
+          credentials:
+            authorizationHeader:
+              prefix: Bearer
+      authorization:
+        neuralbank-client:
+          opa:
+            rego: |
+              allow { object.get(input.auth.identity, "azp", "") == "neuralbank-frontend" }
+      response:
+        unauthenticated:
+          code: 401
+        unauthorized:
+          code: 403
+----
+
+If the 3scale Application uses another `client_id`, put that value in the Rego `allow` line. Confirm the claim with the token payload (`azp`). Authorino must expose it on `input.auth.identity`.
+
+=== AuthPolicy — NFL Wallet API key
+
+The Secret below is the *shape*. Replace the placeholder at apply time from the live 3scale Application, or from External Secrets. A second Secret with `plan-id: premium` is the Premium tier. Same labels, different annotation, different key value.
+
+`queryString.name: user_key` accepts the 3scale parameter while clients move to the header. Drop it after the cutover.
 
 [source,yaml]
 ----
 apiVersion: v1
 kind: Secret
 metadata:
-  name: nfl-wallet-migrated-key
+  name: nfl-wallet-migrated-basic
   namespace: business-apis
   labels:
     app: nfl-wallet
@@ -235,8 +456,22 @@ metadata:
     secret.kuadrant.io/plan-id: basic
 type: Opaque
 stringData:
-  # Value taken from the existing 3scale Application user_key
-  api_key: "<paste-existing-user_key>"
+  api_key: "replace-from-3scale-application-user-key"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nfl-wallet-migrated-premium
+  namespace: business-apis
+  labels:
+    app: nfl-wallet
+    kuadrant.io/apikey: "true"
+    authorino.kuadrant.io/managed-by: authorino
+  annotations:
+    secret.kuadrant.io/plan-id: premium
+type: Opaque
+stringData:
+  api_key: "replace-from-3scale-premium-application-user-key"
 ---
 apiVersion: kuadrant.io/v1
 kind: AuthPolicy
@@ -248,7 +483,7 @@ spec:
     group: gateway.networking.k8s.io
     kind: HTTPRoute
     name: nfl-wallet-route
-  defaults:
+  overrides:
     rules:
       authentication:
         api-key-auth:
@@ -260,69 +495,130 @@ spec:
           credentials:
             customHeader:
               name: X-API-Key
+            queryString:
+              name: user_key
       response:
         unauthenticated:
           code: 401
+        unauthorized:
+          code: 403
 ----
 
-=== OIDCPolicy — Neuralbank (existing Keycloak client)
+=== Plans and rate limits (per caller)
+
+In 3scale, 60/min belongs to *one Application*. A Kuadrant `RateLimitPolicy` without `counters` shares that budget across every caller on the route. Count the API key for wallet, and the token subject for Neuralbank.
+
+`PlanPolicy` compiles one RateLimitPolicy. On this cluster a second RateLimitPolicy on the same HTTPRoute is marked `Overridden` and is not enforced. Do not add another RateLimitPolicy "beside" the plan and expect both to run. Read `status.conditions` type `Enforced` after apply.
+
+Wallet tiers follow the 3scale plans (Basic 120/min, Premium 600/min). The predicate reads the Secret annotation. The counter is the key, so two Applications on Basic each get 120/min.
 
 [source,yaml]
 ----
 apiVersion: extensions.kuadrant.io/v1alpha1
-kind: OIDCPolicy
+kind: PlanPolicy
 metadata:
-  name: neuralbank-oidc
+  name: nfl-wallet-plans
+  namespace: business-apis
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: nfl-wallet-route
+  plans:
+    - tier: basic
+      predicate: |
+        auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "basic"
+      limits:
+        daily: 10000
+        custom:
+          - limit: 120
+            window: 1m
+    - tier: premium
+      predicate: |
+        auth.identity.metadata.annotations["secret.kuadrant.io/plan-id"] == "premium"
+      limits:
+        daily: 100000
+        custom:
+          - limit: 600
+            window: 1m
+----
+
+Neuralbank has no Secret annotation. Map the tier from a Keycloak claim or realm role, and count `auth.identity.sub` so two users do not share the 60/min. The example below treats realm role `premium` as Premium and every other valid token as Basic. Create that role in the `neuralbank` realm only if you want a second tier. Until the role exists, every token matches Basic.
+
+[source,yaml]
+----
+apiVersion: kuadrant.io/v1
+kind: RateLimitPolicy
+metadata:
+  name: neuralbank-plans
   namespace: business-apis
 spec:
   targetRef:
     group: gateway.networking.k8s.io
     kind: HTTPRoute
     name: neuralbank-route
-  provider:
-    issuerURL: https://rhbk.{cluster_domain}/realms/neuralbank
-    clientID: neuralbank-frontend   # or the 3scale Application client_id
-    authorizationEndpoint: https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/auth
-    tokenEndpoint: https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token
-    redirectURI: https://business-apis.{cluster_domain}/auth/callback
-  auth:
-    tokenSource:
-      authorizationHeader:
-        prefix: Bearer
+  limits:
+    premium:
+      rates:
+        - limit: 300
+          window: 1m
+      counters:
+        - expression: auth.identity.sub
+      when:
+        - predicate: auth.identity.realm_access.roles.exists(r, r == "premium")
+    basic:
+      rates:
+        - limit: 60
+          window: 1m
+      counters:
+        - expression: auth.identity.sub
+      when:
+        - predicate: '!auth.identity.realm_access.roles.exists(r, r == "premium")'
 ----
 
-Add a `RateLimitPolicy` and `PlanPolicy` on each route using the same Basic / Premium numbers as the 3scale Application Plans. Publish two `APIProduct` resources (`neuralbank-api`, `nfl-wallet-api`) targeting the matching HTTPRoute for Developer Hub discovery.
+A limit denial is *429*, not 403. 403 on these routes means the credential was accepted and the authorization rule rejected it (wrong `azp`, or the Gateway deny). 401 means no credential or a bad one.
+
+Publish two `APIProduct` resources (`neuralbank-api`, `nfl-wallet-api`) targeting the matching HTTPRoute when you want Developer Hub discovery.
+
+== Cutover
+
+Leave the 3scale Products and the side-by-side Gateways in modules 4 and 5 running. This Gateway is a second front door.
+
+. Apply the manifests and pass the checks in <<_verify_isolation>>.
+. Point a test client at `https://business-apis.{cluster_domain}/neuralbank/...` and `.../nfl-wallet/...`. Wallet clients may still send `user_key` until you remove `queryString`.
+. Move traffic when those checks stay green: change the client base URL, or add a second host on this Gateway that matches the old hostname and shift DNS.
+. Roll back by pointing clients at the original 3scale or side-by-side host. Do not delete the 3scale Product as part of this exercise.
 
 == Walkthrough with Migration Toolkit and APIShift
 
-Both tools discover the same 3scale Admin API and can emit Gateway API + RHCL policies. Use either or both.
+Both tools discover the same 3scale Admin API and can emit Gateway API + RHCL policies. Use either or both. Budget time to edit the YAML: the tools do not emit the rewrite, the ReferenceGrant, the Route, or the per-identity counter for you.
 
 [cols="1,2,2",options="header"]
 |===
 | Step | Migration Toolkit | APIShift
 
 | Connect
-| Open `https://migration-toolkit.\{cluster_domain}` · confirm Admin URL + token (`GET /api/defaults`)
-| Open `https://gateforge-gateforge.\{cluster_domain}` · patch `threescale.adminApi.accessToken` if still a placeholder
+| Open `https://migration-toolkit.{cluster_domain}` · confirm Admin URL + token (`GET /api/defaults`)
+| Open `https://gateforge-gateforge.{cluster_domain}` · patch `threescale.adminApi.accessToken` if still a placeholder
 
 | Discover
 | Select Products `neuralbank-oidc` *and* `nfl-wallet-apikey`
 | Same — create a migration plan per Product (or one plan covering both)
 
 | Transform
-| Review AuthPolicy / OIDCPolicy, RateLimitPolicy, PlanPolicy, HTTPRoute, APIProduct
+| Review AuthPolicy, RateLimitPolicy, PlanPolicy, HTTPRoute, APIProduct
 | Same core mapping · optional AI assist via `litemaas`
 
 | Target
 | Export or apply into namespace `business-apis`
-| Set `connectivityLink.targetNamespace: business-apis` and `gatewayStrategy: shared` (chart default may still say `kuadrant-system` — override for this example)
+| Set `connectivityLink.targetNamespace: business-apis` and `gatewayStrategy: shared`. The chart default stays `kuadrant-system`; override it only for this example.
 
 | Fold Gateways
-| If the tool emits one Gateway per Product, merge onto `business-gw` and the path prefixes above before apply
+| If the tool emits one Gateway per Product, merge listeners onto `business-gw`, then replace the generated HTTPRoutes with the per-path rules and `URLRewrite` on this page
 | Same review step
 
 | Credentials
-| Create wallet Secrets from existing `user_key` values · keep Neuralbank Keycloak clients
+| Create wallet Secrets from existing `user_key` values, outside Git. Keep Neuralbank Keycloak clients.
 | Same
 
 | Register
@@ -334,16 +630,76 @@ IMPORTANT: APIShift needs two real tokens after a fresh deploy: 3scale Admin acc
 
 == Verify isolation
 
-. Wallet key on Neuralbank path → *401* (AuthPolicy on `nfl-wallet-route` does not protect `/neuralbank`; OIDCPolicy rejects missing Bearer).
-. Neuralbank Bearer on Wallet path → *401* (AuthPolicy expects `X-API-Key` from Secrets labeled `app: nfl-wallet`).
-. Valid wallet key → `200` on `/nfl-wallet/...` only.
-. Valid Neuralbank token → `200` on `/neuralbank/...` only.
-. In Developer Hub (after APIShift), open both Components / APIProducts and confirm Topology / API tabs.
+Set the host once. Expect *401* with no credential, *403* with a credential the route does not accept, *200* with the right credential, *404* on a path 3scale did not map, and *429* when the caller exceeds the plan. The 61st Neuralbank call in one minute is the Basic-plan check (the first 60 return 200).
+
+The curls use `nfl-wallet-demo-key-2024` only after that value is in a Secret in `business-apis` with the labels above. The copy that already exists in `nfl-wallet-prod` does not match this Gateway.
+
+[source,bash,role="execute",subs="+attributes"]
+----
+HOST="https://business-apis.{cluster_domain}"
+
+# No credential
+curl -sk -o /dev/null -w "nb-none %{http_code}\n" "$HOST/neuralbank/api/v1/customers"
+curl -sk -o /dev/null -w "nfl-none %{http_code}\n" "$HOST/nfl-wallet/api/v1/wallets"
+
+# Wallet key on the Neuralbank path: 401 or 403 (this route wants a Bearer token)
+curl -sk -o /dev/null -w "key-on-nb %{http_code}\n" \
+  -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  "$HOST/neuralbank/api/v1/customers"
+
+# Neuralbank token on the wallet path: 401 (this route wants an API key)
+TOKEN=$(curl -sk -X POST "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=password' -d 'client_id=neuralbank-frontend' \
+  -d "username={neuralbank_user}" -d "password={neuralbank_password}" \
+  | python -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+curl -sk -o /dev/null -w "token-on-nfl %{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  "$HOST/nfl-wallet/api/v1/wallets"
+
+# Right credential, right path
+curl -sk -o /dev/null -w "nb-ok %{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  "$HOST/neuralbank/api/v1/customers"
+curl -sk -o /dev/null -w "nfl-ok %{http_code}\n" \
+  -H "X-API-Key: nfl-wallet-demo-key-2024" \
+  "$HOST/nfl-wallet/api/v1/wallets"
+
+# Same wallet key still accepted as the 3scale query parameter
+curl -sk -o /dev/null -w "nfl-query %{http_code}\n" \
+  "$HOST/nfl-wallet/api/v1/wallets?user_key=nfl-wallet-demo-key-2024"
+
+# Path that 3scale did not map
+curl -sk -o /dev/null -w "nb-extra %{http_code}\n" \
+  -H "Authorization: Bearer $TOKEN" \
+  "$HOST/neuralbank/api/v1/admin"
+
+# Basic plan: 60 succeed, the 61st is 429
+ok=0; limited=0
+for i in $(seq 1 61); do
+  code=$(curl -sk -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" "$HOST/neuralbank/api/v1/customers")
+  if [ "$code" = "200" ]; then ok=$((ok+1)); elif [ "$code" = "429" ]; then limited=$((limited+1)); fi
+done
+echo "nb-200=$ok nb-429=$limited"
+----
+
+Also confirm the policy that is actually on:
+
+[source,bash,role="execute"]
+----
+oc get httproute,authpolicy,ratelimitpolicy,planpolicy -n business-apis
+oc get referencegrant -n neuralbank-stack
+oc get referencegrant -n nfl-wallet-prod
+oc get route business-apis -n business-apis
+----
+
+`RateLimitPolicy` `Enforced=True` should be the plan policy only. A second policy on the same route with `Enforced=False` and reason `Overridden` is not in effect.
+
+In Developer Hub, after APIShift, open both Components / APIProducts and confirm the Topology and API tabs.
 
 Day-2 key and product operations: xref:11-kuadrant-console.adoc[Kuadrant Console].
 
 == Next
 
-* xref:12-migration-toolkit.adoc[9. Migration Toolkit] — guided discovery without AI / catalog
-* xref:13-apishift-gateforge.adoc[10. APIShift] — same path + AI + Developer Hub registration
-* xref:08-verify-test.adoc[12. Verify and Test] — curl / Swagger checks after apply
+* xref:08-verify-test.adoc[12. Verify and Test] — the same curl style against the pre-installed Gateways
+* xref:09-deploy-vm-apikey.adoc[13. Deploy VM (API Key)] — optional VM backend
