@@ -1590,6 +1590,25 @@ spec:
               - name: rag-data-volume
                 emptyDir: {}
             initContainers:
+              - name: wait-for-keycloak
+                image: registry.redhat.io/openshift4/ose-cli:latest
+                command:
+                  - /bin/bash
+                  - -c
+                  - |
+                    set -euo pipefail
+                    url="https://rhbk.{{ .Values.clusterDomain }}/realms/backstage/.well-known/openid-configuration"
+                    for i in $(seq 1 60); do
+                      code="$(curl -sk -o /dev/null -w '%{http_code}' "$url" || true)"
+                      if [ "$code" = "200" ]; then
+                        echo "Keycloak discovery returned 200"
+                        exit 0
+                      fi
+                      echo "Keycloak discovery returned ${code:-none} (${i}/60)"
+                      sleep 10
+                    done
+                    echo "Keycloak discovery did not return 200"
+                    exit 1
               - name: init-rag-data
                 image: "quay.io/redhat-ai-dev/rag-content:release-1.8-lcs"
                 command:

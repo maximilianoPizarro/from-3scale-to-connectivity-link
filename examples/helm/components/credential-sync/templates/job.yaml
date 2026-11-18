@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: credential-sync
+  namespace: 3scale-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: credential-sync
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: credential-sync
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: credential-sync
+subjects:
+  - kind: ServiceAccount
+    name: credential-sync
+    namespace: 3scale-system
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: credential-sync
+  namespace: 3scale-system
+spec:
+  backoffLimit: 8
+  activeDeadlineSeconds: 1200
+  template:
+    spec:
+      serviceAccountName: credential-sync
+      restartPolicy: OnFailure
+      containers:
+        - name: sync
+          image: registry.redhat.io/openshift4/ose-cli:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              wait_secret() {
+                local ns="$1" name="$2"
+                for i in $(seq 1 60); do
+                  if oc get secret "$name" -n "$ns" >/dev/null 2>&1; then
+                    return 0
+                  fi
+                  echo "Waiting for secret ${ns}/${name} (${i}/60)"
+                  sleep 10
+                done
+                echo "Secret ${ns}/${name} was not created"
+                return 1
+              }
+              wait_secret 3scale-system system-seed
+              wait_secret developer-hub secrets-rhdh
+              wait_secret gateforge apishift-config
+              wait_secret migration-toolkit migration-toolkit-rhcl-config
+              TOKEN="$(oc get secret system-seed -n 3scale-system -o jsonpath='{.data.ADMIN_ACCESS_TOKEN}' | base64 -d)"
+              SCAFFOLD="$(oc get secret secrets-rhdh -n developer-hub -o jsonpath='{.data.BACKEND_SECRET}' | base64 -d)"
+              if [ -z "$TOKEN" ] || [ -z "$SCAFFOLD" ]; then
+                echo "Admin token length ${#TOKEN}, scaffolder token length ${#SCAFFOLD}"
+                exit 1
+              fi
+              echo "Patching APIShift and migration toolkit tokens (admin length ${#TOKEN}, scaffolder length ${#SCAFFOLD})"
+              oc patch secret apishift-config -n gateforge --type merge \
+                -p "{\"stringData\":{\"THREESCALE_ACCESS_TOKEN\":\"${TOKEN}\",\"DEVHUB_SCAFFOLDER_TOKEN\":\"${SCAFFOLD}\"}}"
+              oc patch secret migration-toolkit-rhcl-config -n migration-toolkit --type merge \
+                -p "{\"stringData\":{\"THREESCALE_DEFAULT_TOKEN\":\"${TOKEN}\"}}"
+              oc rollout restart deploy/apishift-backend -n gateforge
+              oc rollout restart deploy/migration-toolkit-rhcl-backend -n migration-toolkit
+              oc rollout status deploy/apishift-backend -n gateforge --timeout=300s
+              oc rollout status deploy/migration-toolkit-rhcl-backend -n migration-toolkit --timeout=300s
+              echo "Credential sync finished"

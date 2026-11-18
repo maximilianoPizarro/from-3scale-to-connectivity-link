@@ -733,6 +733,23 @@ spec:
         - view-groups
     clientScopes:
     - attributes:
+        display.on.consent.screen: "false"
+        include.in.token.scope: "true"
+      description: Audience for the Keycloak Admin REST API. Required so service-account tokens are accepted by /admin.
+      id: 8cd0addb-0db8-452f-bebf-b2b9659a1928
+      name: kc-admin-api
+      protocol: openid-connect
+      protocolMappers:
+      - config:
+          access.token.claim: "true"
+          introspection.token.claim: "true"
+          lightweight.claim: "true"
+        consentRequired: false
+        id: 0ac7cc34-b851-4a0a-aa67-358eac33a351
+        name: admin-api-audience
+        protocol: openid-connect
+        protocolMapper: oidc-admin-api-audience-mapper
+    - attributes:
         consent.screen.text: ${offlineAccessScopeConsentText}
         display.on.consent.screen: "true"
       description: 'OpenID Connect built-in scope: offline_access'
@@ -1372,6 +1389,7 @@ spec:
       - roles
       - basic
       - email
+      - kc-admin-api
       directAccessGrantsEnabled: true
       enabled: true
       frontchannelLogout: true

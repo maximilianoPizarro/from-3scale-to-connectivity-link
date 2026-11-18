@@ -329,6 +329,14 @@ connectivityLink:
       prune: true
       selfHeal: true
       skipDryRunOnMissingResource: false
+    - id: credential-sync
+      enabled: true
+      path: credential-sync
+      destinationNamespace: 3scale-system
+      syncWave: "11"
+      prune: true
+      selfHeal: true
+      skipDryRunOnMissingResource: true
 
 # ============================================================
 # Helm Chart Applications (deployed via ArgoCD Helm source)
@@ -409,8 +417,11 @@ connectivityLink:
           enabled: true
           route:
             enabled: true
-    # Chart on main: helm/apishift. Images retagged to maximilianopizarro/gateforge-*
+    # Chart: helm/apishift. Images retagged to maximilianopizarro/gateforge-*
     # (upstream CI publishes everythingascode/apishift-*; frontend there is private).
+    # Pinned past main until code owners merge
+    # https://github.com/Everything-is-Code/apishift/pull/201
+    # (scaffolder token is read from the config secret).
     - id: apishift
       enabled: true
       # Keep autoSync on so fresh clusters get GateForge without a manual Argo sync
@@ -418,7 +429,7 @@ connectivityLink:
       autoSync: true
       repoURL: "https://github.com/Everything-is-Code/apishift"
       path: helm/apishift
-      targetRevision: "main"
+      targetRevision: "921f1fb11017234114e634ed9169d9a1dba26294"
       destinationNamespace: gateforge
       syncWave: "9"
       values:
@@ -491,6 +502,12 @@ connectivityLink:
             repository: quay.io/maximilianopizarro/migration-toolkit-rhcl-backend
             tag: v0.1.0
             pullPolicy: Always
+          # URL is not a secret. The token is a placeholder so the chart
+          # mounts THREESCALE_DEFAULT_TOKEN from the config secret; the
+          # credential-sync job replaces that value from 3scale system-seed.
+          threescale:
+            defaultUrl: "https://3scale-admin.{{ .Values.deployer.domain }}"
+            defaultToken: "placeholder-set-in-argocd"
         frontend:
           image:
             repository: quay.io/maximilianopizarro/migration-toolkit-rhcl-frontend

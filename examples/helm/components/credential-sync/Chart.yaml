@@ -1,0 +1,5 @@
+apiVersion: v2
+name: credential-sync
+description: Copy generated 3scale and Developer Hub tokens into APIShift and the migration toolkit after those apps exist.
+version: 0.1.0
+type: application
