@@ -10,7 +10,7 @@
 * Isolate products on a *shared Gateway* with path prefixes and one AuthPolicy / OIDCPolicy per HTTPRoute
 * Register both products in Developer Hub with APIShift (Migration Toolkit produces the same YAML without catalog registration)
 
-NOTE: Modules xref:04-explore-cl-oidc.adoc[4] and xref:05-explore-cl-apikey.adoc[5] keep *one Gateway per app* so you can compare 3scale and RHCL side by side. This page is the *business target pattern*: one Gateway for the whole business, products and backends divided by path, isolated by RHCL auth policies.
+NOTE: This layout is *not* pre-installed. Modules xref:04-explore-cl-oidc.adoc[4] and xref:05-explore-cl-apikey.adoc[5] keep *one Gateway per app* (`neuralbank-stack`, `nfl-wallet-prod`) so you can compare 3scale and RHCL side by side. This page is the *target pattern* you produce with Migration Toolkit or APIShift: one Gateway, products and backends divided by path, isolated by RHCL auth policies.
 
 Terminology on this page: *RHCL* means Red Hat Connectivity Link (policies and CRDs). The only product name that keeps “Kuadrant” is xref:11-kuadrant-console.adoc[Kuadrant Console] for day-2 operations. YAML still uses `apiVersion: kuadrant.io/...` because that is the API group.
 
@@ -40,7 +40,7 @@ Cards → `/api/v1/cards`
 
 Private base URLs stay on the existing Services (do not move the workloads in this example):
 
-* Neuralbank backends → `http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080`
+* Neuralbank backends → `http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080`
 * NFL Wallet backends → `http://nfl-wallet-api.nfl-wallet-prod.svc.cluster.local:8080`
 
 == Credentials that already exist (carry them over)
@@ -75,13 +75,13 @@ Path layout (product prefix, then backend prefix):
 | Public path prefix | Backend Service
 
 | `/neuralbank/api/v1/customers`
-| `neuralbank-backend` in `neuralbank-stack`
+| `neuralbank-backend-svc` in `neuralbank-stack`
 
 | `/neuralbank/api/v1/transactions`
-| `neuralbank-backend` in `neuralbank-stack`
+| `neuralbank-backend-svc` in `neuralbank-stack`
 
 | `/neuralbank/api/v1/loans`
-| `neuralbank-backend` in `neuralbank-stack`
+| `neuralbank-backend-svc` in `neuralbank-stack`
 
 | `/nfl-wallet/api/v1/wallets`
 | `nfl-wallet-api` in `nfl-wallet-prod`
@@ -187,7 +187,7 @@ spec:
             type: PathPrefix
             value: /neuralbank
       backendRefs:
-        - name: neuralbank-backend
+        - name: neuralbank-backend-svc
           namespace: neuralbank-stack
           port: 8080
 ----

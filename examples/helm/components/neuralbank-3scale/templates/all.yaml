@@ -64,7 +64,7 @@ metadata:
 spec:
   name: "Neuralbank Accounts Backend"
   systemName: neuralbank-accounts-backend
-  privateBaseURL: "http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080"
+  privateBaseURL: "http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/customers$"
@@ -130,7 +130,7 @@ metadata:
 spec:
   name: "Neuralbank Transactions Backend"
   systemName: neuralbank-transactions-backend
-  privateBaseURL: "http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080"
+  privateBaseURL: "http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/accounts/{id}/transactions$"
@@ -172,7 +172,7 @@ metadata:
 spec:
   name: "Neuralbank Lending Backend"
   systemName: neuralbank-lending-backend
-  privateBaseURL: "http://neuralbank-backend.neuralbank-stack.svc.cluster.local:8080"
+  privateBaseURL: "http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/customers/{id}/credit-score$"

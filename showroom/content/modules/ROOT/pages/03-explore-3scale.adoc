@@ -15,21 +15,21 @@ NOTE: This lab migrates routing, auth, and rate limits. 3scale *billing / moneti
 
 == Part 1 — Neuralbank on 3scale (OIDC Authentication)
 
-The `neuralbank-3scale` namespace contains the Neuralbank banking API protected by a 3scale *Product* with OIDC authentication via Keycloak.
+The Neuralbank *workloads* run in `neuralbank-stack`. The 3scale Product, Backends, and ActiveDoc are CRs in `3scale-system`. Namespace `neuralbank-3scale` only holds RBAC for Argo CD — `oc get pods -n neuralbank-3scale` is empty.
 
 === 1.1 Inspect the running pods
 
 [source,bash]
 ----
-oc get pods -n neuralbank-3scale
+oc get pods -n neuralbank-stack
 ----
 
 [cols="1,2",options="header"]
 |===
 | Pod | Role
-| `neuralbank-backend-*` | Quarkus REST API (`/api/v1/customers`)
-| `neuralbank-frontend-*` | Web SPA (credit visualization)
-| `neuralbank-db-*` | PostgreSQL database with seed data
+| `*-backend-*` | Quarkus REST API (Service `neuralbank-backend-svc`)
+| `*-frontend-*` | Web SPA
+| `neuralbank-db-*` | PostgreSQL
 |===
 
 === 1.2 Inspect the 3scale Product (OIDC)
@@ -55,8 +55,12 @@ spec:
   name: "Neuralbank API (OIDC)"
   systemName: neuralbank-oidc
   backendUsages:
-    neuralbank-backend-api:
-      path: /
+    neuralbank-accounts-backend:
+      path: /api/v1/customers
+    neuralbank-transactions-backend:
+      path: /api/v1/transactions
+    neuralbank-lending-backend:
+      path: /api/v1/loans
   deployment:
     apicastHosted:
       authentication:
@@ -103,20 +107,22 @@ The *Backend* resource defines the private base URL (the internal Kubernetes Ser
 [source,bash]
 ----
 oc get backend -n 3scale-system | grep neuralbank
-oc get backend neuralbank-backend-api -n 3scale-system -o yaml
+oc get backend neuralbank-accounts-backend -n 3scale-system -o yaml
 ----
+
+There are three Backends (`neuralbank-accounts-backend`, `neuralbank-transactions-backend`, `neuralbank-lending-backend`). All forward to the same Service:
 
 [source,yaml]
 ----
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
-  name: neuralbank-backend-api
+  name: neuralbank-accounts-backend
   namespace: 3scale-system
 spec:
-  name: "Neuralbank Backend API"
-  systemName: neuralbank-backend-api
-  privateBaseURL: "http://neuralbank-backend-svc.neuralbank-3scale.svc.cluster.local:8080"
+  name: "Neuralbank Accounts Backend"
+  systemName: neuralbank-accounts-backend
+  privateBaseURL: "http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/customers$"
@@ -171,7 +177,7 @@ spec:
   name: "Neuralbank Credit Management API"
   productSystemName: neuralbank-oidc
   activeDocOpenAPIRef:
-    url: "https://neuralbank-3scale.{cluster_domain}/q/openapi"
+    url: "http://neuralbank-backend-svc.neuralbank-stack.svc.cluster.local:8080/q/openapi?format=json"
   published: true
 ----
 
@@ -181,13 +187,13 @@ image::explore-3scale-apicast.svg["Neuralbank on 3scale — Route to APIcast; Pr
 
 == Part 2 — NFL Wallet on 3scale (API Key Authentication)
 
-The `nfl-wallet-3scale` namespace contains the NFL Wallet API protected by a 3scale *Product* with API Key (`user_key`) authentication.
+NFL Wallet *workloads* run in `nfl-wallet-prod` (Service `nfl-wallet-api`). The Product and Backends are CRs in `3scale-system`. `nfl-wallet-3scale` has no application pods.
 
 === 2.1 Inspect the running pods
 
 [source,bash]
 ----
-oc get pods -n nfl-wallet-3scale
+oc get pods -n nfl-wallet-prod
 ----
 
 === 2.2 Inspect the 3scale Product (API Key)
@@ -209,8 +215,10 @@ spec:
   name: "NFL Wallet API (API Key)"
   systemName: nfl-wallet-apikey
   backendUsages:
-    nfl-wallet-backend-api:
-      path: /
+    nfl-wallet-payments-backend:
+      path: /api/v1/wallets
+    nfl-wallet-cards-backend:
+      path: /api/v1/cards
   deployment:
     apicastHosted:
       authentication:
@@ -245,20 +253,23 @@ Key differences from the Neuralbank Product:
 
 [source,bash]
 ----
-oc get backend nfl-wallet-backend-api -n 3scale-system -o yaml
+oc get backend -n 3scale-system | grep nfl-wallet
+oc get backend nfl-wallet-payments-backend -n 3scale-system -o yaml
 ----
+
+Backends: `nfl-wallet-payments-backend` and `nfl-wallet-cards-backend`.
 
 [source,yaml]
 ----
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
-  name: nfl-wallet-backend-api
+  name: nfl-wallet-payments-backend
   namespace: 3scale-system
 spec:
-  name: "NFL Wallet Backend API"
-  systemName: nfl-wallet-backend-api
-  privateBaseURL: "http://nfl-wallet-api.nfl-wallet-3scale.svc.cluster.local:8080"
+  name: "NFL Wallet Payments Backend"
+  systemName: nfl-wallet-payments-backend
+  privateBaseURL: "http://nfl-wallet-api.nfl-wallet-prod.svc.cluster.local:8080"
   mappingRules:
     - httpMethod: GET
       pattern: "/api/v1/customers$"
@@ -290,8 +301,8 @@ spec:
 | `nfl-wallet-apikey-product`
 
 | *Backend*
-| `neuralbank-backend-api`
-| `nfl-wallet-backend-api`
+| `neuralbank-accounts-backend`, `neuralbank-transactions-backend`, `neuralbank-lending-backend`
+| `nfl-wallet-payments-backend`, `nfl-wallet-cards-backend`
 
 | *Auth Type*
 | OIDC (`issuerEndpoint` -> Keycloak)
@@ -302,16 +313,16 @@ spec:
 | basic (120/min), premium (600/min)
 
 | *MappingRules*
-| 5 rules (GET/POST customers, openapi, swagger)
-| 3 rules (GET/POST customers)
+| Accounts, transactions, and lending paths (three Backends)
+| Wallets and cards paths (two Backends)
 
 | *ActiveDoc*
 | `neuralbank-activedoc` (published)
 | `nfl-wallet-activedoc` (published)
 
-| *App Namespace*
-| `neuralbank-3scale`
-| `nfl-wallet-3scale`
+| *Workload namespace*
+| `neuralbank-stack` (Service `neuralbank-backend-svc`)
+| `nfl-wallet-prod` (Service `nfl-wallet-api`)
 
 | *CRDs Namespace*
 | `3scale-system`

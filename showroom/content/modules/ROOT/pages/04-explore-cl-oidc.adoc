@@ -112,7 +112,7 @@ oc get ratelimitpolicy -n neuralbank-stack
 oc get ratelimitpolicy neuralbank-customers-ratelimit -n neuralbank-stack -o yaml
 ----
 
-Configuration: *60 requests per minute* per authenticated user. The counter uses `auth.identity.username` to isolate rate limits per OIDC user.
+The deployed `RateLimitPolicy` is a narrow demo rule: *10 requests per minute* when the path matches `/api/customers` *and* the identity is `Javier Rodríguez Torres`. Plan tiers (60/min basic, 300/min premium) come from `PlanPolicy`, not from that RateLimitPolicy.
 
 == Step 5: Test the OIDC flow from the browser
 
@@ -122,7 +122,7 @@ Open the Neuralbank URL:
 https://neuralbank.{cluster_domain}
 ----
 
-You will be automatically redirected to the Keycloak login screen (realm `neuralbank`). Enter your workshop credentials (`{user_name}` / `{user_password}`). After authentication you are redirected back to the API.
+You will be automatically redirected to the Keycloak login screen (realm `neuralbank`). That realm does *not* use `{user_name}`. Sign in as `robert.anderson@email.com` / `Welcome123` (no exclamation mark). `{user_name}` / `{user_password}` is the *backstage* realm (Developer Hub).
 
 == Step 6: Test with curl
 
@@ -145,8 +145,8 @@ TOKEN=$(curl -s -X POST \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "client_id=neuralbank-frontend" \
-  -d "username={user_name}" \
-  -d "password={user_password}" \
+  -d "username=robert.anderson@email.com" \
+  -d "password=Welcome123" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
 
 echo "Token (first 50 chars): ${TOKEN:0:50}..."
