@@ -308,6 +308,24 @@ stringData:
   DATABASE_URL: "postgresql://zync:zync3scale@zync-postgresql.3scale-system.svc.cluster.local:5432/zync_production"
   ZYNC_DATABASE_PASSWORD: "zync3scale"
 ---
+# The operator always creates system-storage as ReadWriteMany. gp3-csi (EBS)
+# cannot provision that, so create the claim first as ReadWriteOnce. Access
+# mode is immutable; the operator's later update is rejected and this claim stays.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: system-storage
+  namespace: 3scale-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-csi
+  resources:
+    requests:
+      storage: 1Gi
+---
 # ============================================================
 # APIManager — 3scale 2.16 (external databases)
 # ============================================================
