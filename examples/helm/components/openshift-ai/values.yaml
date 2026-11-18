@@ -1,2 +1,5 @@
 # Vendored from https://gitlab.com/maximilianoPizarro/connectivity-link (openshift-ai)
 enabled: true
+llmApiKey: ""
+llmEndpoint: "https://maas-rhdp.apps.maas.redhatworkshops.io/v1"
+llmModel: "qwen3-14b"

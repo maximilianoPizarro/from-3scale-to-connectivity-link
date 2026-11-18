@@ -95,6 +95,7 @@ See the repository README section *Configuring an AI / LLM Model*.
 
 == Related UIs
 
+* xref:15-two-product-migration.adoc[Two-product migration] — Neuralbank (OIDC) + NFL Wallet (API Key) onto one shared Gateway with path isolation and Developer Hub registration
 * xref:12-migration-toolkit.adoc[Migration Toolkit] — same migration path without AI / catalog registration
 * xref:11-kuadrant-console.adoc[Kuadrant Console] — operate API Products and keys after migration
 * xref:07-run-migration.adoc[Golden Path (Developer Hub)] — Software Template → Gitea → Argo CD

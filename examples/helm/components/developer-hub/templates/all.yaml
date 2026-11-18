@@ -454,19 +454,19 @@ data:
               initialDelay: { seconds: 15 }
       locations:
         - type: url
-          target: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link/blob/{{ .Values.gitopsRevision }}/examples/helm/software-templates/templates-catalog.yaml
+          target: {{ .Values.gitopsRepoUrl }}/blob/{{ .Values.gitopsRevision }}/examples/helm/software-templates/templates-catalog.yaml
         - type: url
-          target: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link/blob/{{ .Values.gitopsRevision }}/examples/helm/components/connectivity-link-neuralbank-stack/catalog-info.yaml
+          target: {{ .Values.gitopsRepoUrl }}/blob/{{ .Values.gitopsRevision }}/examples/helm/components/neuralbank-stack/catalog-info.yaml
         - type: url
-          target: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link/blob/{{ .Values.gitopsRevision }}/examples/helm/components/connectivity-link-nfl-wallet/catalog-info.yaml
+          target: {{ .Values.gitopsRepoUrl }}/blob/{{ .Values.gitopsRevision }}/examples/helm/components/nfl-wallet/catalog-info.yaml
         - type: url
-          target: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link/blob/{{ .Values.gitopsRevision }}/examples/helm/components/connectivity-link-observability/catalog-info.yaml
+          target: {{ .Values.gitopsRepoUrl }}/blob/{{ .Values.gitopsRevision }}/examples/helm/components/observability/catalog-info.yaml
         - type: url
-          target: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link/blob/{{ .Values.gitopsRevision }}/examples/helm/components/connectivity-link-mailpit/catalog-info.yaml
+          target: {{ .Values.gitopsRepoUrl }}/blob/{{ .Values.gitopsRevision }}/examples/helm/components/mailpit/catalog-info.yaml
         - type: url
-          target: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link/blob/{{ .Values.gitopsRevision }}/examples/helm/components/gateforge-migrated/catalog-info.yaml
+          target: {{ .Values.gitopsRepoUrl }}/blob/{{ .Values.gitopsRevision }}/examples/helm/components/gateforge-migrated/catalog-info.yaml
         - type: url
-          target: https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link/blob/{{ .Values.gitopsRevision }}/examples/helm/components/3scale-catalog/catalog-info.yaml
+          target: {{ .Values.gitopsRepoUrl }}/blob/{{ .Values.gitopsRevision }}/examples/helm/components/3scale-catalog/catalog-info.yaml
       rules:
         - allow: [Component, Group, User, Resource, Location, Template, API, APIProduct, System, Domain]
     techdocs:
@@ -973,7 +973,7 @@ data:
     platformadmin: full platform engineer permissions\ng, user:default/platformadmin,
     role:default/platformengineer\ng, user:default/platformadmin, role:default/api-admin\ng,
     user:default/platformadmin, role:default/api-owner\ng, user:default/platformadmin,
-    role:default/rhdhpai-users\ng, user:default/platformadmin, role:default/template-executers\n{{ range $i := until (.Values.userCount | default 200 | int) }}g, user:default/user{{ add1 $i }}, role:default/authenticated\n{{ end }}\n#
+    role:default/rhdhpai-users\ng, user:default/platformadmin, role:default/template-executers\n{{ range $i := until (.Values.userCount | default 30 | int) }}g, user:default/user{{ add1 $i }}, role:default/authenticated\n{{ end }}\n#
     Group assignments (Keycloak groups)\n# Assign rhdh group to platformengineer role
     (has all permissions including Adoption Insights)\ng, group:default/rhdh, role:default/platformengineer\n\n#
     ==========================================================\n# 4. KUADRANT PLUGIN
@@ -1226,7 +1226,7 @@ data:
       url: "http://localhost:8321"
     inference:
       default_provider: vllm
-      default_model: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" }}
+      default_model: {{ .Values.litellmModel | default "qwen3-14b" }}
     user_data_collection:
       feedback_enabled: true
       feedback_storage: "/tmp/data/feedback"
@@ -1311,11 +1311,11 @@ metadata:
 type: Opaque
 stringData:
   VLLM_URL: {{ .Values.litellmUrl | default "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1" | quote }}
-  VLLM_API_KEY: {{ .Values.litellmApiKey | default "sk-openshift-mcp-1234" | quote }}
+  VLLM_API_KEY: {{ .Values.litellmApiKey | quote }}
   VLLM_MAX_TOKENS: "4096"
   VLLM_TLS_VERIFY: "false"
   VALIDATION_PROVIDER: "vllm"
-  VALIDATION_MODEL_NAME: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
+  VALIDATION_MODEL_NAME: {{ .Values.litellmModel | default "qwen3-14b" | quote }}
   MCP_TOKEN: "backstage"
 ---
 apiVersion: v1
@@ -1327,10 +1327,10 @@ metadata:
     rhdh.redhat.com/ext-config-sync: "true"
 type: Opaque
 stringData:
-  LIGHTSPEED_SERVER_ID: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
+  LIGHTSPEED_SERVER_ID: {{ .Values.litellmModel | default "qwen3-14b" | quote }}
   LIGHTSPEED_SERVICE_PORT: "8080"
   LIGHTSPEED_QUESTION_VALIDATION: "false"
-  LLM_SERVER_ID: {{ .Values.litellmModel | default "deepseek-r1-distill-qwen-14b" | quote }}
+  LLM_SERVER_ID: {{ .Values.litellmModel | default "qwen3-14b" | quote }}
   LLM_SERVER_URL: "http://localhost:8080"
   LLM_SERVER_TOKEN: ""
 ---

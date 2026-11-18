@@ -61,7 +61,7 @@ spec:
                 -u "$AUTH" -H "Content-Type: application/json" -d "$ORG_JSON" || true)
               echo "  developer-hub org: HTTP $CODE"
 
-              USER_COUNT={{ .Values.userCount | default 200 }}
+              USER_COUNT={{ .Values.userCount | default 30 }}
               echo "Creating $USER_COUNT users and orgs..."
               for i in $(seq 1 $USER_COUNT); do
                 U="user${i}"

@@ -97,7 +97,7 @@ spec:
         - name: GITEA_HOST
           value: "gitea-gitea.{{ .Values.clusterDomain }}"
         - name: USER_COUNT
-          value: "{{ .Values.userCount | default 200 }}"
+          value: "{{ .Values.userCount | default 30 }}"
         - name: GITEA_PASSWORD
           value: "Welcome123!"
         command:

@@ -2,8 +2,9 @@
 enabled: true
 clusterDomain: ""
 gitopsRevision: "main"
-userCount: 200
+gitopsRepoUrl: "https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link"
+userCount: 30
 litellmUrl: "http://openshift-mcp-server-litellm.openshift-lightspeed.svc:4000/v1"
-litellmModel: "deepseek-r1-distill-qwen-14b"
-litellmApiKey: "sk-openshift-mcp-1234"
+litellmModel: "qwen3-14b"
+litellmApiKey: ""
 threescaleAccessToken: "placeholder-set-in-argocd"

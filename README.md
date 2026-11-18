@@ -57,8 +57,8 @@ This repository provisions a complete migration workshop environment on OpenShif
 | **ArgoCD** | GitOps continuous delivery, auto-syncs scaffolded apps from Gitea |
 | **Tekton Pipelines** | CI/CD pipelines: git-clone → maven-build → buildah → deploy |
 | **DevSpaces** | Cloud-based developer workspaces with pre-configured devfiles |
-| **Gitea** | In-cluster Git server for scaffolded application repos (200 users) |
-| **Keycloak** | Identity provider for backstage and neuralbank realms (200 users) |
+| **Gitea** | In-cluster Git server for scaffolded application repos (`userCount`, default 30) |
+| **Keycloak** | Identity provider for backstage and neuralbank realms (`userCount`, default 30) |
 | **Istio / Gateway API** | Service mesh with Gateway, HTTPRoute per scaffolded service |
 | **Kuadrant** | API management engine: Authorino (auth) + Limitador (rate limiting) |
 | **Showroom** | Antora-based workshop lab guide |
@@ -97,7 +97,7 @@ Quarkus backend + PatternFly frontend that walks operators through connecting to
 |------|-------|
 | **Route** | `https://migration-toolkit.<cluster-domain>` |
 | **Namespace** | `migration-toolkit` |
-| **Images** | `quay.io/maximilianopizarro/migration-toolkit-rhcl-{backend,frontend}:v0.1.0` |
+| **Images** | `quay.io/maximilianopizarro/migration-toolkit-rhcl-{backend,frontend}:v0.1.0` (fork pin, 5 Aug 2026). Upstream chart is 1.0.0 — see [Demo system parameters](#demo-system-parameters-rhdp-field-content). |
 | **Defaults** | `THREESCALE_DEFAULT_URL` / `THREESCALE_DEFAULT_TOKEN` (via Helm `backend.threescale.*`) pre-fill the Connection form (`GET /api/defaults`) |
 | **Storage** | In-cluster PostgreSQL |
 | **Docs** | [Everything-is-Code/migration-toolkit-rhcl](https://github.com/Everything-is-Code/migration-toolkit-rhcl) |
@@ -212,7 +212,7 @@ User in Developer Hub
 User count is controlled by a single parameter in `values.yaml`:
 
 ```yaml
-userCount: 200  # Default: 200. Adjust as needed (30, 50, 100, 200).
+userCount: 30  # Matches a 3-worker RHDP order. Do not raise it on this form.
 ```
 
 This parameter drives all user provisioning via Helm `range` loops:
@@ -263,138 +263,22 @@ A `devspaces` OIDC client is registered in the Keycloak `backstage` realm. DevSp
 
 **Result**: Users only need a Keycloak account (`user1`…`userN`) to access Developer Hub AND DevSpaces. No OpenShift User objects or manual RBAC required.
 
-### Cluster Sizing
+### Provisioning
 
-#### Per-User Resource Footprint
+The RHDP demo system form only offers **3 workers** and these instance types. Order with that shape. `userCount` stays **30**.
 
-| Component | CPU (limit) | RAM (limit) |
-|-----------|------------|------------|
-| DevSpaces workspace (UDI + Maven cache) | 2 vCPU | 3 Gi |
-| customer-service-mcp (Quarkus) | 500m | 512 Mi |
-| neuralbank-backend (Quarkus) | 500m | 512 Mi |
-| neuralbank-frontend (httpd) | 200m | 128 Mi |
-| Istio sidecar gateways (×3) | 300m | 384 Mi |
-| **Total per user (all 3 apps + DevSpaces)** | **3.5 vCPU** | **4.5 Gi** |
-| **Total per user (all 3 apps, no DevSpaces)** | **1.5 vCPU** | **1.5 Gi** |
+| Form field | Set to |
+|------------|--------|
+| **OpenShift Worker count** | `3` |
+| **OpenShift Worker instance type** | `m5a.8xlarge` |
 
-#### Infrastructure Overhead (fixed, independent of user count)
+| Instance type | Size | For this chart |
+|---------------|------|----------------|
+| `m5a.2xlarge` | 8 vCPU / 32 Gi | Too small. The operators alone (mesh, 3scale, Developer Hub, Kuadrant, observability) will pressure the nodes. |
+| `m5a.4xlarge` | 16 vCPU / 64 Gi | Tight. Enough to sync the stack if almost nobody opens DevSpaces. |
+| `m5a.8xlarge` | 32 vCPU / 128 Gi | Use this. Three of them cover the platform plus `userCount: 30`. |
 
-| Layer | CPU (limits) | RAM (limits) | Disk |
-|-------|-------------|-------------|------|
-| OpenShift Platform (API server, etcd, ingress, monitoring) | 14 vCPU | 34 Gi | 220 GB |
-| Infrastructure Services (ArgoCD, Keycloak, Gitea, Developer Hub, Tekton, Istio, Kuadrant) | 36 vCPU | 54 Gi | 135 GB |
-| Container Images (pre-pulled) | — | — | 113 GB |
-| **Fixed total** | **50 vCPU** | **88 Gi** | **468 GB** |
-
-#### Operator / Stack Footprint (approximate steady-state)
-
-Use this table when sizing a **quickstart / demo** cluster before applying `userCount` scaling:
-
-| Stack | Namespace(s) | Approx RAM | Notes |
-|-------|--------------|------------|-------|
-| **Service Mesh (Istio ambient)** | `istio-system`, `istio-cni`, `ztunnel` | ~4 Gi | Ambient profile + gateway pods |
-| **Connectivity Link / Kuadrant** | `kuadrant-system` | ~2 Gi | Authorino + Limitador + RHCL operator |
-| **Observability** | `openshift-cluster-observability-operator`, `openshift-tempo`, OTel | ~3 Gi | Grafana, Thanos querier, Tempo, collectors |
-| **Developer Hub** | `developer-hub`, `rhdh-operator` | ~2 Gi | Backstage + dynamic plugins |
-| **3scale** | `3scale-system` | ~4 Gi | APIcast + system + zync |
-| **Migration UIs** | `gateforge`, `migration-toolkit`, `custom-rhcl-console` | ~1.5 Gi | APIShift + Migration Toolkit + console plugin |
-| **Identity / SCM** | `rhbk-operator`, `gitea` | ~3 Gi | Keycloak + Gitea + DB |
-
-#### Quickstart Cluster Profiles (control plane + workers)
-
-| Profile | Users | Control plane | Workers | Worker size (each) | When to use |
-|---------|-------|---------------|---------|--------------------|-------------|
-| **Minimum viable** | ~30 | 3 masters | **3** | 16 vCPU / 64 Gi | Smoke test / PoC without full DevSpaces load |
-| **Standard demo** | ~100 | 3 masters | **6** | 16–32 vCPU / 64–128 Gi | Side-by-side 3scale + CL + migration UIs |
-| **Full workshop** | 200 | 3 masters (**16 vCPU / 64 Gi**) | **8–12** | 32 vCPU / 128 Gi (m5.8xlarge) | RHDP workshop with concurrent DevSpaces |
-
-#### Scaling at 200 Users — Key Considerations
-
-At 200 users the following platform components become scale-sensitive:
-
-| Component | Impact at 200 users | Recommendation |
-|-----------|-------------------|----------------|
-| **ArgoCD Application Controller** | 200 ApplicationSets + up to 600 Applications | Increase memory limit to 8 Gi; consider `--sharding-algorithm round-robin` with 2 replicas |
-| **ArgoCD Repo Server** | Clones up to 600 repos | Scale to 2 replicas, increase CPU/memory limits |
-| **etcd / API Server** | 400+ namespaces, 1200+ RoleBindings, 600+ ArgoCD Applications | Ensure control plane nodes have ≥16 Gi RAM and fast SSD storage |
-| **Keycloak** | 200 user sessions | Scale to 2 replicas if login storms expected |
-| **Gitea** | 200 users, 200 orgs, up to 600 repos | Monitor PostgreSQL/SQLite I/O; consider external DB for >100 users |
-
-#### Scaling Profiles
-
-| Users | User Resources | Total (infra + users) | Recommended Workers | Instance Type |
-|-------|---------------|----------------------|-------------------|---------------|
-| **30** | 105 vCPU / 135 Gi | 155 vCPU / 223 Gi | 3 nodes | m5.8xlarge (32 vCPU, 128 Gi) |
-| **50** | 175 vCPU / 225 Gi | 225 vCPU / 313 Gi | 4 nodes | m5.8xlarge |
-| **100** | 350 vCPU / 450 Gi | 400 vCPU / 538 Gi | 7 nodes | m5.8xlarge |
-| **100** (no DevSpaces) | 150 vCPU / 150 Gi | 200 vCPU / 238 Gi | 4 nodes | m5.8xlarge |
-| **200** | 700 vCPU / 900 Gi | 750 vCPU / 988 Gi | **12 nodes** | **m5.8xlarge (32 vCPU, 128 Gi)** |
-| **200** (no DevSpaces) | 300 vCPU / 300 Gi | 350 vCPU / 388 Gi | **6 nodes** | **m5.8xlarge** |
-| **200** (30% DevSpaces concurrent) | 420 vCPU / 480 Gi | 470 vCPU / 568 Gi | **8 nodes** | **m5.8xlarge** |
-
-> **Recommended for 200 users**: **8–12 worker nodes** (m5.8xlarge: 32 vCPU, 128 Gi each), depending on DevSpaces concurrency. In practice, not all 200 users run DevSpaces workspaces simultaneously — with 30% concurrent DevSpaces usage, 8 workers suffice. If all users deploy all 3 templates AND use DevSpaces concurrently, scale to 12 workers.
-
-> **Note**: Without DevSpaces (users only view topology/CI/CD in Developer Hub), per-user footprint drops to **1.5 vCPU / 1.5 Gi** — enabling 200 users on a 6-worker cluster.
-
-Control plane: 3 masters with **16 vCPU, 64 Gi RAM, 200 GB SSD** each (upgraded from standard 8 vCPU / 32 Gi for 200-user deployments due to etcd and API server load from 400+ namespaces).
-
-> **Warning**: Single-node (SNO) deployments are not supported for >30 users. Standard 3-master control plane with 8 vCPU / 32 Gi is sufficient up to 100 users; for 200 users, upgrade masters to 16 vCPU / 64 Gi.
-
-#### RHDP Provisioning (KubeVirt / OpenShift CNV)
-
-When ordering from RHDP, the provisioning form exposes three parameters for worker nodes:
-
-| Parameter | Description |
-|-----------|-------------|
-| **OpenShift Worker count** | Number of KubeVirt worker VMs to create |
-| **OpenShift Worker memory** | Guest memory per worker VM |
-| **OpenShift Worker CPU** | vCPU cores per worker VM |
-
-##### Resource Quota Considerations
-
-RHDP environments have memory quotas applied to the sandbox namespace. The total quota covers all resources: control planes, bastion, workers, and system pods. The infrastructure base (control planes + bastion + overhead) consumes a significant portion of the quota, so plan worker sizing carefully to avoid exceeding the limit.
-
-> **Important**: Exceeding the namespace quota causes worker VM creation to fail. The error manifests as the `virt-launcher` pod being forbidden, and the provisioning task exhausts all retries. Always verify available quota before ordering.
-
-##### Recommended RHDP Values
-
-| Users | Worker count | Worker memory | Worker CPU | Total worker resources |
-|-------|-------------|--------------|-----------|----------------------|
-| **100** | **4** | **128Gi** | **32** | 512Gi RAM / 128 vCPU |
-| **100** (conservative) | **5** | **64Gi** | **16** | 320Gi RAM / 80 vCPU |
-| **200** | **6** | **128Gi** | **32** | 768Gi RAM / 192 vCPU |
-| **200** (conservative) | **8** | **64Gi** | **16** | 512Gi RAM / 128 vCPU |
-
-> **Important**: The maximum number of 128Gi workers that fit under the sandbox quota is **6** (not 7). Each worker VM's virt-launcher pod requests ~257Gi (128Gi guest + overhead), and the infrastructure base (3 control-plane nodes + bastion + system pods) consumes ~1,037Gi of the 2,000Gi quota. Requesting a 7th 128Gi worker will fail with `exceeded quota: sandbox-quota`.
->
-> **Tip**: When in doubt, start with fewer large workers rather than many small ones, and verify quota availability before scaling up.
-
-##### Provisioning Time
-
-| Configuration | Workers | Time (approx.) |
-|---------------|---------|----------------|
-| 200 users, 128Gi workers | 6 nodes | ~43 minutes |
-
-> Measured on RHDP KubeVirt environment. Time includes worker VM creation, node join, operator installation, and ArgoCD initial sync of all components.
-
-##### Sizing Rationale
-
-| Component | Per-user footprint | 100 users (50% concurrent) | 200 users (50% concurrent) |
-|-----------|-------------------|---------------------------|---------------------------|
-| DevSpaces workspaces | 2–4Gi RAM, 1–2 vCPU | ~200Gi / 100 vCPU | ~400Gi / 200 vCPU |
-| Scaffolded apps (3 per user) | 1.5Gi RAM, 1.5 vCPU | ~75Gi / 75 vCPU | ~150Gi / 150 vCPU |
-| Infrastructure (fixed) | — | ~100–150Gi / 30–50 vCPU | ~100–150Gi / 30–50 vCPU |
-| **Total worker requirement** | — | **~375–425Gi** | **~650–700Gi** |
-
-Adjust `userCount` in `values.yaml` to match:
-
-```yaml
-# For 100 users
-userCount: 100
-
-# For 200 users
-userCount: 200
-```
+Leave `userCount: 30` in `examples/helm/values.yaml`. This form cannot add workers, so do not raise the user count.
 
 ## Configuring an AI / LLM Model (Helm values)
 
@@ -473,6 +357,66 @@ Connectivity Link runs on **Istio Gateway API**. When browser clients (Swagger U
 | [examples/ansible/](examples/ansible/) | You need wait-for-ready, secret generation, API calls, or conditional logic |
 
 **Install path (Helm):** Point RHDP / Argo CD at [`examples/helm/`](examples/helm/). That root chart is an **App-of-Apps**: it creates child `Application` resources for the connectivity-link stack (operators, namespaces, Developer Hub, 3scale demos, showroom, migration UIs). Inside the same tree, [`components/applicationsets`](examples/helm/components/applicationsets/) (wired as `connectivityLink.apps` id `connectivity-link-applicationsets` in `values.yaml`) deploys the Argo CD **ApplicationSet** that watches Gitea and spins up per-user Applications after Golden Path scaffolds land in Git. You do not install that ApplicationSet by hand — enable the component and sync the root chart.
+
+### Demo system parameters (RHDP Field Content)
+
+Order the catalog item that runs `ocp4_workload_field_content`. The role only creates the root Argo CD Application; it does not wait for sync. Helm lint of `examples/helm` passes. Set these on the order form.
+
+| Demo system parameter | Value |
+|-----------------------|-------|
+| `ocp4_workload_field_content_gitops_repo_url` | `https://github.com/maximilianoPizarro/from-3scale-to-connectivity-link.git` (your fork, if you forked) |
+| `ocp4_workload_field_content_gitops_repo_revision` | `main` or a release tag (`v1.1.2`) |
+| `ocp4_workload_field_content_gitops_repo_path` | `examples/helm` |
+
+RHDP injects these automatically from the cluster. The chart default is the placeholder `apps.cluster.example.com`, not a previous lab domain.
+
+| Injected Helm key | Source |
+|-------------------|--------|
+| `deployer.domain` | `openshift_cluster_ingress_domain` |
+| `deployer.apiUrl` | `openshift_api_url` |
+
+Put the rest under `ocp4_workload_field_content_helm_values` (merged over the chart). If you skip them, Git defaults apply.
+
+| Helm value | Git default | What to set |
+|------------|-------------|-------------|
+| `userCount` | `30` | Leave `30`. This demo system order is 3 workers; do not raise the count. |
+| `gitops.repoUrl` | this GitHub repo | Same URL as the order. Required if you forked; child Applications clone this URL. |
+| `gitops.revision` | `main` | Same revision as the order. |
+| `gitops.basePath` | `examples/helm` | Leave as-is. |
+| `components.showroom.content.repoUrl` | this GitHub repo | Same URL if you forked, so the in-cluster showroom builds your content. |
+| `components.showroom.content.repoRef` | `main` | Same revision as `gitops.revision`. |
+| `litemaas.apiUrl` | `https://maas-rhdp.apps.maas.redhatworkshops.io/v1` | Keep for RHDP MaaS, or your LiteLLM `/v1` base. |
+| `litemaas.model` | `qwen3-14b` | Model id that exists on that endpoint. |
+| `litemaas.apiKey` | empty | **Required** for Lightspeed, Developer Hub, and APIShift AI. RHDP can inject it when MaaS is ordered with the demo. Never commit the key. |
+| `workshopRegistration.adminToken` | `workshop-admin-2024` | Rotate for any shared demo. |
+| `workshopRegistration.keycloakAdminPassword` | empty | RHBK `admin` password so the registration portal can create users. If unknown at order time, patch after RHBK is up. |
+| `connectivityLink.threescaleAccessToken` | `placeholder-set-in-argocd` | 3scale Admin API token. Patch after the 3scale admin route exists; Developer Hub and APIShift discovery stay inert until then. |
+
+Manual install (no RHDP inject): run `./update-cluster-domain.sh apps.<your-cluster-domain>` and push before Argo CD syncs. That rewrites `deployer.domain` and static docs that cannot use Helm.
+
+After the first sync, these stay placeholders until you patch the live Argo CD Application (do not commit secrets):
+
+| Placeholder | Where |
+|-------------|--------|
+| `threescale.adminApi.accessToken` | `connectivityLink.helmApps` id `apishift` |
+| `developerHub.scaffolderToken` | same APIShift app (`secrets-rhdh` / `BACKEND_SECRET`) |
+| `connectivityLink.argocdMcpToken` | MCP gateway Argo CD token (optional) |
+
+`connectivityLink.operators.channel` (`stable-4.20`) is **not** read by the operator templates. Subscriptions install the **current** CSV of their channel (no `startingCSV`), so a fresh catalog is not blocked on a removed z-stream. Channels: RHDH `fast`, Dev Spaces `stable`, RHBK `stable-v26.4`, OpenTelemetry `stable`, 3scale `threescale-2.16`.
+
+`deployer.domain` in Git is `apps.cluster.example.com`. RHDP replaces it at order time. Do not commit a previous cluster's ingress domain.
+
+#### Migration Toolkit version (checked before instantiate)
+
+The workshop pin is **not** the current upstream chart.
+
+| | This repo (`examples/helm/values.yaml`) | Upstream [Everything-is-Code/migration-toolkit-rhcl](https://github.com/Everything-is-Code/migration-toolkit-rhcl) `main` |
+|--|--|--|
+| Helm source | `github.com/maximilianoPizarro/migration-toolkit-rhcl` `helm/migration-toolkit-rhcl` @ `main` | same path, chart **1.0.0** (21 Sep 2026, `5f9e0e5`) |
+| Images | `quay.io/maximilianopizarro/migration-toolkit-rhcl-{backend,frontend}:v0.1.0` (exists; built 5 Aug 2026, `148088c`) | `quay.io/everythingascode/migration-toolkit-rhcl-*:v0.1.0` is what the chart file says, but **that tag is not on Quay**. `latest` is the 21 Sep 2026 image. |
+| Postgres | chart default password `migrationtool` | chart 1.0.0 requires `postgresql.password` (empty default; breaking vs 0.1.0) |
+
+Leave the fork pin for this instantiate. Pointing `repoURL` at Everything-is-Code while keeping image tag `v0.1.0` fails the pull. A later bump needs image tag `latest` (or digest of `5f9e0e5`) **and** an explicit Postgres password.
 
 ### Quick Start
 

@@ -567,10 +567,10 @@ lightspeed:
 # ============================================================
 # User Scaling — single parameter controls all user provisioning
 # Keycloak users, DevSpaces namespaces, RBAC policy, workshop registration
-# Recommended: 30 (small), 50 (medium), 100 (large), 200 (extra-large)
-# See README.md "Cluster Sizing" for node/resource recommendations
+# Default 30 matches an RHDP order of 3 workers (m5a.8xlarge).
+# See README.md "Provisioning".
 # ============================================================
-userCount: 200
+userCount: 30
 
 # ============================================================
 # Workshop Registration Portal
@@ -624,7 +624,9 @@ components:
 # Values injected by field content workload (do not modify)
 # ============================================================
 deployer:
-  domain: "apps.cluster-lfm7v.dynamic2.redhatworkshops.io"
+  # Neutral default. RHDP Field Content overwrites this with the live ingress domain.
+  # Manual installs: ./update-cluster-domain.sh apps.<cluster-domain>
+  domain: "apps.cluster.example.com"
   apiUrl: ""
 
 fieldContent:

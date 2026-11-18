@@ -184,7 +184,7 @@ spec:
                   ADMIN_USER="gitea_admin"
                   ADMIN_PASS="openshift"
                   DOMAIN="{{ $.Values.clusterDomain }}"
-                  USER_COUNT={{ $.Values.userCount | default 200 }}
+                  USER_COUNT={{ $.Values.userCount | default 30 }}
                   KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
                   KUBE_API="https://kubernetes.default.svc"
                   CA=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -291,7 +291,7 @@ spec:
                   echo "Webhook sync complete."
       backoffLimit: 1
 ---
-{{- $userCount := .Values.userCount | default 200 | int }}
+{{- $userCount := .Values.userCount | default 30 | int }}
 ---
 apiVersion: v1
 kind: ConfigMap

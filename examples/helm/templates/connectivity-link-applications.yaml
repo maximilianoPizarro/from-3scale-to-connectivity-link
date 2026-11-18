@@ -184,17 +184,17 @@ spec:
     {{- if eq .path "openshift-gitops" }}
     helm:
       valuesObject:
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
         clusterDomain: {{ $domain }}
     {{- else if eq .path "namespaces" }}
     helm:
       valuesObject:
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "devspaces" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "operators" }}
     helm:
       valuesObject:
@@ -206,6 +206,13 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
+    {{- else if eq .path "openshift-ai" }}
+    helm:
+      valuesObject:
+        clusterDomain: {{ $domain }}
+        llmApiKey: {{ $llmKey | quote }}
+        llmEndpoint: {{ $llmEndpoint | quote }}
+        llmModel: {{ $llmModel | quote }}
     {{- else if eq .path "openshift-lightspeed" }}
     helm:
       valuesObject:
@@ -217,7 +224,7 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "mcp-gateway" }}
     helm:
       valuesObject:
@@ -227,23 +234,24 @@ spec:
     {{- else if eq .path "oauth-users" }}
     helm:
       valuesObject:
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "applicationsets" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "gitea" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
     {{- else if eq .path "developer-hub" }}
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
+        gitopsRepoUrl: {{ $.Values.gitops.repoUrl | trimSuffix ".git" | quote }}
         litellmModel: {{ $llmModel | quote }}
         litellmApiKey: {{ $llmKey | quote }}
         threescaleAccessToken: {{ $.Values.connectivityLink.threescaleAccessToken | default "placeholder-set-in-argocd" | quote }}
@@ -260,7 +268,7 @@ spec:
           domain: {{ $domain }}
         registration:
           enabled: true
-          maxUsers: {{ $.Values.userCount | default 200 }}
+          maxUsers: {{ $.Values.userCount | default 30 }}
           adminToken: {{ $.Values.workshopRegistration.adminToken | default "workshop-admin-2024" | quote }}
         keycloak:
           url: {{ printf "https://rhbk.%s" $domain | quote }}
@@ -334,7 +342,7 @@ spec:
     helm:
       valuesObject:
         clusterDomain: {{ $domain }}
-        userCount: {{ $.Values.userCount | default 200 }}
+        userCount: {{ $.Values.userCount | default 30 }}
         gitopsRevision: {{ $.Values.gitops.revision }}
     {{- else if eq .path "apicast-scenarios" }}
     helm:

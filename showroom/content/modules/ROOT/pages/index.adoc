@@ -44,6 +44,8 @@ image::migration-flow.png["3scale to Connectivity Link — Developer Hub Golden 
 
 TIP: Run at least the *Golden Path* (module 7) in the lab. Use *Toolkit* or *APIShift* when you want a GUI against real 3scale Admin API data; use *Kuadrant Console* after policies exist.
 
+Worked example — migrate *two* Products (Neuralbank OIDC + NFL Wallet API Key) onto *one* shared Gateway with path isolation: xref:15-two-product-migration.adoc[15. Two-product migration].
+
 == What you will learn
 
 * Name the *four migration strategies* and when to use each
@@ -52,6 +54,7 @@ TIP: Run at least the *Golden Path* (module 7) in the lab. Use *Toolkit* or *API
 * Inspect 3scale vs Connectivity Link apps (OIDC + API Key) and compare side by side
 * Execute the *Developer Hub Golden Path* Software Template
 * Practice *Kuadrant Console*, *Migration Toolkit*, and *APIShift*
+* Migrate two products onto a shared Gateway with RHCL path isolation (xref:15-two-product-migration.adoc[module 15])
 * Verify the migrated application; *(optional)* provision a RHEL VM behind Connectivity Link
 
 == Pre-deployed scenarios
