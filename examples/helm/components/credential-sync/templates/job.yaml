@@ -78,6 +78,19 @@ spec:
                 -p "{\"stringData\":{\"THREESCALE_DEFAULT_TOKEN\":\"${TOKEN}\"}}"
               oc rollout restart deploy/apishift-backend -n gateforge
               oc rollout restart deploy/migration-toolkit-rhcl-backend -n migration-toolkit
+              # Developer Hub caches a failed OpenID discovery for the life of the process.
+              # Restart it only after Keycloak answers, so login is not stuck on a startup 503.
+              META="$(oc get secret secrets-rhdh -n developer-hub -o jsonpath='{.data.KEYCLOAK_METADATA_URL}' | base64 -d)"
+              for i in $(seq 1 30); do
+                code="$(curl -sk -o /dev/null -w '%{http_code}' "$META" || true)"
+                if [ "$code" = "200" ]; then
+                  break
+                fi
+                echo "Keycloak discovery returned ${code:-none} (${i}/30)"
+                sleep 10
+              done
+              oc rollout restart deploy/backstage-developer-hub -n developer-hub
               oc rollout status deploy/apishift-backend -n gateforge --timeout=300s
               oc rollout status deploy/migration-toolkit-rhcl-backend -n migration-toolkit --timeout=300s
+              oc rollout status deploy/backstage-developer-hub -n developer-hub --timeout=600s
               echo "Credential sync finished"
