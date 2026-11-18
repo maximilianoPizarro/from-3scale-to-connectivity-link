@@ -344,6 +344,6 @@ Day-2 key and product operations: xref:11-kuadrant-console.adoc[Kuadrant Console
 
 == Next
 
-* xref:12-migration-toolkit.adoc[12. Migration Toolkit] — guided discovery without AI / catalog
-* xref:13-apishift-gateforge.adoc[13. APIShift] — same path + AI + Developer Hub registration
-* xref:08-verify-test.adoc[8. Verify and Test] — curl / Swagger checks after apply
+* xref:12-migration-toolkit.adoc[9. Migration Toolkit] — guided discovery without AI / catalog
+* xref:13-apishift-gateforge.adoc[10. APIShift] — same path + AI + Developer Hub registration
+* xref:08-verify-test.adoc[12. Verify and Test] — curl / Swagger checks after apply

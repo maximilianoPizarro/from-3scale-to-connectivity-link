@@ -83,7 +83,7 @@ Docs / chart: https://github.com/Everything-is-Code/migration-toolkit-rhcl
 
 == Next
 
-. Worked example with *two* Products (OIDC + API Key) on one shared Gateway: xref:15-two-product-migration.adoc[15. Two-product migration].
-. Validate generated policies with xref:08-verify-test.adoc[Verify and Test].
+. Worked example with *two* Products (OIDC + API Key) on one shared Gateway: xref:15-two-product-migration.adoc[11. Two-product migration].
+. Validate generated policies with xref:08-verify-test.adoc[12. Verify and Test].
 . Operate day-2 APIs with xref:11-kuadrant-console.adoc[Kuadrant Console].
 . Or run the same migration with AI + Developer Hub registration via xref:13-apishift-gateforge.adoc[APIShift].

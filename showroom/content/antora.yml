@@ -6,7 +6,11 @@ asciidoc:
     # Must live here so generated <img> uses absolute paths (playbook-only imagesdir was ignored → relative _images/ broke at URL /).
     imagesdir: /modules/_images
     cluster_domain: apps.cluster.example.com@
-    user_name: user1@
-    user_password: Welcome123!@
+    # Placeholders for the public GitHub Pages build. The in-cluster showroom
+    # overrides these from /user_data/user_data.yml (per-user registration).
+    user_name: "{user}@"
+    user_password: "{password}@"
+    neuralbank_user: "{neuralbank-user}@"
+    neuralbank_password: "{neuralbank-password}@"
 nav:
   - modules/ROOT/nav.adoc

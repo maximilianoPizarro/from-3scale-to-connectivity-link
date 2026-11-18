@@ -25,13 +25,13 @@ This module introduces the key concepts of both products and explains why organi
 | Software Template → Git → Argo CD → Kuadrant. Self-service GitOps; primary hands-on path in this workshop (xref:07-run-migration.adoc[module 7]).
 
 | *Kuadrant Console*
-| Operate API Products, keys, traffic, and Swagger after (or alongside) migration (xref:11-kuadrant-console.adoc[module 11]).
+| Operate API Products, keys, traffic, and Swagger after (or alongside) migration (xref:11-kuadrant-console.adoc[module 8]).
 
 | *Migration Toolkit*
-| Guided discovery from a live 3scale Admin API into Connectivity Link config (xref:12-migration-toolkit.adoc[module 12]).
+| Guided discovery from a live 3scale Admin API into Connectivity Link config (xref:12-migration-toolkit.adoc[module 9]).
 
 | *APIShift*
-| Same migration core as the Toolkit + AI assist + register into Developer Hub (xref:13-apishift-gateforge.adoc[module 13]).
+| Same migration core as the Toolkit + AI assist + register into Developer Hub (xref:13-apishift-gateforge.adoc[module 10]).
 |===
 
 You will *explore* source and target first (modules 3–6), then *execute* the Golden Path and the UIs. See the xref:index.adoc[Home] strategies table for the full first-impression map.
@@ -185,6 +185,7 @@ Two smaller tables keep the map readable. Skim the *So what* bullets if you only
 . *Integrated developer experience*: Kuadrant's Backstage plugin surfaces APIProducts, plans, and key management directly inside Developer Hub.
 . *Cloud-native observability*: Envoy/Istio metrics feed Prometheus and Grafana natively; OpenTelemetry and Kiali provide end-to-end tracing.
 
+[#not-migrated]
 == What this workshop does not cover
 
 Connectivity Link is not a drop-in replacement for every 3scale feature. This lab focuses on *routing*, *authentication*, *rate limiting / plans*, *GitOps*, and *day-2 UIs*. It does *not* provide a 1:1 path for:

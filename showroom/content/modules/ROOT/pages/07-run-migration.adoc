@@ -386,4 +386,4 @@ You just ran the *Golden Path*. The same Connectivity Link resource types can al
 
 == Next
 
-In the next module you will xref:08-verify-test.adoc[verify the migrated application] and compare it with the 3scale original.
+Continue with xref:11-kuadrant-console.adoc[8. Kuadrant Console]. After the strategy modules, xref:08-verify-test.adoc[12. Verify and Test] checks the Golden Path application against the 3scale original.

@@ -240,16 +240,16 @@ Same set as the xref:index.adoc[Home] first impression — pick by team workflow
 | xref:07-run-migration.adoc[7. Golden Path]
 
 | *Kuadrant Console*
-| Day-2 after policies exist (products, keys, traffic, Swagger)
-| xref:11-kuadrant-console.adoc[11. Kuadrant Console]
+| Policies already exist and you need keys, traffic, and Swagger. In OpenShift Console the menu is *Connectivity Link*.
+| xref:11-kuadrant-console.adoc[8. Kuadrant Console]
 
 | *Migration Toolkit*
-| You want a guided wizard against a live 3scale Admin API (no AI)
-| xref:12-migration-toolkit.adoc[12. Migration Toolkit]
+| 3scale is in production and you want a guided import. No LLM call; the mapping stays in the cluster.
+| xref:12-migration-toolkit.adoc[9. Migration Toolkit]
 
 | *APIShift*
-| Same migration as the toolkit, plus AI assist and catalog registration
-| xref:13-apishift-gateforge.adoc[13. APIShift]
+| Same import as the Toolkit, plus an LLM draft and Developer Hub registration. Review the diff before sync; prompts leave the cluster to LiteMaaS.
+| xref:13-apishift-gateforge.adoc[10. APIShift]
 |===
 
 == Observability comparison

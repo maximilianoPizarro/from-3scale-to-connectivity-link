@@ -122,7 +122,7 @@ Open the Neuralbank URL:
 https://neuralbank.{cluster_domain}
 ----
 
-You will be automatically redirected to the Keycloak login screen (realm `neuralbank`). That realm does *not* use `{user_name}`. Sign in as `robert.anderson@email.com` / `Welcome123` (no exclamation mark). `{user_name}` / `{user_password}` is the *backstage* realm (Developer Hub).
+You will be automatically redirected to the Keycloak login screen (realm `neuralbank`). That realm does *not* use `{user_name}`. Sign in as `{neuralbank_user}` / `{neuralbank_password}` (no exclamation mark). `{user_name}` / `{user_password}` is the *backstage* realm (Developer Hub). On GitHub Pages those values stay as placeholders; the deployed showroom fills them in.
 
 == Step 6: Test with curl
 
@@ -138,15 +138,15 @@ Expected: `HTTP Status: 302` (redirect to Keycloak).
 
 === 6.2 — Get a Bearer Token from Keycloak
 
-[source,bash]
+[source,bash,subs=attributes+]
 ----
 TOKEN=$(curl -s -X POST \
   "https://rhbk.{cluster_domain}/realms/neuralbank/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password" \
   -d "client_id=neuralbank-frontend" \
-  -d "username=robert.anderson@email.com" \
-  -d "password=Welcome123" \
+  -d "username={neuralbank_user}" \
+  -d "password={neuralbank_password}" \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
 
 echo "Token (first 50 chars): ${TOKEN:0:50}..."

@@ -3,19 +3,108 @@
 *Migration Workshop — four strategies to Connectivity Link · Powered by https://kuadrant.io[Kuadrant]*
 
 [.lead]
-*Total duration*: ~3–3.5 hours · strategies below are the *core story* · +~30 min optional VM lab
+*Core session*: about *2 h 50 min* (modules 0–7, then verify and summary). Adding the three strategy consoles is about *+45 min* (*~3 h 35 min*). The two-product example is *+25 min*. The VM lab is *+20 min* and optional. Troubleshooting is a reference, not scheduled time.
 
 == Welcome
+
+This workshop is for *platform engineers, application architects, and SREs* who already use OpenShift. You should know namespaces, Routes, and what an Argo CD sync does. Gateway API and Istio are introduced in the lab; you do not need prior Kuadrant experience.
 
 Migrate API management from *Red Hat 3scale API Management* to *Red Hat Connectivity Link* (Kuadrant) with a clear set of strategies — not a single button.
 
 *Why migrate (business view):* teams want APIs that ship with the same GitOps cadence as the rest of the platform — less dual admin planes, clearer ownership for platform vs product teams, and a path that does not lock gateway policy into a separate CMS. Connectivity Link puts auth, rate limits, and discovery next to the workloads on Gateway API.
 
-The workshop ships *four complementary approaches*. Explore pre-deployed 3scale and Connectivity Link apps side by side, then pick the path that fits your team.
+The workshop ships *four complementary approaches*. Explore pre-deployed 3scale and Connectivity Link apps side by side, then pick the path that fits the situation in the decision table below.
 
-NOTE: URLs that contain `\{cluster_domain}` or `apps.cluster.example.com` are *placeholders*. On a *deployed showroom* they are replaced automatically with your cluster ingress domain. On https://maximilianopizarro.github.io/from-3scale-to-connectivity-link/[GitHub Pages] they remain examples and will not resolve — use this site as documentation preview only.
+NOTE: On https://maximilianopizarro.github.io/from-3scale-to-connectivity-link/[GitHub Pages], `\{cluster_domain}` stays a placeholder and `\{user_name}` / `\{user_password}` render as `\{user}` / `\{password}`. On the *deployed showroom* those attributes are filled in for your lab user and cluster. They are disposable accounts for this environment. Do not reuse them elsewhere. For admin console URLs and the remaining secrets, run `./scripts/get-credentials.sh` from a machine with `oc`.
 
-IMPORTANT: Workshop usernames and passwords are *ephemeral lab credentials*. They exist only for this disposable environment. Do not reuse the same password patterns or share production secrets in training materials.
+== How long
+
+The menu order *is* the reading order. Numbers below match the left navigation. Page URLs keep earlier filenames (`11-kuadrant-console`, `13-apishift-gateforge`, and so on) so existing links still open.
+
+[cols="1,4,2,2",options="header"]
+|===
+| # | Module | Time | In the core session?
+
+| 0
+| xref:00-prerequisites.adoc[Prerequisites & Sizing]
+| 10 min
+| Yes
+
+| 1
+| xref:01-migration-overview.adoc[Migration Overview]
+| 15 min
+| Yes
+
+| 2
+| xref:02-architecture.adoc[Architecture]
+| 15 min
+| Yes
+
+| 3
+| xref:03-explore-3scale.adoc[Explore 3scale]
+| 20 min
+| Yes
+
+| 4
+| xref:04-explore-cl-oidc.adoc[Connectivity Link: OIDC]
+| 20 min
+| Yes
+
+| 5
+| xref:05-explore-cl-apikey.adoc[Connectivity Link: API Key]
+| 20 min
+| Yes
+
+| 6
+| xref:06-comparison.adoc[Side-by-Side Comparison]
+| 15 min
+| Yes
+
+| 7
+| xref:07-run-migration.adoc[Golden Path (Developer Hub)]
+| 25 min
+| Yes — do this one in the lab
+
+| 8
+| xref:11-kuadrant-console.adoc[Kuadrant Console]
+| 15 min
+| Add for the full strategy set
+
+| 9
+| xref:12-migration-toolkit.adoc[Migration Toolkit]
+| 15 min
+| Add for the full strategy set
+
+| 10
+| xref:13-apishift-gateforge.adoc[APIShift]
+| 15 min
+| Add for the full strategy set
+
+| 11
+| xref:15-two-product-migration.adoc[Two-product migration]
+| 25 min
+| Extra worked example
+
+| 12
+| xref:08-verify-test.adoc[Verify and Test]
+| 20 min
+| Yes
+
+| 13
+| xref:09-deploy-vm-apikey.adoc[Deploy VM (API Key)]
+| 20 min
+| Optional
+
+| 14
+| xref:10-summary.adoc[Summary]
+| 10 min
+| Yes
+
+| 15
+| xref:14-troubleshooting.adoc[Troubleshooting]
+| 10 min
+| Reference when something breaks
+|===
 
 == Migration strategies (first impression)
 
@@ -30,21 +119,47 @@ image::migration-flow.png["3scale to Connectivity Link — Developer Hub Golden 
 | xref:07-run-migration.adoc[7. Golden Path]
 
 | *Kuadrant Console*
-| Day-2 operate Connectivity Link in OpenShift Console: API Products, keys, traffic, Grafana / Swagger.
-| xref:11-kuadrant-console.adoc[11. Kuadrant Console]
+| Day-2 operate Connectivity Link in OpenShift Console: API Products, keys, traffic, Grafana / Swagger. The console menu item is *Connectivity Link* (plugin `custom-rhcl-console`).
+| xref:11-kuadrant-console.adoc[8. Kuadrant Console]
 
 | *Migration Toolkit*
-| Guided wizard against a live 3scale Admin API — discover Products / Plans and produce CL config (no AI).
-| xref:12-migration-toolkit.adoc[12. Migration Toolkit]
+| Guided wizard against a live 3scale Admin API — discover Products / Plans and produce Connectivity Link config. No LLM call.
+| xref:12-migration-toolkit.adoc[9. Migration Toolkit]
 
 | *APIShift*
-| Same migration core as the Toolkit, plus *AI assist* (`litemaas`) and Developer Hub catalog registration.
-| xref:13-apishift-gateforge.adoc[13. APIShift]
+| Same migration core as the Toolkit, plus an LLM draft (`litemaas`) and Developer Hub catalog registration. The Route host is still `gateforge-gateforge` (chart name).
+| xref:13-apishift-gateforge.adoc[10. APIShift]
 |===
 
-TIP: Run at least the *Golden Path* (module 7) in the lab. Use *Toolkit* or *APIShift* when you want a GUI against real 3scale Admin API data; use *Kuadrant Console* after policies exist.
+=== Which strategy
 
-Worked example — migrate *two* Products (Neuralbank OIDC + NFL Wallet API Key) onto *one* shared Gateway with path isolation: xref:15-two-product-migration.adoc[15. Two-product migration].
+[cols="3,2",options="header"]
+|===
+| Situation | Start here
+
+| A handful of APIs, and the team already delivers through GitOps
+| xref:07-run-migration.adoc[Golden Path]
+
+| 3scale is in production and you want a guided import of Products, plans, and auth
+| xref:12-migration-toolkit.adoc[Migration Toolkit]
+
+| Same import, and you also want a first draft from a model plus the API registered in Developer Hub
+| xref:13-apishift-gateforge.adoc[APIShift]
+
+| Policies already exist; you need keys, traffic, and Swagger day to day
+| xref:11-kuadrant-console.adoc[Kuadrant Console]
+
+| Two products (OIDC and API key) should share one hostname, split by path
+| xref:15-two-product-migration.adoc[Two-product migration] after Toolkit or APIShift
+|===
+
+*Toolkit and APIShift* share the migration core. Use the Toolkit when the mapping must stay inside the cluster and a person reviews every step in the wizard. Use APIShift when the Product is large or unfamiliar and a draft HTTPRoute / policy plus a catalog entity saves time.
+
+The model can invent paths or policy fields. Read the diff before Argo CD syncs it. Product metadata and the prompt leave the cluster to the workshop LiteMaaS endpoint. Do not point APIShift at a 3scale token you cannot rotate. The Toolkit does not call the LLM.
+
+TIP: In the lab, run at least the *Golden Path* (module 7). Use Toolkit or APIShift when you want a GUI against the live 3scale Admin API. Use Kuadrant Console after policies exist.
+
+Worked example — migrate *two* Products (Neuralbank OIDC + NFL Wallet API Key) onto *one* shared Gateway with path isolation: xref:15-two-product-migration.adoc[11. Two-product migration].
 
 == What you will learn
 
@@ -54,7 +169,7 @@ Worked example — migrate *two* Products (Neuralbank OIDC + NFL Wallet API Key)
 * Inspect 3scale vs Connectivity Link apps (OIDC + API Key) and compare side by side
 * Execute the *Developer Hub Golden Path* Software Template
 * Practice *Kuadrant Console*, *Migration Toolkit*, and *APIShift*
-* Migrate two products onto a shared Gateway with RHCL path isolation (xref:15-two-product-migration.adoc[module 15])
+* Migrate two products onto a shared Gateway with RHCL path isolation (xref:15-two-product-migration.adoc[module 11])
 * Verify the migrated application; *(optional)* provision a RHEL VM behind Connectivity Link
 
 == Pre-deployed scenarios
@@ -74,28 +189,30 @@ Worked example — migrate *two* Products (Neuralbank OIDC + NFL Wallet API Key)
 | `nfl-wallet-prod`
 |===
 
-NOTE: Namespace names are *not* symmetric on purpose. Neuralbank CL lives in `neuralbank-stack` (full stack chart name); NFL Wallet CL lives in `nfl-wallet-prod` (existing prod-style target). Source namespaces both use the `-3scale` suffix. Memorize the pair from this table — do not assume `-stack` / `-cl` for every app.
+NOTE: Namespace names are *not* symmetric on purpose. Neuralbank Connectivity Link lives in `neuralbank-stack` (full stack chart name); NFL Wallet lives in `nfl-wallet-prod` (existing prod-style target). Source namespaces both use the `-3scale` suffix. Memorize the pair from this table — do not assume `-stack` / `-cl` for every app.
+
+== What does not migrate automatically
+
+Connectivity Link in this lab covers routing, authentication, rate limits / plans, GitOps, and day-2 UIs. It does not replace:
+
+* 3scale *billing* and commercial plan pricing
+* The 3scale *Developer Portal CMS* (themes, Liquid, CMS pages) — discovery moves to APIProduct + Developer Hub
+* Custom *APIcast* policies (Lua / NGINX) — those need an EnvoyFilter, WASM, or a redesign
+
+Detail and the concept map: xref:01-migration-overview.adoc#not-migrated[module 1, What this workshop does not cover].
 
 == Environment access
 
-Your credentials:
+Your lab user, filled in on the deployed showroom:
 
 * *Username*: `{user_name}`
 * *Password*: `{user_password}`
 
 Cluster sizing and recommended profiles: xref:00-prerequisites.adoc[0. Prerequisites & Sizing].
 
-IMPORTANT: Treat `{user_name}` / `{user_password}` as lab-only accounts. Rotate or discard them after the session.
-
-For *non-OAuth* admin consoles (Argo CD, Grafana, Gitea, Keycloak, 3scale, APIShift, Migration Toolkit), print URLs and secrets from a machine with `oc` access:
-
-----
-./scripts/get-credentials.sh
-----
-
 == Workshop platform links
 
-Strategy entry points first; then supporting platform tools.
+=== Strategies
 
 [cols="1,3",options="header"]
 |===
@@ -105,37 +222,53 @@ Strategy entry points first; then supporting platform tools.
 | https://backstage-developer-hub-developer-hub.{cluster_domain}
 
 | *Kuadrant Console* (day-2)
-| OpenShift Console → *Connectivity Link* plugin — https://console-openshift-console.{cluster_domain}
+| OpenShift Console → menu *Connectivity Link* — https://console-openshift-console.{cluster_domain}
 
 | *Migration Toolkit*
 | https://migration-toolkit.{cluster_domain}
 
 | *APIShift*
-| https://gateforge-gateforge.{cluster_domain}
+| https://gateforge-gateforge.{cluster_domain} (Route name from the `gateforge` chart; the product is APIShift)
+|===
+
+=== Platform
+
+[cols="1,3",options="header"]
+|===
+| Tool | URL
 
 | *Gitea*
 | https://gitea-gitea.{cluster_domain}
 
-| *ArgoCD*
+| *Argo CD*
 | https://openshift-gitops-server-openshift-gitops.{cluster_domain}
 
 | *Keycloak*
 | https://rhbk.{cluster_domain}/admin/master/console
+
+| *OpenShift Console*
+| https://console-openshift-console.{cluster_domain}
+
+| *Mailpit*
+| https://n8n-mailpit-openshift-lightspeed.{cluster_domain}
+|===
+
+Mailpit is the catch-all mailbox for Developer Hub software templates (scaffold and delete notifications). The host `n8n-mailpit-openshift-lightspeed` is the Service and Route this chart installs in namespace `openshift-lightspeed`. It is part of the workshop, not a URL copied from another environment.
+
+=== Observability
+
+[cols="1,3",options="header"]
+|===
+| Tool | URL
 
 | *Grafana*
 | https://grafana-observability.{cluster_domain}
 
 | *Kiali*
 | https://kiali-openshift-cluster-observability-operator.{cluster_domain}
-
-| *Mailpit*
-| https://n8n-mailpit-openshift-lightspeed.{cluster_domain}
-
-| *OpenShift Console*
-| https://console-openshift-console.{cluster_domain}
 |===
 
-WARNING: Prefer the showroom *Terminal* tab for `oc` / `curl` (`/terminal/`). The *Developer Hub* tab embeds Backstage in an iframe — OIDC login often fails inside that frame. If the panel is blank or stuck on login, open Developer Hub in a *new browser tab* from the links table above.
+WARNING: Prefer the showroom *Terminal* tab for `oc` / `curl` (`/terminal/`). The *Developer Hub* tab embeds Backstage in an iframe — OIDC login often fails inside that frame. If the panel is blank or stuck on login, open Developer Hub in a *new browser tab* from the links above.
 
 == Workshop flow
 
@@ -153,8 +286,7 @@ Text alternative — Golden Path (Developer Hub) steps:
 
 == Start here
 
-. Skim the *Migration strategies* table above — that is the workshop thesis.
-. Complete xref:00-prerequisites.adoc[0. Prerequisites & Sizing] (~10 min).
-. Continue with xref:01-migration-overview.adoc[1. Migration Overview].
-
-If something breaks later, see xref:14-troubleshooting.adoc[14. Troubleshooting].
+. Skim the strategy table and the *Which strategy* table above.
+. Complete xref:00-prerequisites.adoc[0. Prerequisites & Sizing].
+. Follow the menu in order from xref:01-migration-overview.adoc[1. Migration Overview]. After module 7, the next items are 8, 9, 10, and 11 — not module 8 in an old numbering.
+. If something breaks, open xref:14-troubleshooting.adoc[15. Troubleshooting].

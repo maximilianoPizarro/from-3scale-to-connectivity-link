@@ -48,13 +48,13 @@ image::cluster-layout.svg["3scale source workloads and Connectivity Link target 
 | Observability stack: dashboards (Grafana), service mesh topology (Kiali).
 
 | *Kuadrant Console*
-| OpenShift Console dynamic plugin for API Products, API Keys, traffic, and Grafana deep links. See xref:11-kuadrant-console.adoc[module 11].
+| OpenShift Console dynamic plugin for API Products, API Keys, traffic, and Grafana deep links. The menu label is *Connectivity Link*. See xref:11-kuadrant-console.adoc[module 8].
 
 | *Migration Toolkit*
-| Guided 3scale → Connectivity Link wizard. See xref:12-migration-toolkit.adoc[module 12].
+| Guided 3scale → Connectivity Link wizard. See xref:12-migration-toolkit.adoc[module 9].
 
 | *APIShift*
-| Same migration path as Migration Toolkit, plus AI models and Developer Hub registration. See xref:13-apishift-gateforge.adoc[module 13].
+| Same migration path as Migration Toolkit, plus AI models and Developer Hub registration. See xref:13-apishift-gateforge.adoc[module 10].
 |===
 
 == Migration strategies overview

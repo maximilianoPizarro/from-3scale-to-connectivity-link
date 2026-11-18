@@ -10,13 +10,13 @@
 * xref:06-comparison.adoc[6. Side-by-Side Comparison]
 . Migration strategies
 * xref:07-run-migration.adoc[7. Golden Path (Developer Hub)]
-* xref:11-kuadrant-console.adoc[11. Kuadrant Console]
-* xref:12-migration-toolkit.adoc[12. Migration Toolkit]
-* xref:13-apishift-gateforge.adoc[13. APIShift]
-* xref:15-two-product-migration.adoc[15. Two-product migration (shared Gateway)]
-* xref:08-verify-test.adoc[8. Verify and Test]
+* xref:11-kuadrant-console.adoc[8. Kuadrant Console]
+* xref:12-migration-toolkit.adoc[9. Migration Toolkit]
+* xref:13-apishift-gateforge.adoc[10. APIShift]
+* xref:15-two-product-migration.adoc[11. Two-product migration (shared Gateway)]
+* xref:08-verify-test.adoc[12. Verify and Test]
 . Optional
-* xref:09-deploy-vm-apikey.adoc[9. Deploy VM (API Key)]
+* xref:09-deploy-vm-apikey.adoc[13. Deploy VM (API Key)]
 . Wrap-up
-* xref:10-summary.adoc[10. Summary]
-* xref:14-troubleshooting.adoc[14. Troubleshooting]
+* xref:10-summary.adoc[14. Summary]
+* xref:14-troubleshooting.adoc[15. Troubleshooting]

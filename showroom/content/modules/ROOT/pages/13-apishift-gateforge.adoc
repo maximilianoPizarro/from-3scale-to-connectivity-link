@@ -14,6 +14,8 @@
 * *AI model assist* (shared workshop `litemaas` endpoint / model)
 * *Developer Hub* catalog registration via the Scaffolder API
 
+Use the model when the Product is large or the auth mapping is unfamiliar and you want a first draft. Read that draft before anything syncs: the model can invent paths or policy fields. Product metadata and the prompt are sent to LiteMaaS, outside the cluster. Do not use a 3scale admin token you cannot rotate. The xref:12-migration-toolkit.adoc[Migration Toolkit] does the same migration without that call.
+
 == Migration flow
 
 image::migration-flow.png["3scale to Connectivity Link via APIShift and Migration Toolkit — same path; APIShift adds AI"]
